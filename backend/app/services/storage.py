@@ -6,7 +6,9 @@
 """
 from __future__ import annotations
 
+import mimetypes
 import uuid
+from pathlib import Path
 
 import boto3
 
@@ -43,8 +45,33 @@ class StorageClient:
         )
         return f"{self.settings.s3_endpoint_url}/{self.settings.s3_bucket}/{key}"
 
-    def get_mock_content(self, key: str) -> str | None:
-        return _MOCK_STORE.get(key)
+    def upload_bytes(self, key: str, content: bytes, content_type: str = "application/octet-stream") -> str:
+        if self.mock:
+            return f"mock://{self.settings.s3_bucket}/{key}"
+
+        self._client.put_object(  # pragma: no cover — требует реальные ключи
+            Bucket=self.settings.s3_bucket,
+            Key=key,
+            Body=content,
+            ContentType=content_type,
+            ACL="public-read",
+        )
+        return f"{self.settings.s3_endpoint_url}/{self.settings.s3_bucket}/{key}"
+
+    def upload_dir(self, local_dir: str, prefix: str) -> str:
+        """Рекурсивно заливает статическую сборку сайта (вывод `nuxi generate`
+        из site-builder) под указанным префиксом ключей, определяя content-type
+        по расширению файла. Возвращает публичный URL каталога сборки."""
+        root = Path(local_dir)
+        for path in sorted(root.rglob("*")):
+            if path.is_file():
+                rel_key = f"{prefix}/{path.relative_to(root).as_posix()}"
+                content_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+                self.upload_bytes(rel_key, path.read_bytes(), content_type)
+
+        if self.mock:
+            return f"mock://{self.settings.s3_bucket}/{prefix}"
+        return f"{self.settings.s3_endpoint_url}/{self.settings.s3_bucket}/{prefix}"
 
 
 def new_build_id() -> str:

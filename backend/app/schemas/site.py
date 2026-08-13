@@ -166,7 +166,7 @@ BLOCK_LIBRARY: dict[str, type[BaseModel]] = {
 }
 
 # Единый источник правды по допустимым визуальным вариантам каждого блока —
-# используется и Pydantic-моделями выше (Literal), и DeepSeekLayoutEngine при
+# используется и Pydantic-моделями выше (Literal), и YandexLayoutEngine при
 # формировании промпта/санитайзинге ответа (см. app/services/ai/providers.py),
 # чтобы каждый сгенерированный сайт выглядел по-разному, а не по одному шаблону.
 SECTION_VARIANTS: dict[str, list[str]] = {
@@ -185,8 +185,8 @@ class Theme(BaseModel):
     primary_color: str = "#2563EB"
     font: Literal["Inter", "Roboto", "PT Sans", "Montserrat"] = "Inter"
     logo_url: str = ""
-    # Точечные CSS-правки от DeepSeek-Coder для запросов из ИИ-чата, которые не
-    # сводятся к готовому полю секции (например «сделай текст кнопки жирным»).
+    # Точечные CSS-правки от ИИ-чата, которые не сводятся к готовому полю секции
+    # (например «сделай текст кнопки жирным»).
     custom_css: str = ""
 
 

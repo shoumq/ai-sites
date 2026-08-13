@@ -1,0 +1,107 @@
+/**
+ * Design-токены АДМИНКИ (не путать с site-blocks/assets/tokens.css — те
+ * стилизуют ГЕНЕРИРУЕМЫЕ сайты, нейтрально). Здесь — фирменный стиль
+ * инструмента: тёмная база + закатные градиентные акценты
+ * (оранжево-розовый -> индиго-фиолетовый), стеклянные поверхности.
+ *
+ * Соглашение об именах: --a-* (admin), чтобы не пересекаться с --primary/
+ * --font-family и т.п., которые useSiteTheme() выставляет на <html> при
+ * рендере превью сайта внутри редактора.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* -- база -- */
+  --a-bg: #0b0b14;
+  --a-bg-elevated: #12121f;
+  --a-surface: rgba(255, 255, 255, 0.04);
+  --a-surface-hover: rgba(255, 255, 255, 0.07);
+  --a-surface-solid: #161623;
+  --a-border: rgba(255, 255, 255, 0.09);
+  --a-border-strong: rgba(255, 255, 255, 0.16);
+
+  /* -- текст -- */
+  --a-text: #f4f3fb;
+  --a-text-muted: #a3a1b8;
+  --a-text-faint: #6f6d87;
+
+  /* -- закатный градиент: бренд-акценты -- */
+  --a-sunset-orange: #ff8a5c;
+  --a-sunset-pink: #ff5d8f;
+  --a-sunset-violet: #a25dff;
+  --a-sunset-indigo: #5b6bff;
+
+  --a-gradient-brand: linear-gradient(135deg, var(--a-sunset-orange) 0%, var(--a-sunset-pink) 45%, var(--a-sunset-violet) 75%, var(--a-sunset-indigo) 100%);
+  --a-gradient-brand-soft: linear-gradient(135deg, color-mix(in srgb, var(--a-sunset-orange) 55%, transparent) 0%, color-mix(in srgb, var(--a-sunset-pink) 55%, transparent) 45%, color-mix(in srgb, var(--a-sunset-violet) 55%, transparent) 100%);
+  --a-gradient-text: linear-gradient(90deg, var(--a-sunset-orange), var(--a-sunset-pink) 50%, var(--a-sunset-violet));
+
+  --a-accent: var(--a-sunset-pink);
+  --a-accent-2: var(--a-sunset-indigo);
+
+  /* -- статусы -- */
+  --a-success: #34d399;
+  --a-success-bg: rgba(52, 211, 153, 0.14);
+  --a-error: #fb7185;
+  --a-error-bg: rgba(251, 113, 133, 0.14);
+  --a-warning: #fbbf24;
+  --a-warning-bg: rgba(251, 191, 36, 0.14);
+  --a-info: #60a5fa;
+  --a-info-bg: rgba(96, 165, 250, 0.14);
+
+  /* -- spacing -- */
+  --a-space-1: 4px;
+  --a-space-2: 8px;
+  --a-space-3: 12px;
+  --a-space-4: 16px;
+  --a-space-5: 24px;
+  --a-space-6: 32px;
+  --a-space-7: 48px;
+  --a-space-8: 64px;
+
+  /* -- radius -- */
+  --a-radius-sm: 8px;
+  --a-radius-md: 14px;
+  --a-radius-lg: 20px;
+  --a-radius-xl: 28px;
+  --a-radius-full: 999px;
+
+  /* -- shadows -- */
+  --a-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --a-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25);
+  --a-shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.3);
+  --a-shadow-glow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 12px 40px -8px color-mix(in srgb, var(--a-accent) 45%, transparent);
+
+  /* -- typography -- */
+  --a-font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --a-fs-xs: 0.75rem;
+  --a-fs-sm: 0.8125rem;
+  --a-fs-base: 0.9375rem;
+  --a-fs-md: 1.0625rem;
+  --a-fs-lg: 1.25rem;
+  --a-fs-xl: 1.625rem;
+  --a-fs-2xl: 2.125rem;
+  --a-fs-3xl: 2.75rem;
+
+  /* -- motion -- */
+  --a-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --a-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --a-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --a-transition-fast: 140ms var(--a-ease-out);
+  --a-transition-base: 240ms var(--a-ease-out);
+  --a-transition-slow: 420ms var(--a-ease-out);
+
+  /* -- glass -- */
+  --a-glass-bg: rgba(22, 22, 35, 0.55);
+  --a-glass-border: rgba(255, 255, 255, 0.1);
+  --a-glass-blur: 20px;
+
+  /* -- z-index scale -- */
+  --a-z-bg: 0;
+  --a-z-base: 1;
+  --a-z-dropdown: 30;
+  --a-z-sticky: 40;
+  --a-z-modal-backdrop: 50;
+  --a-z-modal: 51;
+  --a-z-toast: 60;
+}

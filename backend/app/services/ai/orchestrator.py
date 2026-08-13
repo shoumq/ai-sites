@@ -12,7 +12,8 @@ from collections.abc import Awaitable, Callable
 from app.core.config import Settings
 from app.schemas.project import BriefIn, GenerationProgress
 from app.schemas.site import Page, SiteSchema, Theme, parse_site
-from app.services.ai.providers import DeepSeekLayoutEngine, KandinskyImageGenerator, OpenAICopywriter
+from app.services.ai.providers import YandexArtImageGenerator, YandexCopywriter, YandexLayoutEngine
+from app.services.storage import StorageClient
 
 ProgressCallback = Callable[[GenerationProgress], Awaitable[None]]
 
@@ -39,10 +40,10 @@ MULTIPAGE_PAGE_COUNT = 4
 
 
 class GenerationOrchestrator:
-    def __init__(self, settings: Settings):
-        self.copywriter = OpenAICopywriter(settings)
-        self.layout_engine = DeepSeekLayoutEngine(settings)
-        self.image_generator = KandinskyImageGenerator(settings)
+    def __init__(self, settings: Settings, storage: StorageClient | None = None):
+        self.copywriter = YandexCopywriter(settings)
+        self.layout_engine = YandexLayoutEngine(settings)
+        self.image_generator = YandexArtImageGenerator(settings, storage or StorageClient(settings))
 
     async def generate(
         self,
@@ -181,13 +182,14 @@ class GenerationOrchestrator:
     def _build_multipage(
         self, layout: dict, copy: dict, hero_bg: str, about_image: str | None, brief: BriefIn
     ) -> list[Page]:
-        # Ссылки — на реальные соседние HTML-файлы (см. publish.py: каждая
-        # страница сохраняется как {slug}.html), а не якоря внутри одной страницы.
+        # Ссылки — на реальные чистые маршруты статической Nuxt-сборки (см.
+        # site-renderer: slug "main" рендерится в "/", остальные — в "/{slug}"),
+        # а не якоря внутри одной страницы.
         nav_items = [
-            {"label": "Главная", "href": "main.html"},
-            {"label": "Услуги", "href": "services.html"},
-            {"label": "О нас", "href": "about.html"},
-            {"label": "Контакты", "href": "contacts.html"},
+            {"label": "Главная", "href": "/"},
+            {"label": "Услуги", "href": "/services"},
+            {"label": "О нас", "href": "/about"},
+            {"label": "Контакты", "href": "/contacts"},
         ]
 
         def make_header() -> dict:

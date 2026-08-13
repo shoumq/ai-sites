@@ -22,6 +22,27 @@ services:
     ports:
       - "6379:6379"
 
+  # Оборачивает site-renderer (Nuxt-сборка блоков из site-blocks) в HTTP API:
+  # принимает SiteSchema от backend, гоняет `nuxi generate`, кладёт статику в
+  # общий volume builds_data. Собирается из корня репо (нужны оба каталога
+  # site-builder/ и site-renderer/ в build-контексте — см. site-builder/Dockerfile).
+  site-builder:
+    build:
+      context: .
+      dockerfile: site-builder/Dockerfile
+    environment:
+      BUILDS_DIR: /builds
+    ports:
+      - "4000:4000"
+    volumes:
+      - builds_data:/builds
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   backend:
     build: ./backend
     env_file:
@@ -29,6 +50,9 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://ai_sites:ai_sites@postgres:5432/ai_sites
       REDIS_URL: redis://redis:6379/0
+      SITE_BUILDER_URL: http://site-builder:4000
+      SITE_BUILDS_DIR: /builds
+      PUBLIC_BACKEND_URL: http://localhost:8000
     ports:
       - "8000:8000"
     depends_on:
@@ -36,24 +60,35 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      site-builder:
+        condition: service_healthy
     command: >
       sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     volumes:
       - ./backend:/app
+      # Тот же build-каталог, что site-builder заполняет — backend читает готовые
+      # файлы отсюда для (mock-)заливки в S3, зип-экспорта и раздачи /preview-sites.
+      - builds_data:/builds:ro
 
-  frontend:
-    build: ./frontend
+  admin-panel:
+    build:
+      context: .
+      dockerfile: admin-panel/Dockerfile
     environment:
-      VITE_API_BASE_URL: http://localhost:8000/api/v1
-      VITE_WS_BASE_URL: ws://localhost:8000/api/v1
+      NUXT_PUBLIC_API_BASE: http://localhost:8000/api/v1
+      NUXT_PUBLIC_WS_BASE: ws://localhost:8000/api/v1
     ports:
-      - "5173:5173"
+      - "3000:3000"
     depends_on:
       - backend
     volumes:
-      - ./frontend:/app
+      - ./admin-panel:/app
+      # nuxt.config.ts делает extends: ['../site-blocks'] — layer должен лежать
+      # соседом /app (см. комментарий в admin-panel/Dockerfile).
+      - ./site-blocks:/site-blocks
       - /app/node_modules
-    command: npm run dev -- --host
+    command: npm run dev
 
 volumes:
   postgres_data:
+  builds_data:

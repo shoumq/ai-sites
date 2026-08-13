@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     secret_key: str = "dev-secret-change-me"
     access_token_expire_minutes: int = 60 * 24 * 7
 
-    # CORS
-    cors_origins: list[str] = ["http://localhost:5173"]
+    # CORS — 3000 это admin-panel (Nuxt dev server)
+    cors_origins: list[str] = ["http://localhost:3000"]
 
     # Database
     database_url: str = "postgresql+asyncpg://ai_sites:ai_sites@localhost:5432/ai_sites"
@@ -22,13 +22,11 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://localhost:6379/0"
 
-    # AI providers — leave blank to run in mock mode (no external calls)
-    openai_api_key: str = ""
-    openai_model: str = "gpt-4o"
-    deepseek_api_key: str = ""
-    deepseek_model: str = "deepseek-v4-flash"
-    kandinsky_api_key: str = ""
-    kandinsky_secret_key: str = ""
+    # AI providers — Yandex AI Studio (YandexGPT + YandexART). Leave blank to run in mock mode.
+    yandex_api_key: str = ""
+    yandex_folder_id: str = ""
+    yandex_gpt_model: str = "yandexgpt/latest"
+    yandex_art_model: str = "yandex-art/latest"
 
     # S3-compatible storage (VK Cloud / Yandex Cloud)
     s3_endpoint_url: str = ""
@@ -37,16 +35,29 @@ class Settings(BaseSettings):
     s3_bucket: str = "ai-sites-builds"
     s3_region: str = "ru-central1"
     public_base_domain: str = "builder.ai"
+    # Откуда браузер разработчика реально достучится до бэкенда — используется
+    # только в mock-режиме публикации (см. app/services/publish.py), чтобы
+    # ссылка "Сайт опубликован" вела на реально работающий /preview-sites, а
+    # не на несуществующий поддомен public_base_domain.
+    public_backend_url: str = "http://localhost:8000"
 
     # ЮKassa
     yookassa_shop_id: str = ""
     yookassa_secret_key: str = ""
 
+    # Микросервис статической сборки сайтов (Nuxt `nuxi generate`)
+    site_builder_url: str = "http://site-builder:4000"
+    # Общий с site-builder docker-volume — backend читает готовые файлы отсюда
+    # для заливки в S3/зип-экспорта, а в mock-режиме (без реальных S3-ключей)
+    # раздаёт их напрямую через /preview-sites, чтобы билд можно было открыть
+    # в браузере локально без облака.
+    site_builds_dir: str = "/builds"
+
     # Yandex Metrika / integrations defaults are per-project, stored in DB
 
     @property
     def ai_mock_mode(self) -> bool:
-        return not self.openai_api_key
+        return not self.yandex_api_key
 
 
 @lru_cache

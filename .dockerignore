@@ -1,0 +1,20 @@
+# Билд-контекст для сервисов, собирающихся из корня репо (site-builder,
+# admin-panel — оба используют build.context: . в docker-compose.yml, потому
+# что им нужно COPY соседний site-blocks/site-renderer, см. комментарии в
+# соответствующих Dockerfile). Без этого файла Docker тянул в контекст ВЕСЬ
+# репозиторий целиком (node_modules каждого пакета, .nuxt/.output кеши) —
+# сотни мегабайт и падение на битых Windows-симлинках внутри node_modules
+# ("invalid file request site-renderer/dist").
+**/node_modules/
+**/.nuxt/
+**/.output/
+**/dist/
+.git/
+*.log
+
+.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+
+.claude/
