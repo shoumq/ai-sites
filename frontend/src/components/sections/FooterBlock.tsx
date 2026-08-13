@@ -1,4 +1,5 @@
 import EditableText from "../EditableText";
+import SiteNavLink from "../SiteNavLink";
 import type { FooterSection } from "../../types/site";
 
 export default function FooterBlock({
@@ -25,9 +26,9 @@ export default function FooterBlock({
               <div className="pv-footer-col-title">Меню</div>
               <nav className="pv-footer-col-links">
                 {section.links.map((link) => (
-                  <a key={link.label} href={link.href}>
+                  <SiteNavLink key={link.label} href={link.href}>
                     {link.label}
-                  </a>
+                  </SiteNavLink>
                 ))}
               </nav>
             </div>
@@ -68,9 +69,9 @@ export default function FooterBlock({
       <EditableText value={section.company_name} onChange={(company_name) => onChange({ company_name })} />
       <nav className="pv-header-nav">
         {section.links.map((link) => (
-          <a key={link.label} href={link.href}>
+          <SiteNavLink key={link.label} href={link.href}>
             {link.label}
-          </a>
+          </SiteNavLink>
         ))}
       </nav>
       <EditableText value={section.copyright_text} onChange={(copyright_text) => onChange({ copyright_text })} />

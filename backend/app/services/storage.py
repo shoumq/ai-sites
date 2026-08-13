@@ -6,6 +6,7 @@
 """
 from __future__ import annotations
 
+import base64
 import uuid
 
 import boto3
@@ -38,6 +39,21 @@ class StorageClient:
             Bucket=self.settings.s3_bucket,
             Key=key,
             Body=content.encode("utf-8"),
+            ContentType=content_type,
+            ACL="public-read",
+        )
+        return f"{self.settings.s3_endpoint_url}/{self.settings.s3_bucket}/{key}"
+
+    def upload_bytes(self, key: str, content: bytes, content_type: str) -> str:
+        if self.mock:
+            # Без S3 отдать картинку неоткуда — data:URI рендерится в <img src>
+            # напрямую, так реальная YandexART-генерация проверяема и без облака.
+            return f"data:{content_type};base64,{base64.b64encode(content).decode()}"
+
+        self._client.put_object(  # pragma: no cover — требует реальные ключи
+            Bucket=self.settings.s3_bucket,
+            Key=key,
+            Body=content,
             ContentType=content_type,
             ACL="public-read",
         )

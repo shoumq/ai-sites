@@ -1,16 +1,17 @@
-"""Клиенты трёх AI-провайдеров (ТЗ п.1: «Все запросы к AI идут через единый
-Orchestrator»). Каждый клиент работает в двух режимах:
+"""Клиенты AI-провайдеров (ТЗ п.1: «Все запросы к AI идут через единый
+Orchestrator»). Весь доступ к моделям — через единую точку Yandex AI Studio
+(llm.api.cloud.yandex.net): YandexGPT для текста (копирайтинг, вёрстка,
+чат-правки) и YandexART для изображений. Каждый клиент работает в двух
+режимах:
 
-  * реальный — если в .env задан соответствующий API-ключ;
-  * mock — если ключа нет (по умолчанию для локальной разработки), чтобы весь
+  * реальный — если в .env заданы YANDEX_API_KEY и YANDEX_FOLDER_ID;
+  * mock — если их нет (по умолчанию для локальной разработки), чтобы весь
     пайплайн генерации был проверяемым без внешних учётных данных.
-
-Реальные HTTP-вызовы оставлены как заглушки `_call_real_api`, готовые к
-подключению ключей — эндпоинты и формат payload зависят от актуальной
-документации провайдеров на момент интеграции.
 """
 from __future__ import annotations
 
+import asyncio
+import base64
 import hashlib
 import json
 import random
@@ -22,8 +23,46 @@ from app.core.config import Settings
 from app.schemas.project import BriefIn
 from app.schemas.site import SECTION_VARIANTS, SiteSchema, parse_site
 from app.services.chat_commands import apply_chat_command
+from app.services.storage import StorageClient
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
+
+_YANDEX_COMPLETION_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
+_YANDEX_IMAGE_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/imageGenerationAsync"
+_YANDEX_OPERATION_URL = "https://llm.api.cloud.yandex.net/operations/{operation_id}"
+
+
+def _yandex_headers(settings: Settings) -> dict[str, str]:
+    return {"Authorization": f"Api-Key {settings.yandex_api_key}", "x-folder-id": settings.yandex_folder_id}
+
+
+async def _yandex_complete(
+    settings: Settings, system_prompt: str, user_content: str, *, temperature: float = 0.6, max_tokens: int = 2000
+) -> dict | None:
+    """Отправляет system+user пару в YandexGPT и парсит ответ как JSON — общий
+    путь для копирайтинга, вёрстки и чат-правок (все три просят модель вернуть
+    строго JSON и парсят его одинаково, отличаются только промптом)."""
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(
+                _YANDEX_COMPLETION_URL,
+                headers=_yandex_headers(settings),
+                json={
+                    "modelUri": f"gpt://{settings.yandex_folder_id}/{settings.yandex_gpt_model}/latest",
+                    "completionOptions": {"stream": False, "temperature": temperature, "maxTokens": str(max_tokens)},
+                    "messages": [
+                        {"role": "system", "text": system_prompt},
+                        {"role": "user", "text": user_content},
+                    ],
+                },
+            )
+            response.raise_for_status()
+            text = response.json()["result"]["alternatives"][0]["message"]["text"]
+            return json.loads(text)
+    except (httpx.HTTPError, KeyError, IndexError, ValueError):
+        # Сбой сети/лимитов/невалидный JSON — вызывающий код откатывается на
+        # детерминированный фолбэк, чтобы один упавший запрос не ронял генерацию.
+        return None
 
 # Тон и структура текстов должны реально зависеть от типа сайта, а не только
 # от брифа — иначе лендинг, магазин и CRM-портал выглядят как один и тот же
@@ -49,7 +88,7 @@ def _copy_items_count(site_type: str) -> int:
     return 6 if site_type == "shop" else 3
 
 
-# Структура блоков тоже должна зависеть от типа сайта — без этого DeepSeek
+# Структура блоков тоже должна зависеть от типа сайта — без этого YandexGPT
 # в реальном режиме собирал один и тот же набор блоков (grid_3col+pricing+
 # testimonials+contact_map) независимо от landing/shop/crm.
 _LAYOUT_TYPE_GUIDANCE = {
@@ -79,12 +118,12 @@ def _seeded_choice(seed: str, options: list[str]) -> str:
     return options[int(digest, 16) % len(options)]
 
 
-class OpenAICopywriter:
-    """GPT-4o — генерация текстов сайта."""
+class YandexCopywriter:
+    """YandexGPT — генерация текстов сайта."""
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.mock = not settings.openai_api_key
+        self.mock = not (settings.yandex_api_key and settings.yandex_folder_id)
 
     async def generate_copy(self, brief: BriefIn) -> dict:
         fallback = self._mock_copy(brief)
@@ -96,53 +135,29 @@ class OpenAICopywriter:
     async def _call_real_api(self, brief: BriefIn) -> dict | None:  # pragma: no cover — требует ключ
         items_count = _copy_items_count(brief.site_type.value)
         type_guidance = _COPY_TYPE_GUIDANCE.get(brief.site_type.value, "")
-        try:
-            async with httpx.AsyncClient(timeout=30) as client:
-                response = await client.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {self.settings.openai_api_key}"},
-                    json={
-                        "model": self.settings.openai_model,
-                        "response_format": {"type": "json_object"},
-                        "messages": [
-                            {
-                                "role": "system",
-                                "content": (
-                                    "Ты копирайтер AI-конструктора сайтов. Пиши тексты на русском языке. "
-                                    f"{type_guidance}\n\n"
-                                    "Верни строго JSON без markdown и без пояснений, СТРОГО с такими ключами "
-                                    "и типами (не добавляй и не переименовывай поля):\n"
-                                    "{\n"
-                                    '  "hero": {"title": str, "subtitle": str, "cta_text": str},\n'
-                                    '  "services": {"title": str, "items": [{"name": str, '
-                                    '"description": str, "price": str}, ...]},\n'
-                                    '  "pricing": {"title": str, "plans": [{"name": str, "price": str, '
-                                    '"period": str, "features": [str, ...], "highlighted": bool}, ...]},\n'
-                                    '  "testimonials": {"title": str, "items": [{"author": str, "text": str, '
-                                    '"rating": int}, ...]},\n'
-                                    '  "footer": {"company_name": str, "copyright_text": str}\n'
-                                    "}\n"
-                                    "price и period — всегда строки (например \"1 500\", \"мес\"), а не числа. "
-                                    f"{items_count} items в services, 3 plans в pricing, 2 items в testimonials."
-                                ),
-                            },
-                            {
-                                "role": "user",
-                                "content": (
-                                    f"Бренд: {brief.brand_name}\nЧем занимается: {brief.description}\n"
-                                    f"Цель сайта: {brief.goal.value}\nТип сайта: {brief.site_type.value}"
-                                ),
-                            },
-                        ],
-                    },
-                )
-                response.raise_for_status()
-                content = response.json()["choices"][0]["message"]["content"]
-                return json.loads(content)
-        except (httpx.HTTPError, KeyError, IndexError, ValueError):
-            # Сбой сети/лимитов/невалидный JSON — откатываемся на mock-копию,
-            # чтобы один упавший провайдер не ронял всю генерацию сайта.
-            return None
+        system_prompt = (
+            "Ты копирайтер AI-конструктора сайтов. Пиши тексты на русском языке. "
+            f"{type_guidance}\n\n"
+            "Верни строго JSON без markdown и без пояснений, СТРОГО с такими ключами "
+            "и типами (не добавляй и не переименовывай поля):\n"
+            "{\n"
+            '  "hero": {"title": str, "subtitle": str, "cta_text": str},\n'
+            '  "services": {"title": str, "items": [{"name": str, '
+            '"description": str, "price": str}, ...]},\n'
+            '  "pricing": {"title": str, "plans": [{"name": str, "price": str, '
+            '"period": str, "features": [str, ...], "highlighted": bool}, ...]},\n'
+            '  "testimonials": {"title": str, "items": [{"author": str, "text": str, '
+            '"rating": int}, ...]},\n'
+            '  "footer": {"company_name": str, "copyright_text": str}\n'
+            "}\n"
+            "price и period — всегда строки (например \"1 500\", \"мес\"), а не числа. "
+            f"{items_count} items в services, 3 plans в pricing, 2 items в testimonials."
+        )
+        user_content = (
+            f"Бренд: {brief.brand_name}\nЧем занимается: {brief.description}\n"
+            f"Цель сайта: {brief.goal.value}\nТип сайта: {brief.site_type.value}"
+        )
+        return await _yandex_complete(self.settings, system_prompt, user_content)
 
     def _coerce_copy(self, raw: object, fallback: dict) -> dict:
         """Строит финальный `copy`, беря из ответа LLM только валидные поля и
@@ -183,7 +198,7 @@ class OpenAICopywriter:
     def _merge_dict(raw: object, fallback: dict) -> dict:
         """Копирует из `raw` только те строковые поля, что уже есть в `fallback` —
         так LLM не может подсунуть лишний ключ (например, `bg_image` в hero,
-        затерев реально сгенерированную Kandinsky-картинку)."""
+        затерев реально сгенерированную YandexART-картинку)."""
         if not isinstance(raw, dict):
             return dict(fallback)
         merged = dict(fallback)
@@ -268,8 +283,8 @@ class OpenAICopywriter:
         }
 
 
-class DeepSeekLayoutEngine:
-    """DeepSeek — подбор темы, состава блоков и визуального варианта КАЖДОГО
+class YandexLayoutEngine:
+    """YandexGPT — подбор темы, состава блоков и визуального варианта КАЖДОГО
     блока под бриф.
 
     header и hero структурно обязательны и всегда идут первыми, footer —
@@ -302,7 +317,7 @@ class DeepSeekLayoutEngine:
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.mock = not settings.deepseek_api_key
+        self.mock = not (settings.yandex_api_key and settings.yandex_folder_id)
 
     async def plan_layout(self, brief: BriefIn) -> dict:
         """Возвращает {"primary_color", "font", "style", "header_variant",
@@ -330,7 +345,7 @@ class DeepSeekLayoutEngine:
     def _fallback_layout(self, brief: BriefIn) -> dict:
         """Детерминированный (по бренду) фолбэк для mock-режима и для сбоя
         реального вызова. Варианты выбираются псевдослучайно по хэшу брифа,
-        поэтому разные проекты выглядят по-разному даже без ключа DeepSeek."""
+        поэтому разные проекты выглядят по-разному даже без ключа Yandex."""
         seed = f"{brief.brand_name}|{brief.description}"
         middle_types = self.DEFAULT_MIDDLE_SECTIONS.get(brief.site_type.value, self.DEFAULT_MIDDLE_SECTIONS["multipage"])
         return {
@@ -371,82 +386,88 @@ class DeepSeekLayoutEngine:
 
     async def _call_real_api(self, brief: BriefIn) -> dict | None:  # pragma: no cover — требует ключ
         type_guidance = _LAYOUT_TYPE_GUIDANCE.get(brief.site_type.value, "")
-        try:
-            async with httpx.AsyncClient(timeout=20) as client:
-                response = await client.post(
-                    "https://api.deepseek.com/chat/completions",
-                    headers={"Authorization": f"Bearer {self.settings.deepseek_api_key}"},
-                    json={
-                        "model": self.settings.deepseek_model,
-                        "response_format": {"type": "json_object"},
-                        "messages": [
-                            {
-                                "role": "system",
-                                "content": (
-                                    "Ты фронтенд-архитектор AI-конструктора сайтов. Библиотека React-блоков "
-                                    "фиксирована, но у каждого блока есть несколько визуальных вариантов — "
-                                    "выбирай их осознанно под характер бизнеса и НЕ всегда один и тот же "
-                                    "набор, чтобы разные сайты выглядели по-разному, а не по шаблону. Сайт "
-                                    "всегда открывается шапкой (header) и героем (hero) и заканчивается "
-                                    "футером (footer) — в sections их добавлять не нужно, только укажи "
-                                    "их variant отдельными полями.\n\n"
-                                    f"ОБЯЗАТЕЛЬНО учти тип сайта при выборе состава блоков: {type_guidance}\n\n"
-                                    "Допустимые варианты:\n"
-                                    f"- header_variant: {SECTION_VARIANTS['header']}\n"
-                                    f"- hero_variant: {SECTION_VARIANTS['hero']}\n"
-                                    f"- footer_variant: {SECTION_VARIANTS['footer']}\n"
-                                    f"- variant блока grid_3col: {SECTION_VARIANTS['grid_3col']}\n"
-                                    f"- variant блока pricing: {SECTION_VARIANTS['pricing']}\n"
-                                    f"- variant блока testimonials: {SECTION_VARIANTS['testimonials']}\n"
-                                    f"- variant блока contact_map: {SECTION_VARIANTS['contact_map']}\n\n"
-                                    "Выбери от 3 до 6 блоков ИЗ СПИСКА "
-                                    "[text_image, grid_3col, pricing, testimonials, contact_map] (с учётом "
-                                    "правила по типу сайта выше) и порядок их показа под задачу пользователя, "
-                                    "плюс акцентный HEX-цвет и шрифт. "
-                                    "Верни строго JSON без markdown и пояснений: "
-                                    '{"primary_color": "#RRGGBB", '
-                                    '"font": "Inter" | "Roboto" | "PT Sans" | "Montserrat", '
-                                    '"header_variant": "...", "hero_variant": "...", "footer_variant": "...", '
-                                    '"sections": [{"type": "...", "variant": "..."}, ...]}'
-                                ),
-                            },
-                            {
-                                "role": "user",
-                                "content": (
-                                    f"Тип сайта: {brief.site_type.value}\nПресет настроения: {brief.style.value}\n"
-                                    f"Бренд: {brief.brand_name}\nЧем занимается: {brief.description}\n"
-                                    f"Цель сайта: {brief.goal.value}"
-                                ),
-                            },
-                        ],
-                    },
-                )
-                response.raise_for_status()
-                content = response.json()["choices"][0]["message"]["content"]
-                return json.loads(content)
-        except (httpx.HTTPError, KeyError, IndexError, ValueError):
-            # Сбой сети/лимитов/невалидный JSON — откатываемся на детерминированный
-            # фолбэк, чтобы один упавший провайдер не ломал всю генерацию.
-            return None
+        system_prompt = (
+            "Ты фронтенд-архитектор AI-конструктора сайтов. Библиотека React-блоков "
+            "фиксирована, но у каждого блока есть несколько визуальных вариантов — "
+            "выбирай их осознанно под характер бизнеса и НЕ всегда один и тот же "
+            "набор, чтобы разные сайты выглядели по-разному, а не по шаблону. Сайт "
+            "всегда открывается шапкой (header) и героем (hero) и заканчивается "
+            "футером (footer) — в sections их добавлять не нужно, только укажи "
+            "их variant отдельными полями.\n\n"
+            f"ОБЯЗАТЕЛЬНО учти тип сайта при выборе состава блоков: {type_guidance}\n\n"
+            "Допустимые варианты:\n"
+            f"- header_variant: {SECTION_VARIANTS['header']}\n"
+            f"- hero_variant: {SECTION_VARIANTS['hero']}\n"
+            f"- footer_variant: {SECTION_VARIANTS['footer']}\n"
+            f"- variant блока grid_3col: {SECTION_VARIANTS['grid_3col']}\n"
+            f"- variant блока pricing: {SECTION_VARIANTS['pricing']}\n"
+            f"- variant блока testimonials: {SECTION_VARIANTS['testimonials']}\n"
+            f"- variant блока contact_map: {SECTION_VARIANTS['contact_map']}\n\n"
+            "Выбери от 3 до 6 блоков ИЗ СПИСКА "
+            "[text_image, grid_3col, pricing, testimonials, contact_map] (с учётом "
+            "правила по типу сайта выше) и порядок их показа под задачу пользователя, "
+            "плюс акцентный HEX-цвет и шрифт. "
+            "Верни строго JSON без markdown и пояснений: "
+            '{"primary_color": "#RRGGBB", '
+            '"font": "Inter" | "Roboto" | "PT Sans" | "Montserrat", '
+            '"header_variant": "...", "hero_variant": "...", "footer_variant": "...", '
+            '"sections": [{"type": "...", "variant": "..."}, ...]}'
+        )
+        user_content = (
+            f"Тип сайта: {brief.site_type.value}\nПресет настроения: {brief.style.value}\n"
+            f"Бренд: {brief.brand_name}\nЧем занимается: {brief.description}\n"
+            f"Цель сайта: {brief.goal.value}"
+        )
+        return await _yandex_complete(self.settings, system_prompt, user_content)
 
 
-class KandinskyImageGenerator:
-    """Kandinsky 3.0 — генерация изображений для блоков."""
+class YandexImageGenerator:
+    """YandexART — генерация изображений для блоков. Генерация асинхронная:
+    задача создаётся отдельным запросом и опрашивается по operation id."""
+
+    POLL_INTERVAL_SECONDS = 1
+    POLL_MAX_ATTEMPTS = 25
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.mock = not settings.kandinsky_api_key
+        self.mock = not (settings.yandex_api_key and settings.yandex_folder_id)
+        self.storage = StorageClient(settings)
 
     async def generate_image(self, prompt: str) -> str:
         if self.mock:
             return self._mock_image(prompt)
-        return await self._call_real_api(prompt)
+        try:
+            return await self._call_real_api(prompt)
+        except (httpx.HTTPError, KeyError, IndexError, ValueError, TimeoutError):
+            # Сбой сети/лимитов/таймаут ожидания — не роняем генерацию сайта
+            # целиком из-за одной не сгенерировавшейся картинки.
+            return self._mock_image(prompt)
 
     async def _call_real_api(self, prompt: str) -> str:  # pragma: no cover — требует ключ
-        # Реальный вызов Fusion Brain API (Kandinsky 3.0): создать задачу генерации,
-        # дождаться результата, залить base64-картинку в S3 через storage-сервис
-        # и вернуть публичный URL.
-        raise NotImplementedError("Подключите KANDINSKY_API_KEY для реальной генерации")
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(
+                _YANDEX_IMAGE_URL,
+                headers=_yandex_headers(self.settings),
+                json={
+                    "modelUri": f"art://{self.settings.yandex_folder_id}/{self.settings.yandex_art_model}/latest",
+                    "messages": [{"text": prompt, "weight": 1}],
+                    "generationOptions": {"mimeType": "image/jpeg", "aspectRatio": {"widthRatio": 3, "heightRatio": 2}},
+                },
+            )
+            response.raise_for_status()
+            operation_id = response.json()["id"]
+
+            for _ in range(self.POLL_MAX_ATTEMPTS):
+                await asyncio.sleep(self.POLL_INTERVAL_SECONDS)
+                poll = await client.get(_YANDEX_OPERATION_URL.format(operation_id=operation_id), headers=_yandex_headers(self.settings))
+                poll.raise_for_status()
+                operation = poll.json()
+                if operation.get("done"):
+                    image_b64 = operation["response"]["image"]
+                    image_bytes = base64.b64decode(image_b64)
+                    key = f"generated/{hashlib.sha1(image_bytes).hexdigest()}.jpg"
+                    return self.storage.upload_bytes(key, image_bytes, "image/jpeg")
+            raise TimeoutError(f"YandexART operation {operation_id} did not finish in time")
 
     @staticmethod
     def _mock_image(prompt: str) -> str:
@@ -479,15 +500,16 @@ _CHAT_SYSTEM_PROMPT = (
 class AIChatEditor:
     """Обработчик команд вкладки «ИИ-Чат» (ТЗ п.4). Сначала пробует быстрый
     бесплатный rule-based разбор (chat_commands.py) для типовых формулировок
-    из ТЗ; если он не смог распознать команду и задан OPENAI_API_KEY —
-    отправляет GPT-4o всю текущую JSON-схему сайта и просьбу пользователя,
-    просит вернуть обновлённую схему целиком. Результат в любом случае
-    проходит parse_site() — DoD п.2 гарантирован независимо от источника правки.
+    из ТЗ; если он не смог распознать команду и заданы YANDEX_API_KEY/
+    YANDEX_FOLDER_ID — отправляет YandexGPT всю текущую JSON-схему сайта и
+    просьбу пользователя, просит вернуть обновлённую схему целиком. Результат
+    в любом случае проходит parse_site() — DoD п.2 гарантирован независимо от
+    источника правки.
     """
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.mock = not settings.openai_api_key
+        self.mock = not (settings.yandex_api_key and settings.yandex_folder_id)
 
     async def apply_command(self, site: SiteSchema, message: str) -> tuple[SiteSchema, str, bool]:
         updated, reply, applied = apply_chat_command(site, message)
@@ -509,30 +531,8 @@ class AIChatEditor:
         return new_site, reply_text, changed
 
     async def _call_real_api(self, site: SiteSchema, message: str) -> dict | None:  # pragma: no cover — требует ключ
-        try:
-            async with httpx.AsyncClient(timeout=30) as client:
-                response = await client.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {self.settings.openai_api_key}"},
-                    json={
-                        "model": self.settings.openai_model,
-                        "response_format": {"type": "json_object"},
-                        "messages": [
-                            {"role": "system", "content": _CHAT_SYSTEM_PROMPT},
-                            {
-                                "role": "user",
-                                "content": json.dumps(
-                                    {"site": site.model_dump(), "command": message}, ensure_ascii=False
-                                ),
-                            },
-                        ],
-                    },
-                )
-                response.raise_for_status()
-                content = response.json()["choices"][0]["message"]["content"]
-                return json.loads(content)
-        except (httpx.HTTPError, KeyError, IndexError, ValueError):
-            return None
+        user_content = json.dumps({"site": site.model_dump(), "command": message}, ensure_ascii=False)
+        return await _yandex_complete(self.settings, _CHAT_SYSTEM_PROMPT, user_content, max_tokens=4000)
 
 
 def random_avatar_seed() -> str:

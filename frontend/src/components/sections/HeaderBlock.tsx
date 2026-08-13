@@ -1,4 +1,5 @@
 import EditableText from "../EditableText";
+import SiteNavLink from "../SiteNavLink";
 import type { HeaderSection } from "../../types/site";
 
 export default function HeaderBlock({
@@ -18,9 +19,9 @@ export default function HeaderBlock({
       />
       <nav className="pv-header-nav">
         {section.nav_items.map((item) => (
-          <a key={item.label} href={item.href}>
+          <SiteNavLink key={item.label} href={item.href}>
             {item.label}
-          </a>
+          </SiteNavLink>
         ))}
       </nav>
       {section.cta_text && <span className="pv-btn">{section.cta_text}</span>}

@@ -22,13 +22,14 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://localhost:6379/0"
 
-    # AI providers — leave blank to run in mock mode (no external calls)
-    openai_api_key: str = ""
-    openai_model: str = "gpt-4o"
-    deepseek_api_key: str = ""
-    deepseek_model: str = "deepseek-v4-flash"
-    kandinsky_api_key: str = ""
-    kandinsky_secret_key: str = ""
+    # AI providers — Yandex AI Studio (единая точка доступа к моделям текста и
+    # изображений). Оставьте пустыми, чтобы работать в mock-режиме (без внешних
+    # вызовов). API-ключ создаётся в AI Studio, folder_id — id каталога Yandex
+    # Cloud, к которому он привязан (оба нужны одновременно).
+    yandex_api_key: str = ""
+    yandex_folder_id: str = ""
+    yandex_gpt_model: str = "yandexgpt-lite"
+    yandex_art_model: str = "yandex-art"
 
     # S3-compatible storage (VK Cloud / Yandex Cloud)
     s3_endpoint_url: str = ""
@@ -46,7 +47,7 @@ class Settings(BaseSettings):
 
     @property
     def ai_mock_mode(self) -> bool:
-        return not self.openai_api_key
+        return not (self.yandex_api_key and self.yandex_folder_id)
 
 
 @lru_cache

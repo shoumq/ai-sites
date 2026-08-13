@@ -12,7 +12,7 @@ from collections.abc import Awaitable, Callable
 from app.core.config import Settings
 from app.schemas.project import BriefIn, GenerationProgress
 from app.schemas.site import Page, SiteSchema, Theme, parse_site
-from app.services.ai.providers import DeepSeekLayoutEngine, KandinskyImageGenerator, OpenAICopywriter
+from app.services.ai.providers import YandexCopywriter, YandexImageGenerator, YandexLayoutEngine
 
 ProgressCallback = Callable[[GenerationProgress], Awaitable[None]]
 
@@ -40,9 +40,9 @@ MULTIPAGE_PAGE_COUNT = 4
 
 class GenerationOrchestrator:
     def __init__(self, settings: Settings):
-        self.copywriter = OpenAICopywriter(settings)
-        self.layout_engine = DeepSeekLayoutEngine(settings)
-        self.image_generator = KandinskyImageGenerator(settings)
+        self.copywriter = YandexCopywriter(settings)
+        self.layout_engine = YandexLayoutEngine(settings)
+        self.image_generator = YandexImageGenerator(settings)
 
     async def generate(
         self,
