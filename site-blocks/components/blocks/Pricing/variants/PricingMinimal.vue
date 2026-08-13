@@ -166,7 +166,7 @@ function updatePlan(index: number, patch: Partial<PricingPlan>) {
   box-shadow: var(--shadow-md);
 }
 
-@media (max-width: 720px) {
+@container (max-width: 720px) {
   .pricing__row {
     grid-template-columns: 1fr;
   }

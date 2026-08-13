@@ -8,7 +8,15 @@ const UNDO_LIMIT = 20
 const SAVE_DEBOUNCE_MS = 800
 
 function cloneSite(site: SiteSchema): SiteSchema {
-  return structuredClone(site)
+  // site — реактивный Vue-прокси (Pinia оборачивает объектные ref в reactive()).
+  // toRaw() снимает реактивность только с верхнего уровня: после первого же
+  // обновления через `site.value = { ...site.value, ... }` вложенные pages/
+  // sections остаются реактивными прокси (spread читает их через геттеры
+  // proxy), и structuredClone(toRaw(site)) всё равно падает с DataCloneError
+  // на вложенном уровне. JSON-раундтрип снимает реактивность на любой
+  // глубине и заодно гарантирует чистый JSON-совместимый результат — ровно
+  // то, что и так уходит на бэкенд как site_data.
+  return JSON.parse(JSON.stringify(site))
 }
 
 /**

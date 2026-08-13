@@ -161,7 +161,7 @@ function stars(rating: number) {
   color: var(--text);
 }
 
-@media (max-width: 900px) {
+@container (max-width: 900px) {
   .testimonials__grid {
     grid-template-columns: 1fr;
   }

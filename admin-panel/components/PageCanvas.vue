@@ -26,6 +26,16 @@ function onSelect(id: string) {
 function onUpdateSection(id: string, patch: Record<string, unknown>) {
   store.updateSection(id, patch)
 }
+
+// Кнопки ▲/▼ — альтернатива drag'у для перестановки (не у всех с первого
+// раза получается "поймать" ручку мышью, плюс это доступно с клавиатуры).
+function moveSection(index: number, dir: -1 | 1) {
+  const list = sections.value.slice()
+  const target = index + dir
+  if (target < 0 || target >= list.length) return
+  ;[list[index], list[target]] = [list[target], list[index]]
+  store.setPageSections(list)
+}
 </script>
 
 <template>
@@ -41,7 +51,7 @@ function onUpdateSection(id: string, patch: Record<string, unknown>) {
       tag="div"
       class="page-canvas__list"
     >
-      <template #item="{ element }">
+      <template #item="{ element, index }">
         <div
           class="canvas-block"
           :class="{ 'is-selected': store.selectedSectionId === element.id }"
@@ -51,6 +61,24 @@ function onUpdateSection(id: string, patch: Record<string, unknown>) {
               <Icon name="lucide:grip-vertical" />
             </span>
             <span class="canvas-block__type">{{ SECTION_TYPE_LABELS[element.type as SectionType] }}</span>
+            <span class="canvas-block__move">
+              <button
+                type="button"
+                :disabled="index === 0"
+                title="Переместить выше"
+                @click="moveSection(index, -1)"
+              >
+                <Icon name="lucide:chevron-up" />
+              </button>
+              <button
+                type="button"
+                :disabled="index === sections.length - 1"
+                title="Переместить ниже"
+                @click="moveSection(index, 1)"
+              >
+                <Icon name="lucide:chevron-down" />
+              </button>
+            </span>
           </div>
           <SectionRenderer
             :section="element"
@@ -129,6 +157,40 @@ function onUpdateSection(id: string, patch: Record<string, unknown>) {
 }
 .canvas-block__handle:active {
   cursor: grabbing;
+}
+
+.canvas-block__move {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: 2px;
+  padding-left: 6px;
+  border-left: 1px solid var(--a-border-strong);
+}
+
+.canvas-block__move button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--a-radius-sm);
+  color: var(--a-text-faint);
+  cursor: pointer;
+  transition: background var(--a-transition-fast), color var(--a-transition-fast);
+}
+
+.canvas-block__move button:hover:not(:disabled) {
+  background: var(--a-surface);
+  color: var(--a-text);
+}
+
+.canvas-block__move button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .page-canvas__ghost {

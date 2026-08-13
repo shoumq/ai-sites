@@ -203,7 +203,7 @@ const maxFeatures = computed(() => Math.max(0, ...props.section.plans.map((p) =>
   padding: var(--space-4);
 }
 
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   .table {
     overflow-x: auto;
   }

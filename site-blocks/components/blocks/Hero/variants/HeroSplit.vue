@@ -131,7 +131,7 @@ const emit = defineEmits<{
   display: block;
 }
 
-@media (max-width: 860px) {
+@container (max-width: 860px) {
   .hero__grid {
     grid-template-columns: 1fr;
   }

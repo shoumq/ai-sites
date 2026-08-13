@@ -32,6 +32,19 @@ export default defineNuxtConfig({
     host: '0.0.0.0',
   },
 
+  // Docker на Windows (bind-mount хостовой папки в контейнер) не пробрасывает
+  // inotify-события при правке файлов с хоста — Vite ничего не видит без
+  // polling. Без этого HMR тихо не срабатывает вообще (правки применяются
+  // только после ручного restart контейнера).
+  vite: {
+    server: {
+      watch: {
+        usePolling: true,
+        interval: 300,
+      },
+    },
+  },
+
   runtimeConfig: {
     public: {
       // Переопределяются через NUXT_PUBLIC_API_BASE / NUXT_PUBLIC_WS_BASE

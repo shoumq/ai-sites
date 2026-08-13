@@ -184,7 +184,7 @@ function updateItem(index: number, patch: Partial<ServiceItem>) {
   box-shadow: var(--shadow-md);
 }
 
-@media (max-width: 600px) {
+@container (max-width: 600px) {
   .service-row {
     flex-wrap: wrap;
   }

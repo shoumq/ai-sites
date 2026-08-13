@@ -178,13 +178,13 @@ function updateItem(index: number, patch: Partial<ServiceItem>) {
   box-shadow: var(--shadow-md);
 }
 
-@media (max-width: 900px) {
+@container (max-width: 900px) {
   .grid3col__grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 600px) {
+@container (max-width: 600px) {
   .grid3col__grid {
     grid-template-columns: 1fr;
   }

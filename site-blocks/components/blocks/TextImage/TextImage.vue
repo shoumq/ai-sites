@@ -120,7 +120,7 @@ const emit = defineEmits<{
   display: block;
 }
 
-@media (max-width: 860px) {
+@container (max-width: 860px) {
   .text-image__grid {
     grid-template-columns: 1fr;
   }

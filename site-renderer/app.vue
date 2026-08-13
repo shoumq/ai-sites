@@ -16,5 +16,18 @@ useHead({
 </script>
 
 <template>
-  <NuxtPage />
+  <div class="app-root">
+    <NuxtPage />
+  </div>
 </template>
+
+<style>
+/* container-type здесь даёт блокам (например бургер-меню шапки) единый
+   способ реагировать на реальную доступную ширину через @container — та же
+   ось, что использует live-превью в admin-panel/pages/editor/[id]/index.vue
+   (.editor-canvas-frame), так что поведение совпадает и в редакторе, и на
+   опубликованном сайте. */
+.app-root {
+  container-type: inline-size;
+}
+</style>

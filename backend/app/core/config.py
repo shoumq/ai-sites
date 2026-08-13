@@ -28,6 +28,15 @@ class Settings(BaseSettings):
     yandex_gpt_model: str = "yandexgpt/latest"
     yandex_art_model: str = "yandex-art/latest"
 
+    # ИИ-чат (вкладка «ИИ-Чат» в редакторе) — DeepSeek, доступен из РФ без VPN,
+    # OpenAI-совместимый REST + честный response_format=json_object (в отличие
+    # от YandexGPT). Приоритетнее Yandex для чата, если задан оба ключа —
+    # используется ТОЛЬКО как fallback после rule-based парсера в chat_commands.py.
+    deepseek_api_key: str = ""
+    # Старые алиасы deepseek-chat/deepseek-coder в API DeepSeek больше не
+    # работают — актуальное имя модели deepseek-v4-flash.
+    deepseek_model: str = "deepseek-v4-flash"
+
     # S3-compatible storage (VK Cloud / Yandex Cloud)
     s3_endpoint_url: str = ""
     s3_access_key: str = ""

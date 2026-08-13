@@ -139,7 +139,7 @@ const emit = defineEmits<{
   font-size: 1.15rem;
 }
 
-@media (max-width: 860px) {
+@container (max-width: 860px) {
   .contact__grid {
     grid-template-columns: 1fr;
   }

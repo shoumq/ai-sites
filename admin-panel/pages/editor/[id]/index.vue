@@ -443,6 +443,13 @@ const publishedHref = computed(() => {
   margin: 0 auto;
   transition: max-width var(--a-transition-slow) var(--a-ease-out);
   box-shadow: var(--a-shadow-lg);
+  /* Блоки сайта переключают мобильную вёрстку через @container, а не
+     @media — иначе переключатель "Мобильный" здесь в редакторе сужает
+     только эту рамку, а не реальный viewport браузера, и адаптивные
+     стили (например бургер-меню шапки) никогда не срабатывали в превью,
+     хотя на настоящем телефоне работали. container-type делает ширину
+     САМОЙ рамки источником истины для @container внутри неё. */
+  container-type: inline-size;
 }
 
 .editor-canvas-frame.is-mobile {

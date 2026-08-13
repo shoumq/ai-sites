@@ -152,7 +152,7 @@ function updateItem(index: number, patch: Partial<ServiceItem>) {
   box-shadow: var(--shadow-md);
 }
 
-@media (max-width: 560px) {
+@container (max-width: 560px) {
   .compact-grid {
     grid-template-columns: 1fr;
   }

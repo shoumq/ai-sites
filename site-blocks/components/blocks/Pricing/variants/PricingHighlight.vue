@@ -224,7 +224,7 @@ function updatePlan(index: number, patch: Partial<PricingPlan>) {
   box-shadow: var(--shadow-md);
 }
 
-@media (max-width: 860px) {
+@container (max-width: 860px) {
   .pricing__row {
     flex-direction: column;
     align-items: stretch;

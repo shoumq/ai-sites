@@ -154,7 +154,7 @@ function updateSocial(index: number, patch: Partial<SocialLink>) {
   opacity: 0.55;
 }
 
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   .footer__inner {
     grid-template-columns: 1fr;
   }

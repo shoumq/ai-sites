@@ -15,6 +15,8 @@ function updateNavItem(index: number, patch: Partial<NavItem>) {
   const nav_items = props.section.nav_items.map((item, i) => (i === index ? { ...item, ...patch } : item))
   emit('update:section', { nav_items })
 }
+
+const { isOpen, toggle, close } = useMobileNav()
 </script>
 
 <template>
@@ -31,7 +33,7 @@ function updateNavItem(index: number, patch: Partial<NavItem>) {
         />
       </div>
 
-      <nav v-if="section.nav_items.length" class="header__col header__col--center header__nav">
+      <nav v-if="section.nav_items.length" class="header__col header__col--center header__nav" :class="{ 'is-open': isOpen }">
         <EditableText
           v-for="(item, i) in section.nav_items"
           :key="i"
@@ -41,6 +43,7 @@ function updateNavItem(index: number, patch: Partial<NavItem>) {
           :model-value="item.label"
           :editable="editable"
           @update:model-value="(v) => updateNavItem(i, { label: v })"
+          @click="close"
         />
       </nav>
       <div v-else class="header__col header__col--center" />
@@ -55,6 +58,19 @@ function updateNavItem(index: number, patch: Partial<NavItem>) {
           placeholder="Кнопка"
           @update:model-value="(v) => emit('update:section', { cta_text: v })"
         />
+        <button
+          v-if="section.nav_items.length"
+          type="button"
+          class="header__burger"
+          :class="{ 'is-open': isOpen }"
+          :aria-expanded="isOpen"
+          aria-label="Меню"
+          @click="toggle"
+        >
+          <span class="header__burger-line" />
+          <span class="header__burger-line" />
+          <span class="header__burger-line" />
+        </button>
       </div>
     </div>
   </header>
@@ -139,7 +155,7 @@ function updateNavItem(index: number, patch: Partial<NavItem>) {
   box-shadow: var(--shadow-md);
 }
 
-@media (max-width: 720px) {
+@container (max-width: 720px) {
   .header__inner {
     grid-template-columns: 1fr;
     justify-items: center;

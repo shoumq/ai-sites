@@ -101,7 +101,7 @@ function updateLink(index: number, patch: Partial<NavItem>) {
   white-space: nowrap;
 }
 
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   .footer__inner {
     flex-direction: column;
     align-items: flex-start;
