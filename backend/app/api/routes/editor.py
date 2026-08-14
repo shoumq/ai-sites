@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_owned_project
 from app.core.config import Settings, get_settings
-from app.core.tariffs import TARIFF_LIMITS
 from app.db.redis import get_redis
 from app.db.session import get_db
 from app.models.project import Project
@@ -24,7 +23,6 @@ router = APIRouter(prefix="/projects/{project_id}", tags=["editor"])
 async def update_site(
     payload: SiteUpdateIn,
     project: Project = Depends(get_owned_project),
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SiteUpdateIn:
     """Полная замена JSON-схемы — используется DnD-перестановкой блоков и
@@ -32,13 +30,6 @@ async def update_site(
     SiteSchema на уровне Pydantic (FastAPI отклонит некорректное тело до
     попадания в этот обработчик) — это и есть требуемый DoD п.2 валидатор.
     """
-    max_pages = TARIFF_LIMITS[current_user.tariff].max_pages
-    if len(payload.site_data.pages) > max_pages:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Тариф «{current_user.tariff.value}» ограничен {max_pages} стр. Повысьте тариф.",
-        )
-
     project.site_data = payload.site_data.model_dump()
     await db.commit()
     return payload

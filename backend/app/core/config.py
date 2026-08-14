@@ -24,11 +24,13 @@ class Settings(BaseSettings):
 
     # AI providers — Yandex AI Studio (YandexGPT + YandexART), единственный
     # провайдер ИИ во всём проекте (бриф, подбор блоков, картинки, ИИ-чат).
-    # Leave blank to run in mock mode.
+    # Оставьте пустыми, чтобы работать в mock-режиме (без внешних вызовов).
+    # API-ключ создаётся в AI Studio, folder_id — id каталога Yandex Cloud, к
+    # которому он привязан (оба нужны одновременно).
     yandex_api_key: str = ""
     yandex_folder_id: str = ""
-    yandex_gpt_model: str = "yandexgpt/latest"
-    yandex_art_model: str = "yandex-art/latest"
+    yandex_gpt_model: str = "yandexgpt-lite"
+    yandex_art_model: str = "yandex-art"
 
     # S3-compatible storage (VK Cloud / Yandex Cloud)
     s3_endpoint_url: str = ""
@@ -64,7 +66,7 @@ class Settings(BaseSettings):
 
     @property
     def ai_mock_mode(self) -> bool:
-        return not self.yandex_api_key
+        return not (self.yandex_api_key and self.yandex_folder_id)
 
 
 @lru_cache

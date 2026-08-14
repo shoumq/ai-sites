@@ -1,13 +1,18 @@
 """Клиент Yandex AI Studio (ТЗ п.1: «Все запросы к AI идут через единый
 Orchestrator»): YandexGPT пишет тексты и подбирает состав блоков, YandexART
-генерирует изображения. Работает в двух режимах:
+генерирует изображения. Единая точка доступа к моделям — работает в двух
+режимах:
 
   * реальный — если в .env заданы YANDEX_API_KEY и YANDEX_FOLDER_ID;
-  * mock — если ключа нет (по умолчанию для локальной разработки), чтобы весь
+  * mock — если их нет (по умолчанию для локальной разработки), чтобы весь
     пайплайн генерации был проверяемым без внешних учётных данных.
 
 Эндпоинты и формат payload — реальный REST API Yandex Foundation Models
 (https://llm.api.cloud.yandex.net/foundationModels/v1/...), а не заглушка.
+
+Промпты copywriter/layout/chat строятся динамически из BLOCK_LIBRARY (см.
+app/schemas/site.py) через describe_block_fields() (block_schema.py) — новый
+тип блока в библиотеке не требует ручного дублирования его JSON-схемы здесь.
 """
 from __future__ import annotations
 
@@ -23,7 +28,9 @@ import httpx
 
 from app.core.config import Settings
 from app.schemas.project import BriefIn
-from app.schemas.site import SECTION_VARIANTS, SiteSchema, parse_site
+from app.schemas.site import BLOCK_LIBRARY, SECTION_VARIANTS, SiteSchema, parse_site
+from app.services.ai.block_schema import describe_block_fields
+from app.services.block_keywords import match_type_in_text
 from app.services.chat_commands import apply_chat_command
 from app.services.storage import StorageClient
 
@@ -36,39 +43,63 @@ YANDEX_COMPLETION_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/co
 YANDEX_IMAGE_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/imageGenerationAsync"
 YANDEX_OPERATION_URL = "https://llm.api.cloud.yandex.net/operations/{operation_id}"
 
-# Тон и структура текстов должны реально зависеть от типа сайта, а не только
-# от брифа — иначе лендинг, магазин и CRM-портал выглядят как один и тот же
-# сайт с разными подписями (жалоба, которую этот словарь закрывает).
+# Тон текстов должен реально зависеть от типа сайта, а не только от брифа —
+# иначе лендинг, магазин и CRM-портал выглядят как один и тот же сайт с
+# разными подписями (жалоба, которую этот словарь закрывает).
 _COPY_TYPE_GUIDANCE = {
     "landing": "Это лендинг с фокусом на продажу/заявку с одного экрана — пиши энергично, с явным призывом к действию.",
     "shop": (
-        "Это интернет-магазин. services.items — это КОНКРЕТНЫЕ ТОВАРЫ (не абстрактные "
-        'услуги), сделай 6 штук. hero.cta_text — про покупку/каталог (например "В каталог", '
+        "Это интернет-магазин. grid_3col.items — это КОНКРЕТНЫЕ ТОВАРЫ (не абстрактные "
+        'услуги). hero.cta_text — про покупку/каталог (например "В каталог", '
         '"Купить сейчас"), а не "Оставить заявку". Если пишешь pricing — оформи как акции '
         "или комплекты товаров, а не как абонентские тарифы."
     ),
     "crm": (
-        "Это SaaS/CRM-портал с личным кабинетом. services.items — это ВОЗМОЖНОСТИ платформы "
+        "Это SaaS/CRM-портал с личным кабинетом. grid_3col.items — это ВОЗМОЖНОСТИ платформы "
         '(фичи продукта, не услуги руками). pricing.plans — тарифы подписки (Базовый/Про/'
         'Бизнес). hero.cta_text — про начало работы (например "Начать бесплатно", "Войти").'
     ),
     "multipage": "Это многостраничный корпоративный сайт — пиши официальным, но дружелюбным тоном.",
 }
 
+# Сколько items просить у grid_3col — единственный тип с переменным
+# количеством, зависящим от site_type (магазину нужно больше карточек).
+_GRID_ITEMS_COUNT = {"shop": 6}
+
 
 def _copy_items_count(site_type: str) -> int:
-    return 6 if site_type == "shop" else 3
+    return _GRID_ITEMS_COUNT.get(site_type, 3)
+
+
+# Подсказки по количеству элементов на тип — используются только при наличии
+# соответствующего ключа в block_types (см. YandexCopywriter._call_real_api).
+def _count_hint(section_type: str, items_count: int) -> str:
+    return {
+        "grid_3col": f"{items_count} items",
+        "pricing": "ровно 3 plans",
+        "testimonials": "ровно 2 items",
+        "faq": "4-6 items",
+        "gallery": "4-8 items",
+        "stats": "3-4 items",
+        "catalog_filter": "6 items на 2-3 категории (поле category), заполни и categories, и items",
+        "custom_content": (
+            "используй, только если задача пользователя явно не покрывается другими блоками "
+            "библиотеки; body — 1-3 абзаца текста (можно **жирный**/*курсив*/списки через \"- \"), "
+            "items опционален"
+        ),
+    }.get(section_type, "")
 
 
 # Структура блоков тоже должна зависеть от типа сайта — без этого подборщик
-# блоков в реальном режиме собирал один и тот же набор (grid_3col+pricing+
-# testimonials+contact_map) независимо от landing/shop/crm.
+# блоков в реальном режиме собирал один и тот же набор независимо от
+# landing/shop/crm.
 _LAYOUT_TYPE_GUIDANCE = {
     "landing": "landing — полная воронка продаж на одном экране: уместны все блоки из списка.",
     "shop": (
         "shop — это каталог товаров, а НЕ сервис с подпиской: НЕ выбирай pricing (тарифные "
         "планы не подходят для магазина с отдельными товарами). Обязательно возьми grid_3col "
-        "как каталог товаров. testimonials и contact_map уместны."
+        "или catalog_filter (если нужна фильтрация по категориям) как каталог товаров. "
+        "testimonials и contact_map уместны."
     ),
     "crm": (
         "crm — это SaaS-платформа с личным кабинетом: pricing здесь означает тарифы подписки "
@@ -76,6 +107,16 @@ _LAYOUT_TYPE_GUIDANCE = {
         "поддержку. testimonials необязательны, можно обойтись без них."
     ),
 }
+
+# Подсказки для сопоставления свободного текста (brief.extra_requirements) с
+# ближайшим типом блока из библиотеки — используются и в реальном промпте
+# подборщика блоков, и как человекочитаемый комментарий рядом с
+# block_keywords.RU_NAME_TO_TYPE, который делает то же самое эвристически.
+_EXTRA_REQUIREMENTS_HINTS = (
+    "фильтр каталога/товаров по категориям -> catalog_filter, частые вопросы -> faq, "
+    "фотогалерея/портфолио работ -> gallery, цифры/показатели в динамике -> stats, "
+    "если ничего из списка не подходит под явный запрос пользователя -> custom_content"
+)
 
 
 def _is_hex_color(value: object) -> bool:
@@ -119,10 +160,17 @@ def _extract_json(text: str) -> object | None:
 
 
 async def _call_yandex_completion(
-    settings: Settings, system_prompt: str, user_prompt: str, model: str, temperature: float = 0.6
+    settings: Settings,
+    system_prompt: str,
+    user_prompt: str,
+    model: str,
+    temperature: float = 0.6,
+    max_tokens: int = 2000,
 ) -> str | None:  # pragma: no cover — требует ключ
     """Общий HTTP-вызов `/foundationModels/v1/completion`, которым пользуются
-    копирайтер, подборщик блоков и ИИ-чат — разнится только промпт/температура."""
+    копирайтер, подборщик блоков и ИИ-чат — разнится только промпт/температура/
+    лимит токенов (чат-правки возвращают всю схему сайта целиком, поэтому им
+    нужен запас больше, чем короткому JSON копирайтера или подборщика блоков)."""
     try:
         async with httpx.AsyncClient(timeout=30) as client:
             response = await client.post(
@@ -130,7 +178,7 @@ async def _call_yandex_completion(
                 headers=_yandex_headers(settings),
                 json={
                     "modelUri": f"gpt://{settings.yandex_folder_id}/{model}",
-                    "completionOptions": {"stream": False, "temperature": temperature, "maxTokens": "2000"},
+                    "completionOptions": {"stream": False, "temperature": temperature, "maxTokens": str(max_tokens)},
                     "messages": [
                         {"role": "system", "text": system_prompt},
                         {"role": "user", "text": user_prompt},
@@ -149,73 +197,103 @@ async def _call_yandex_completion(
         return None
 
 
+# ---- YandexCopywriter -------------------------------------------------------
+
+# Для "titled-list" типов (title + один списочный ключ) — имя списочного поля
+# и обязательные строковые ключи элемента списка, которые должен вернуть LLM,
+# иначе элемент считается невалидным и отбрасывается (тот же принцип, что
+# раньше был захардкожен по одной ветке на тип). hero/footer сюда не входят —
+# это "плоские" типы без списка, обрабатываются отдельно через _merge_dict.
+_LIST_FIELD: dict[str, str] = {
+    "grid_3col": "items",
+    "pricing": "plans",
+    "testimonials": "items",
+    "catalog_filter": "items",
+    "faq": "items",
+    "gallery": "items",
+    "stats": "items",
+    "custom_content": "items",
+}
+_LIST_REQUIRED_KEYS: dict[str, tuple[str, ...]] = {
+    "grid_3col": ("name",),
+    "pricing": ("name", "price"),
+    "testimonials": ("author", "text"),
+    "catalog_filter": ("name",),
+    "faq": ("question",),
+    "gallery": ("image",),
+    "stats": ("value", "label"),
+    "custom_content": ("label",),
+}
+_FLAT_TYPES = {"hero", "footer"}
+
+
 class YandexCopywriter:
-    """YandexGPT — генерация текстов сайта."""
+    """YandexGPT — генерация текстов сайта. Принимает список реально выбранных
+    типов блоков (см. GenerationOrchestrator.generate) и пишет контент только
+    для них — новый тип в BLOCK_LIBRARY не требует правки промпта здесь."""
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.mock = not settings.yandex_api_key
+        self.mock = not (settings.yandex_api_key and settings.yandex_folder_id)
 
-    async def generate_copy(self, brief: BriefIn) -> dict:
-        fallback = self._mock_copy(brief)
+    async def generate_copy(self, brief: BriefIn, block_types: list[str]) -> dict:
+        fallback = self._mock_copy(brief, block_types)
         if self.mock:
             return fallback
-        raw = await self._call_real_api(brief)
-        return self._coerce_copy(raw, fallback)
+        raw = await self._call_real_api(brief, block_types)
+        return self._coerce_copy(raw, fallback, block_types)
 
-    async def _call_real_api(self, brief: BriefIn) -> dict | None:  # pragma: no cover — требует ключ
+    async def _call_real_api(self, brief: BriefIn, block_types: list[str]) -> dict | None:  # pragma: no cover — требует ключ
         items_count = _copy_items_count(brief.site_type.value)
         type_guidance = _COPY_TYPE_GUIDANCE.get(brief.site_type.value, "")
+        schema_lines = []
+        for t in block_types:
+            shape = describe_block_fields(BLOCK_LIBRARY[t])
+            hint = _count_hint(t, items_count)
+            schema_lines.append(f'  "{t}": {shape}' + (f"  -- {hint}" if hint else ""))
         system_prompt = (
             "Ты копирайтер AI-конструктора сайтов. Пиши тексты на русском языке. "
             f"{type_guidance}\n\n"
-            "Верни строго JSON без markdown и без пояснений, СТРОГО с такими ключами "
-            "и типами (не добавляй и не переименовывай поля):\n"
-            "{\n"
-            '  "hero": {"title": str, "subtitle": str, "cta_text": str},\n'
-            '  "services": {"title": str, "items": [{"name": str, '
-            '"description": str, "price": str}, ...]},\n'
-            '  "pricing": {"title": str, "plans": [{"name": str, "price": str, '
-            '"period": str, "features": [str, ...], "highlighted": bool}, ...]},\n'
-            '  "testimonials": {"title": str, "items": [{"author": str, "text": str, '
-            '"rating": int}, ...]},\n'
-            '  "footer": {"company_name": str, "copyright_text": str}\n'
-            "}\n"
-            "price и period — всегда строки (например \"1 500\", \"мес\"), а не числа. "
-            f"{items_count} items в services, 3 plans в pricing, 2 items в testimonials."
+            "Верни строго JSON без markdown и без пояснений, ровно с такими ключами "
+            "верхнего уровня (не добавляй, не переименовывай и не пропускай ни один):\n"
+            "{\n" + ",\n".join(schema_lines) + "\n}\n"
+            "price и period — всегда строки (например \"1 500\", \"мес\"), а не числа."
         )
         user_prompt = (
             f"Бренд: {brief.brand_name}\nЧем занимается: {brief.description}\n"
             f"Цель сайта: {brief.goal.value}\nТип сайта: {brief.site_type.value}"
         )
+        if brief.extra_requirements:
+            user_prompt += f"\nДополнительные пожелания пользователя: {brief.extra_requirements}"
         text = await _call_yandex_completion(self.settings, system_prompt, user_prompt, self.settings.yandex_gpt_model, 0.6)
         return _extract_json(text) if text else None
 
-    def _coerce_copy(self, raw: object, fallback: dict) -> dict:
+    def _coerce_copy(self, raw: object, fallback: dict, block_types: list[str]) -> dict:
         """Строит финальный `copy`, беря из ответа LLM только валидные поля и
         подстраховывая всё остальное значениями из `fallback`. Так упавший или
         неполный ответ провайдера не превращается в KeyError/ValidationError
         при сборке JSON-схемы сайта ниже по пайплайну."""
         if not isinstance(raw, dict):
             return fallback
-        return {
-            "hero": self._merge_dict(raw.get("hero"), fallback["hero"]),
-            "services": {
-                "title": self._pick_str(raw.get("services"), "title", fallback["services"]["title"]),
-                "items": self._coerce_list(self._pick(raw.get("services"), "items"), ("name",), fallback["services"]["items"]),
-            },
-            "pricing": {
-                "title": self._pick_str(raw.get("pricing"), "title", fallback["pricing"]["title"]),
-                "plans": self._coerce_list(self._pick(raw.get("pricing"), "plans"), ("name", "price"), fallback["pricing"]["plans"]),
-            },
-            "testimonials": {
-                "title": self._pick_str(raw.get("testimonials"), "title", fallback["testimonials"]["title"]),
-                "items": self._coerce_list(
-                    self._pick(raw.get("testimonials"), "items"), ("author", "text"), fallback["testimonials"]["items"]
-                ),
-            },
-            "footer": self._merge_dict(raw.get("footer"), fallback["footer"]),
-        }
+        result: dict = {}
+        for t in block_types:
+            raw_t = raw.get(t)
+            fallback_t = fallback.get(t, {})
+            if t in _FLAT_TYPES:
+                result[t] = self._merge_dict(raw_t, fallback_t)
+                continue
+            list_field = _LIST_FIELD.get(t, "items")
+            required = _LIST_REQUIRED_KEYS.get(t, ())
+            entry = {
+                "title": self._pick_str(raw_t, "title", fallback_t.get("title", "")),
+                list_field: self._coerce_list(self._pick(raw_t, list_field), required, fallback_t.get(list_field, [])),
+            }
+            if t == "catalog_filter":
+                entry["categories"] = self._coerce_str_list(self._pick(raw_t, "categories"), fallback_t.get("categories", []))
+            if t == "custom_content":
+                entry["body"] = self._pick_str(raw_t, "body", fallback_t.get("body", ""))
+            result[t] = entry
+        return result
 
     @staticmethod
     def _pick(obj: object, key: str) -> object:
@@ -251,7 +329,32 @@ class YandexCopywriter:
         ]
         return result or fallback
 
-    def _mock_copy(self, brief: BriefIn) -> dict:
+    @staticmethod
+    def _coerce_str_list(raw: object, fallback: list[str]) -> list[str]:
+        if not isinstance(raw, list):
+            return fallback
+        result = [item.strip() for item in raw if isinstance(item, str) and item.strip()]
+        return result or fallback
+
+    def _mock_copy(self, brief: BriefIn, block_types: list[str]) -> dict:
+        return {t: self._mock_for_type(t, brief) for t in block_types}
+
+    def _mock_for_type(self, section_type: str, brief: BriefIn) -> dict:
+        generator = {
+            "hero": self._mock_hero,
+            "footer": self._mock_footer,
+            "grid_3col": self._mock_grid_3col,
+            "pricing": self._mock_pricing,
+            "testimonials": self._mock_testimonials,
+            "catalog_filter": self._mock_catalog_filter,
+            "faq": self._mock_faq,
+            "gallery": self._mock_gallery,
+            "stats": self._mock_stats,
+            "custom_content": self._mock_custom_content,
+        }.get(section_type)
+        return generator(brief) if generator else {}
+
+    def _mock_hero(self, brief: BriefIn) -> dict:
         site_type = brief.site_type.value
         goal_cta = {
             "sales": "Купить сейчас",
@@ -263,56 +366,101 @@ class YandexCopywriter:
             goal_cta = "В каталог"
         elif site_type == "crm":
             goal_cta = "Начать бесплатно"
+        return {"title": brief.brand_name, "subtitle": brief.description[:140], "cta_text": goal_cta}
 
+    def _mock_grid_3col(self, brief: BriefIn) -> dict:
+        site_type = brief.site_type.value
         if site_type == "shop":
-            services_title = "Каталог товаров"
-            item_label = "Товар"
-            services_items = [
-                {"name": f"{item_label} {i}", "description": f"{brief.description[:50]}…", "price": f"от {1000 + i * 500} ₽"}
+            items = [
+                {"name": f"Товар {i}", "description": f"{brief.description[:50]}…", "price": f"от {1000 + i * 500} ₽"}
                 for i in range(1, 7)
             ]
-        elif site_type == "crm":
-            services_title = "Возможности платформы"
-            services_items = [
-                {"name": "Управление задачами", "description": "Планирование и контроль в одном окне", "price": ""},
-                {"name": "Совместная работа", "description": "Команда видит прогресс в реальном времени", "price": ""},
-                {"name": "Аналитика", "description": "Отчёты и метрики без ручной сборки", "price": ""},
-            ]
-        else:
-            services_title = "Что мы предлагаем"
-            services_items = [
+            return {"title": "Каталог товаров", "items": items}
+        if site_type == "crm":
+            return {
+                "title": "Возможности платформы",
+                "items": [
+                    {"name": "Управление задачами", "description": "Планирование и контроль в одном окне", "price": ""},
+                    {"name": "Совместная работа", "description": "Команда видит прогресс в реальном времени", "price": ""},
+                    {"name": "Аналитика", "description": "Отчёты и метрики без ручной сборки", "price": ""},
+                ],
+            }
+        return {
+            "title": "Что мы предлагаем",
+            "items": [
                 {"name": "Услуга 1", "description": f"{brief.description[:60]}…", "price": "от 1 500 ₽"},
                 {"name": "Услуга 2", "description": "Индивидуальный подход к каждому клиенту", "price": "от 2 900 ₽"},
                 {"name": "Услуга 3", "description": "Гарантия качества и поддержка после заказа", "price": "от 4 500 ₽"},
-            ]
-
-        return {
-            "hero": {
-                "title": brief.brand_name,
-                "subtitle": brief.description[:140],
-                "cta_text": goal_cta,
-            },
-            "services": {"title": services_title, "items": services_items},
-            "pricing": {
-                "title": "Акции" if site_type == "shop" else "Тарифы",
-                "plans": [
-                    {"name": "Базовый", "price": "1 500", "features": ["Консультация", "Базовый пакет услуг"]},
-                    {"name": "Оптимальный", "price": "3 900", "features": ["Всё из Базового", "Приоритетная поддержка"], "highlighted": True},
-                    {"name": "Премиум", "price": "7 900", "features": ["Всё из Оптимального", "Персональный менеджер"]},
-                ],
-            },
-            "testimonials": {
-                "title": "Отзывы клиентов",
-                "items": [
-                    {"author": "Анна К.", "text": f"Отличный сервис от «{brief.brand_name}», рекомендую!", "rating": 5},
-                    {"author": "Дмитрий С.", "text": "Быстро, качественно, всё понравилось.", "rating": 5},
-                ],
-            },
-            "footer": {
-                "company_name": brief.brand_name,
-                "copyright_text": f"© {brief.brand_name}. Все права защищены.",
-            },
+            ],
         }
+
+    def _mock_pricing(self, brief: BriefIn) -> dict:
+        return {
+            "title": "Акции" if brief.site_type.value == "shop" else "Тарифы",
+            "plans": [
+                {"name": "Базовый", "price": "1 500", "features": ["Консультация", "Базовый пакет услуг"]},
+                {"name": "Оптимальный", "price": "3 900", "features": ["Всё из Базового", "Приоритетная поддержка"], "highlighted": True},
+                {"name": "Премиум", "price": "7 900", "features": ["Всё из Оптимального", "Персональный менеджер"]},
+            ],
+        }
+
+    def _mock_testimonials(self, brief: BriefIn) -> dict:
+        return {
+            "title": "Отзывы клиентов",
+            "items": [
+                {"author": "Анна К.", "text": f"Отличный сервис от «{brief.brand_name}», рекомендую!", "rating": 5},
+                {"author": "Дмитрий С.", "text": "Быстро, качественно, всё понравилось.", "rating": 5},
+            ],
+        }
+
+    def _mock_footer(self, brief: BriefIn) -> dict:
+        return {"company_name": brief.brand_name, "copyright_text": f"© {brief.brand_name}. Все права защищены."}
+
+    def _mock_catalog_filter(self, brief: BriefIn) -> dict:
+        categories = ["Популярное", "Новинки", "Акции"]
+        items = [
+            {
+                "name": f"Товар {i}",
+                "description": f"{brief.description[:40]}…",
+                "price": f"от {1000 + i * 400} ₽",
+                "category": categories[(i - 1) % len(categories)],
+            }
+            for i in range(1, 7)
+        ]
+        return {"title": "Каталог", "categories": categories, "items": items}
+
+    def _mock_faq(self, brief: BriefIn) -> dict:
+        return {
+            "title": "Частые вопросы",
+            "items": [
+                {"question": "Как сделать заказ?", "answer": "Оставьте заявку через форму на сайте — мы свяжемся с вами."},
+                {"question": "Какие способы оплаты доступны?", "answer": "Наличные, банковской картой, безналичный расчёт."},
+                {"question": "Есть ли гарантия?", "answer": f"Да, {brief.brand_name} даёт гарантию на все услуги."},
+            ],
+        }
+
+    def _mock_gallery(self, brief: BriefIn) -> dict:  # noqa: ARG002 — сигнатура унифицирована с остальными _mock_*
+        return {"title": "Галерея работ", "items": [{"image": "", "caption": f"Работа {i}"} for i in range(1, 5)]}
+
+    def _mock_stats(self, brief: BriefIn) -> dict:  # noqa: ARG002
+        return {
+            "title": "",
+            "items": [
+                {"value": "500+", "label": "довольных клиентов"},
+                {"value": "10 лет", "label": "на рынке"},
+                {"value": "24/7", "label": "поддержка"},
+            ],
+        }
+
+    def _mock_custom_content(self, brief: BriefIn) -> dict:
+        return {
+            "title": (brief.extra_requirements or "Дополнительно")[:60],
+            "body": brief.extra_requirements or brief.description,
+            "items": [],
+        }
+
+
+# ---- YandexLayoutEngine ------------------------------------------------------
 
 
 class YandexLayoutEngine:
@@ -321,9 +469,9 @@ class YandexLayoutEngine:
 
     header и hero структурно обязательны и всегда идут первыми, footer —
     последним; их оркестратор добавляет сам. Но их визуальный вариант (как и
-    вариант каждого среднего блока) выбирает ИИ из фиксированной библиотеки
-    Vue-компонентов (см. SECTION_VARIANTS в app/schemas/site.py) — поэтому
-    два сайта с одинаковым набором блоков всё равно выглядят по-разному, а не
+    вариант каждого среднего блока) выбирает ИИ из библиотеки Vue-компонентов
+    (см. BLOCK_LIBRARY/SECTION_VARIANTS в app/schemas/site.py) — поэтому два
+    сайта с одинаковым набором блоков всё равно выглядят по-разному, а не
     штампуются по одному шаблону.
     """
 
@@ -335,21 +483,27 @@ class YandexLayoutEngine:
     }
 
     ALLOWED_FONTS = {"Inter", "Roboto", "PT Sans", "Montserrat"}
-    ALLOWED_MIDDLE_SECTIONS = ["text_image", "grid_3col", "pricing", "testimonials", "contact_map"]
+    # Все типы из BLOCK_LIBRARY кроме структурных header/hero/footer — растёт
+    # автоматически при добавлении нового типа в реестр, без правки здесь.
+    ALLOWED_MIDDLE_SECTIONS = [t for t in BLOCK_LIBRARY if t not in ("header", "hero", "footer")]
 
-    # Какие средние блоки в принципе уместны для типа сайта — сам выбор варианта
-    # и итоговый порядок в реальном режиме решает ИИ, это лишь пул типов.
+    # Какие средние блоки в принципе уместны для типа сайта — сам выбор
+    # варианта и итоговый порядок в реальном режиме решает ИИ; в mock-режиме
+    # (и как фолбэк при сбое реального вызова) в сайт попадают ВСЕ блоки из
+    # пула для данного site_type — это единственное место, где список нужно
+    # расширять руками при добавлении нового типа (осознанный выбор кураторов,
+    # не выводится из BLOCK_LIBRARY механически).
     DEFAULT_MIDDLE_SECTIONS = {
-        "landing": ["grid_3col", "pricing", "testimonials", "contact_map"],
+        "landing": ["grid_3col", "pricing", "testimonials", "contact_map", "faq", "gallery", "stats"],
         # pricing нарочно нет — магазин с отдельными товарами, а не подпиской
-        "shop": ["grid_3col", "testimonials", "contact_map"],
-        "crm": ["text_image", "pricing", "contact_map"],
-        "multipage": ["text_image", "grid_3col", "testimonials", "contact_map"],
+        "shop": ["grid_3col", "testimonials", "contact_map", "catalog_filter", "faq"],
+        "crm": ["text_image", "pricing", "contact_map", "faq", "stats"],
+        "multipage": ["text_image", "grid_3col", "testimonials", "contact_map", "faq", "gallery"],
     }
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.mock = not settings.yandex_api_key
+        self.mock = not (settings.yandex_api_key and settings.yandex_folder_id)
 
     async def plan_layout(self, brief: BriefIn) -> dict:
         """Возвращает {"primary_color", "font", "style", "header_variant",
@@ -377,15 +531,24 @@ class YandexLayoutEngine:
     def _fallback_layout(self, brief: BriefIn) -> dict:
         """Детерминированный (по бренду) фолбэк для mock-режима и для сбоя
         реального вызова. Варианты выбираются псевдослучайно по хэшу брифа,
-        поэтому разные проекты выглядят по-разному даже без ключа."""
+        поэтому разные проекты выглядят по-разному даже без ключа Yandex.
+        brief.extra_requirements проверяется по ключевым словам (см.
+        block_keywords.py) — свободный текст влияет на подбор блоков даже без
+        реального вызова YandexGPT."""
         seed = f"{brief.brand_name}|{brief.description}"
-        middle_types = self.DEFAULT_MIDDLE_SECTIONS.get(brief.site_type.value, self.DEFAULT_MIDDLE_SECTIONS["multipage"])
+        middle_types = list(self.DEFAULT_MIDDLE_SECTIONS.get(brief.site_type.value, self.DEFAULT_MIDDLE_SECTIONS["multipage"]))
+        if brief.extra_requirements:
+            # Ключевое слово не нашлось — не отбрасываем пожелание молча,
+            # берём универсальный запасной блок (custom_content).
+            matched = match_type_in_text(brief.extra_requirements.lower()) or "custom_content"
+            if matched in self.ALLOWED_MIDDLE_SECTIONS and matched not in middle_types:
+                middle_types.append(matched)
         return {
             "header_variant": _seeded_choice(f"{seed}|header", SECTION_VARIANTS["header"]),
             "hero_variant": _seeded_choice(f"{seed}|hero", SECTION_VARIANTS["hero"]),
             "footer_variant": _seeded_choice(f"{seed}|footer", SECTION_VARIANTS["footer"]),
             "sections": [
-                {"type": t, "variant": _seeded_choice(f"{seed}|{t}", SECTION_VARIANTS[t]) if t in SECTION_VARIANTS else ""}
+                {"type": t, "variant": _seeded_choice(f"{seed}|{t}", SECTION_VARIANTS[t]) if SECTION_VARIANTS.get(t) else ""}
                 for t in middle_types
             ],
         }
@@ -397,9 +560,10 @@ class YandexLayoutEngine:
     def _sanitize_sections(self, sections: object) -> list[dict]:
         """Отфильтровывает несуществующие типы/варианты и убирает повторы —
         ИИ иногда придумывает несуществующий блок, дублирует его или путает
-        вариант с другим типом блока. text_image — валидный тип, но у него нет
-        записи в SECTION_VARIANTS (своя ось вариативности через image_position),
-        поэтому для него используем .get() и пустой вариант вместо KeyError."""
+        вариант с другим типом блока. Типы без variant (text_image,
+        custom_content) получают пустой вариант вместо KeyError — SECTION_VARIANTS.get
+        + falsy-проверка ниже корректно обрабатывают и отсутствующий ключ, и
+        пустой список."""
         if not isinstance(sections, list):
             return []
         seen: set[str] = set()
@@ -418,27 +582,28 @@ class YandexLayoutEngine:
 
     async def _call_real_api(self, brief: BriefIn) -> dict | None:  # pragma: no cover — требует ключ
         type_guidance = _LAYOUT_TYPE_GUIDANCE.get(brief.site_type.value, "")
+        variant_lines = "\n".join(
+            f"- variant блока {t}: {SECTION_VARIANTS[t]}" for t in self.ALLOWED_MIDDLE_SECTIONS if SECTION_VARIANTS.get(t)
+        )
         system_prompt = (
             "Ты фронтенд-архитектор AI-конструктора сайтов. Библиотека Vue-блоков "
-            "фиксирована, но у каждого блока есть несколько визуальных вариантов — "
-            "выбирай их осознанно под характер бизнеса и НЕ всегда один и тот же "
-            "набор, чтобы разные сайты выглядели по-разному, а не по шаблону. Сайт "
-            "всегда открывается шапкой (header) и героем (hero) и заканчивается "
-            "футером (footer) — в sections их добавлять не нужно, только укажи "
-            "их variant отдельными полями.\n\n"
+            "может расширяться — ниже актуальный список типов и их визуальных "
+            "вариантов. Выбирай варианты осознанно под характер бизнеса и НЕ "
+            "всегда один и тот же набор, чтобы разные сайты выглядели по-разному, "
+            "а не по шаблону. Сайт всегда открывается шапкой (header) и героем "
+            "(hero) и заканчивается футером (footer) — в sections их добавлять "
+            "не нужно, только укажи их variant отдельными полями.\n\n"
             f"ОБЯЗАТЕЛЬНО учти тип сайта при выборе состава блоков: {type_guidance}\n\n"
             "Допустимые варианты:\n"
             f"- header_variant: {SECTION_VARIANTS['header']}\n"
             f"- hero_variant: {SECTION_VARIANTS['hero']}\n"
             f"- footer_variant: {SECTION_VARIANTS['footer']}\n"
-            f"- variant блока grid_3col: {SECTION_VARIANTS['grid_3col']}\n"
-            f"- variant блока pricing: {SECTION_VARIANTS['pricing']}\n"
-            f"- variant блока testimonials: {SECTION_VARIANTS['testimonials']}\n"
-            f"- variant блока contact_map: {SECTION_VARIANTS['contact_map']}\n\n"
-            "Выбери от 3 до 6 блоков ИЗ СПИСКА "
-            "[text_image, grid_3col, pricing, testimonials, contact_map] (с учётом "
-            "правила по типу сайта выше) и порядок их показа под задачу пользователя, "
-            "плюс акцентный HEX-цвет и шрифт. "
+            f"{variant_lines}\n\n"
+            f"Выбери от 3 до 6 блоков ИЗ СПИСКА {self.ALLOWED_MIDDLE_SECTIONS} (с учётом "
+            "правила по типу сайта выше) и порядок их показа под задачу пользователя. "
+            f"Если пользователь просит что-то конкретное — сопоставь с ближайшим типом: "
+            f"{_EXTRA_REQUIREMENTS_HINTS}. "
+            "Плюс акцентный HEX-цвет и шрифт. "
             "Верни строго JSON без markdown и пояснений: "
             '{"primary_color": "#RRGGBB", '
             '"font": "Inter" | "Roboto" | "PT Sans" | "Montserrat", '
@@ -450,17 +615,24 @@ class YandexLayoutEngine:
             f"Бренд: {brief.brand_name}\nЧем занимается: {brief.description}\n"
             f"Цель сайта: {brief.goal.value}"
         )
+        if brief.extra_requirements:
+            user_prompt += f"\nДополнительные пожелания пользователя: {brief.extra_requirements}"
         text = await _call_yandex_completion(self.settings, system_prompt, user_prompt, self.settings.yandex_gpt_model, 0.6)
         return _extract_json(text) if text else None
 
 
 class YandexArtImageGenerator:
-    """YandexART — генерация изображений для блоков (hero-фон, фото «о нас»)."""
+    """YandexART — генерация изображений для блоков (hero-фон, фото «о нас»).
+    Генерация асинхронная: задача создаётся отдельным запросом и опрашивается
+    по operation id."""
+
+    POLL_INTERVAL_SECONDS = 2
+    POLL_MAX_ATTEMPTS = 30  # до ~60с — YandexART обычно укладывается в 10-20с
 
     def __init__(self, settings: Settings, storage: StorageClient):
         self.settings = settings
         self.storage = storage
-        self.mock = not settings.yandex_api_key
+        self.mock = not (settings.yandex_api_key and settings.yandex_folder_id)
 
     async def generate_image(self, prompt: str) -> str:
         if self.mock:
@@ -474,8 +646,8 @@ class YandexArtImageGenerator:
 
     async def _call_real_api(self, prompt: str) -> str:  # pragma: no cover — требует ключ
         """Асинхронный REST-вызов YandexART: создать задачу генерации, дождаться
-        результата опросом /operations/{id}, залить base64-картинку в хранилище
-        и вернуть публичный URL."""
+        результата опросом /operations/{id}, залить картинку в хранилище и
+        вернуть публичный URL."""
         async with httpx.AsyncClient(timeout=30) as client:
             response = await client.post(
                 YANDEX_IMAGE_URL,
@@ -493,21 +665,21 @@ class YandexArtImageGenerator:
             operation_id = response.json()["id"]
 
             operation_url = YANDEX_OPERATION_URL.format(operation_id=operation_id)
-            image_b64: str | None = None
-            for _ in range(30):  # до ~60с (30 × 2с) — YandexART обычно укладывается в 10-20с
-                await asyncio.sleep(2)
+            for _ in range(self.POLL_MAX_ATTEMPTS):
+                await asyncio.sleep(self.POLL_INTERVAL_SECONDS)
                 poll = await client.get(operation_url, headers=_yandex_headers(self.settings))
                 poll.raise_for_status()
-                poll_data = poll.json()
-                if poll_data.get("done"):
-                    image_b64 = poll_data["response"]["image"]
-                    break
-            if image_b64 is None:
-                raise TimeoutError("YandexART не ответил вовремя")
-
-        image_bytes = base64.b64decode(image_b64)
-        key = f"generated/{hashlib.sha1(prompt.encode('utf-8')).hexdigest()[:16]}.jpg"
-        return self.storage.upload_bytes(key, image_bytes, "image/jpeg")
+                operation = poll.json()
+                if operation.get("done"):
+                    image_bytes = base64.b64decode(operation["response"]["image"])
+                    # Ключ — хэш самих байт, а не промпта: одинаковый промпт может
+                    # дать разную картинку при перегенерации, и по хэшу промпта
+                    # новый файл перезаписал бы старый URL на диске/в S3, а старые
+                    # закэшированные в браузере копии продолжали бы показывать
+                    # прежнюю картинку.
+                    key = f"generated/{hashlib.sha1(image_bytes).hexdigest()}.jpg"
+                    return self.storage.upload_bytes(key, image_bytes, "image/jpeg")
+            raise TimeoutError(f"YandexART operation {operation_id} не ответил вовремя")
 
     @staticmethod
     def _mock_image(prompt: str) -> str:
@@ -515,66 +687,105 @@ class YandexArtImageGenerator:
         return f"https://picsum.photos/seed/{seed}/1200/800"
 
 
-_CHAT_SYSTEM_PROMPT = (
-    "Ты редактор JSON-схемы сайта в AI-конструкторе. Тебе дают текущую схему сайта "
-    '(поле "site") и команду пользователя на естественном языке (поле "command"). '
-    "Внеси в схему ровно те изменения, которые просит пользователь — меняй текст, "
-    "переставляй/удаляй/добавляй блоки, меняй variant, sticky, цвета темы (theme.primary_color), "
-    "фон сайта целиком (theme.bg_color) или фон конкретного блока (поле bg_color внутри секции — "
-    "пустая строка означает 'без переопределения, наследует фон сайта'), "
-    "шрифт (theme.font), порядок секций и т.д. — но не трогай остальное без необходимости.\n\n"
-    "Строгие правила:\n"
-    '- Верни строго JSON без markdown: {"site": <полная обновлённая схема той же '
-    'структуры, что и во входном "site">, "reply": "<короткий ответ на русском, '
-    'одно предложение, что именно сделано>"}.\n'
-    "- Не добавляй ключи, которых не было в схеме, не удаляй обязательные поля "
-    '(id и type у каждой секции, id страницы), не меняй project_id.\n'
-    "- variant у секции должен быть одним из допустимых для её type (см. библиотеку ниже). "
-    "У text_image своя ось — image_position: left|right, variant у него нет.\n"
-    "- Если просят добавить новый блок — бери тип только из библиотеки ниже и придумай новый "
-    "уникальный id (например grid_3col-2).\n"
-    "- Если просьба не имеет смысла для сайта или невозможна — верни site БЕЗ ИЗМЕНЕНИЙ "
-    "(тот же JSON, что получил) и объясни в reply, что не можешь это сделать.\n\n"
-    f"Библиотека блоков и допустимых вариантов: {json.dumps(SECTION_VARIANTS, ensure_ascii=False)}"
+def _build_chat_system_prompt() -> str:
+    """Строит библиотеку блоков для промпта ИИ-чата из BLOCK_LIBRARY —
+    header/footer исключены (они есть всегда одни на страницу, чат может их
+    точечно править, но не добавлять/удалять новый экземпляр)."""
+    library_lines = []
+    for section_type, model in BLOCK_LIBRARY.items():
+        if section_type in ("header", "footer"):
+            continue
+        shape = describe_block_fields(model)
+        variants = SECTION_VARIANTS.get(section_type) or []
+        variant_note = f", variant один из {variants}" if variants else ", у этого типа нет variant"
+        library_lines.append(f'- "{section_type}"{variant_note}: {shape}')
+    library_text = "\n".join(library_lines)
+    return (
+        "Ты редактор JSON-схемы сайта в AI-конструкторе. Тебе дают текущую схему сайта "
+        '(поле "site") и команду пользователя на естественном языке (поле "command"). '
+        "Внеси в схему ровно те изменения, которые просит пользователь — меняй текст, "
+        "переставляй/удаляй/добавляй блоки, меняй variant, sticky, цвета темы (theme.primary_color), "
+        "фон сайта целиком (theme.bg_color) или фон конкретного блока (поле bg_color внутри секции — "
+        "пустая строка означает 'без переопределения, наследует фон сайта'), "
+        "шрифт (theme.font), порядок секций и т.д.\n\n"
+        "Строгие правила:\n"
+        '- Верни строго JSON без markdown: {"site": <полная обновлённая схема той же '
+        'структуры, что и во входном "site">, "reply": "<короткий ответ на русском, '
+        'одно предложение, что именно сделано>"}.\n'
+        "- Не удаляй обязательные поля (id и type у каждой секции, id страницы), не меняй project_id.\n"
+        "- У СУЩЕСТВУЮЩИХ секций (которые уже были в исходном site) не добавляй лишних ключей "
+        "сверх тех, что там уже были, и не трогай остальные поля без необходимости.\n"
+        "- Если добавляешь НОВУЮ секцию — бери type только из библиотеки ниже, придумай новый "
+        "уникальный id (например grid_3col-2) и ЗАПОЛНИ ВСЕ поля этого типа реалистичным "
+        "контентом по контексту сайта и просьбе пользователя — у новой секции не должно "
+        "остаться пустых обязательных полей.\n"
+        "- variant у секции должен быть одним из допустимых для её type (см. библиотеку ниже).\n"
+        "- Если просьба не имеет смысла для сайта или невозможна — верни site БЕЗ ИЗМЕНЕНИЙ "
+        "(тот же JSON, что получил) и объясни в reply, что не можешь это сделать.\n\n"
+        f"Библиотека типов блоков (кроме header/footer — они всегда есть, по одному на страницу):\n{library_text}"
+    )
+
+
+_CHAT_SYSTEM_PROMPT = _build_chat_system_prompt()
+
+_CHAT_RETRY_HINT = (
+    "ПРЕДЫДУЩИЙ твой ответ был невалиден (не JSON или не прошёл проверку схемы сайта). "
+    "Верни СТРОГО валидный JSON без markdown и без пояснений, точно по описанной структуре, "
+    "заполнив все обязательные поля."
 )
 
 
 class AIChatEditor:
     """Обработчик команд вкладки «ИИ-Чат» (ТЗ п.4). Сначала пробует быстрый
     бесплатный rule-based разбор (chat_commands.py) для типовых формулировок
-    из ТЗ; если он не смог распознать команду и задан YANDEX_API_KEY —
-    отправляет всю текущую JSON-схему сайта и просьбу пользователя YandexGPT,
-    просит вернуть обновлённую схему целиком. Результат в любом случае
-    проходит parse_site() — DoD п.2 гарантирован независимо от источника правки.
+    из ТЗ; если он не смог распознать команду и заданы YANDEX_API_KEY/
+    YANDEX_FOLDER_ID — отправляет YandexGPT всю текущую JSON-схему сайта и
+    просьбу пользователя (с одним повтором при невалидном ответе), просит
+    вернуть обновлённую схему целиком. Результат в любом случае проходит
+    parse_site() — DoD п.2 гарантирован независимо от источника правки.
     """
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.mock = not settings.yandex_api_key
+        self.mock = not (settings.yandex_api_key and settings.yandex_folder_id)
 
     async def apply_command(self, site: SiteSchema, message: str) -> tuple[SiteSchema, str, bool]:
         updated, reply, applied = apply_chat_command(site, message)
         if applied or self.mock:
             return updated, reply, applied
 
-        raw = await self._call_real_api(site, message)
-        if raw is None or not isinstance(raw.get("site"), dict):
+        new_site, reply_text, changed = await self._try_real_edit(site, message)
+        if new_site is None:
+            # Один retry с усиленным напоминанием — YandexGPT иногда не
+            # выдерживает строгий формат/схему с первого раза.
+            new_site, reply_text, changed = await self._try_real_edit(site, message, extra_hint=_CHAT_RETRY_HINT)
+        if new_site is None:
             return site, "Не удалось выполнить команду. Попробуйте переформулировать.", False
+        return new_site, reply_text, changed
 
+    async def _try_real_edit(
+        self, site: SiteSchema, message: str, extra_hint: str = ""
+    ) -> tuple[SiteSchema | None, str, bool]:
+        raw = await self._call_real_api(site, message, extra_hint)
+        if raw is None or not isinstance(raw.get("site"), dict):
+            return None, "", False
         try:
             new_site = parse_site(raw["site"])
         except Exception:
             # Модель вернула JSON, не соответствующий схеме сайта — не сохраняем его.
-            return site, "Не удалось применить изменения — попробуйте переформулировать команду.", False
-
+            return None, "", False
         changed = new_site.model_dump() != site.model_dump()
         reply_text = raw.get("reply") or ("Готово." if changed else "Не удалось понять, что нужно изменить.")
         return new_site, reply_text, changed
 
-    async def _call_real_api(self, site: SiteSchema, message: str) -> dict | None:  # pragma: no cover — требует ключ
+    async def _call_real_api(
+        self, site: SiteSchema, message: str, extra_hint: str = ""
+    ) -> dict | None:  # pragma: no cover — требует ключ
         user_prompt = json.dumps({"site": site.model_dump(), "command": message}, ensure_ascii=False)
+        if extra_hint:
+            user_prompt = f"{extra_hint}\n\n{user_prompt}"
         text = await _call_yandex_completion(
-            self.settings, _CHAT_SYSTEM_PROMPT, user_prompt, self.settings.yandex_gpt_model, 0.3
+            self.settings, _CHAT_SYSTEM_PROMPT, user_prompt, self.settings.yandex_gpt_model, 0.3, max_tokens=4000
         )
         return _extract_json(text) if text else None
 

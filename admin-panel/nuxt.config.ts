@@ -62,6 +62,16 @@ export default defineNuxtConfig({
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       ],
+      script: [
+        {
+          // Выставляет data-theme СИНХРОННО, до первой отрисовки — иначе
+          // при ssr:false страница на мгновение мелькнёт дефолтной темой,
+          // прежде чем stores/theme.ts (Pinia, монтируется вместе с app.vue)
+          // успеет её переопределить. Ключ 'ai-sites:theme' — тот же, что
+          // читает/пишет useThemeStore, оба должны меняться синхронно.
+          innerHTML: `(function(){try{var t=localStorage.getItem('ai-sites:theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`,
+        },
+      ],
     },
   },
 })

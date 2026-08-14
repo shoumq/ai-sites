@@ -1,11 +1,12 @@
 """Единый AI-оркестратор (ТЗ п.1, п.3, шаг 1-2). Собирает ответы воронки в
 строгую JSON-схему сайта, дирижируя тремя провайдерами и стримя прогресс
-(«1/4 Пишем тексты», «2/4 Вёрстаем» и т.д.) через переданный колбэк —
+(«1/4 Планируем блоки», «2/4 Пишем тексты» и т.д.) через переданный колбэк —
 колбэк дергает и WebSocket-эндпоинт, и REST-фолбэк.
 """
 from __future__ import annotations
 
 import asyncio
+import logging
 import uuid
 from collections.abc import Awaitable, Callable
 
@@ -15,11 +16,15 @@ from app.schemas.site import Page, SiteSchema, Theme, parse_site
 from app.services.ai.providers import YandexArtImageGenerator, YandexCopywriter, YandexLayoutEngine
 from app.services.storage import StorageClient
 
+logger = logging.getLogger(__name__)
+
 ProgressCallback = Callable[[GenerationProgress], Awaitable[None]]
 
+# Подбор блоков должен произойти ДО копирайтинга — копирайтеру нужно точно
+# знать, для каких типов блоков писать контент (см. generate() ниже).
 STAGES = [
+    ("planning_layout", "Планируем блоки"),
     ("writing_copy", "Пишем тексты"),
-    ("building_layout", "Верстаем"),
     ("generating_images", "Генерируем изображения"),
     ("finishing", "Собираем сайт"),
 ]
@@ -31,7 +36,17 @@ NAV_LABELS = {
     "testimonials": "Отзывы",
     "contact_map": "Контакты",
     "text_image": "О нас",
+    "catalog_filter": "Каталог",
+    "faq": "Вопросы",
+    "gallery": "Галерея",
 }
+
+# Типы, которые оркестратор заполняет сам (картинки/nav/бренд/пустые поля для
+# ручного заполнения) — их контент НЕ приходит от YandexCopywriter. Всё
+# остальное (hero, footer и любой «чистый контентный» тип из BLOCK_LIBRARY —
+# grid_3col/pricing/testimonials/catalog_filter/faq/gallery/stats/
+# custom_content) — контентные типы, для них нужен copy[type].
+_HAND_FILLED_TYPES = {"header", "text_image", "contact_map"}
 
 # Многостраничник (ТЗ п.2) всегда собирается из ровно 4 страниц — используется
 # в роутах generate/ws для проверки тарифного лимита max_pages ДО запуска
@@ -65,10 +80,6 @@ class GenerationOrchestrator:
             )
 
         await emit(0)
-        copy = await self.copywriter.generate_copy(brief)
-        await asyncio.sleep(0.3)  # UX: видимый прогресс даже в mock-режиме
-
-        await emit(1)
         layout = await self.layout_engine.plan_layout(brief)
         theme_data = {"primary_color": layout["primary_color"], "font": layout["font"], "style": layout["style"]}
         section_specs = [
@@ -77,13 +88,24 @@ class GenerationOrchestrator:
             *layout["sections"],
             {"type": "footer", "variant": layout["footer_variant"]},
         ]
+        await asyncio.sleep(0.3)  # UX: видимый прогресс даже в mock-режиме
+
+        await emit(1)
+        is_multipage = brief.site_type.value == "multipage"
+        copy_types = {spec["type"] for spec in section_specs} - _HAND_FILLED_TYPES
+        if is_multipage:
+            # _build_multipage — фиксированный скелет 4 страниц (Главная/Услуги/
+            # О нас/Контакты), ему всегда нужен контент для этих типов, даже
+            # если подборщик блоков не включил какой-то из них в "доп." секции
+            # для главной страницы (см. _build_multipage).
+            copy_types |= {"grid_3col", "pricing", "testimonials"}
+        copy = await self.copywriter.generate_copy(brief, sorted(copy_types))
         await asyncio.sleep(0.3)
 
         await emit(2)
         hero_bg = await self.image_generator.generate_image(
             f"{brief.description}, {brief.style.value} style, website hero background"
         )
-        is_multipage = brief.site_type.value == "multipage"
         about_image = None
         if is_multipage or any(spec["type"] == "text_image" for spec in section_specs):
             about_image = await self.image_generator.generate_image(
@@ -144,14 +166,6 @@ class GenerationOrchestrator:
                         "image_position": "right",
                     }
                 )
-            elif key == "grid_3col":
-                # id совпадает с type, а не "services" — иначе якорь шапки
-                # href="#grid_3col" (см. NAV_LABELS) никогда не найдёт цель.
-                sections.append({"id": "grid_3col", "type": "grid_3col", "variant": variant, **copy["services"]})
-            elif key == "pricing":
-                sections.append({"id": "pricing", "type": "pricing", "variant": variant, **copy["pricing"]})
-            elif key == "testimonials":
-                sections.append({"id": "testimonials", "type": "testimonials", "variant": variant, **copy["testimonials"]})
             elif key == "contact_map":
                 sections.append(
                     {
@@ -170,6 +184,18 @@ class GenerationOrchestrator:
                 # Дублируем меню шапки в футер — иначе вариант footer="columns"
                 # рендерит пустую колонку меню и визуально не отличается от simple.
                 sections.append({"id": "footer", "type": "footer", "variant": variant, "links": nav_items, **copy["footer"]})
+            elif key in copy:
+                # Единая ветка для «чистых контентных» блоков — их содержимое
+                # целиком приходит из copy[key] (grid_3col, pricing, testimonials
+                # и новые catalog_filter/faq/gallery/stats/custom_content), без
+                # ручной досборки полей. Новый тип в BLOCK_LIBRARY не требует
+                # новой ветки здесь, пока копирайтер умеет его заполнить.
+                sections.append({"id": key, "type": key, "variant": variant, **copy[key]})
+            else:
+                # Тип прошёл через YandexLayoutEngine._sanitize_sections (то
+                # есть валиден), но копирайтер почему-то не вернул для него
+                # контент — пропускаем секцию вместо падения всей генерации.
+                logger.warning("GenerationOrchestrator: нет контента для секции %r, пропущена", key)
         return sections
 
     @staticmethod
@@ -211,8 +237,19 @@ class GenerationOrchestrator:
         testimonials_variant = self._variant_for(layout, "testimonials", "cards")
         contact_variant = self._variant_for(layout, "contact_map", "centered")
 
-        services_preview = dict(copy["services"])
+        services_preview = dict(copy["grid_3col"])
         services_preview["items"] = services_preview["items"][:3]
+
+        # Доп. блоки из расширенного реестра (фильтр каталога/FAQ/галерея/
+        # статистика/произвольный блок), если ИИ их выбрал под задачу —
+        # размещаем на главной перед футером. 4 «базовых» типа уже закреплены
+        # за конкретными страницами (services/about/contacts) ниже.
+        _placed_types = {"header", "hero", "grid_3col", "pricing", "testimonials", "contact_map", "text_image", "footer"}
+        extra_sections = [
+            {"id": spec["type"], "type": spec["type"], "variant": spec["variant"], **copy[spec["type"]]}
+            for spec in layout["sections"]
+            if spec["type"] not in _placed_types and spec["type"] in copy
+        ]
 
         main_page = Page(
             slug="main",
@@ -222,6 +259,7 @@ class GenerationOrchestrator:
                 {"id": "hero", "type": "hero", "variant": layout["hero_variant"], "bg_image": hero_bg, **copy["hero"]},
                 {"id": "grid_3col", "type": "grid_3col", "variant": grid_variant, **services_preview},
                 {"id": "testimonials", "type": "testimonials", "variant": testimonials_variant, **copy["testimonials"]},
+                *extra_sections,
                 make_footer(),
             ],
         )
@@ -230,7 +268,7 @@ class GenerationOrchestrator:
             title=f"{brief.brand_name} — Услуги",
             sections=[
                 make_header(),
-                {"id": "grid_3col", "type": "grid_3col", "variant": grid_variant, **copy["services"]},
+                {"id": "grid_3col", "type": "grid_3col", "variant": grid_variant, **copy["grid_3col"]},
                 {"id": "pricing", "type": "pricing", "variant": pricing_variant, **copy["pricing"]},
                 make_footer(),
             ],

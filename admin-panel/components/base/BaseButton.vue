@@ -84,6 +84,7 @@ withDefaults(
 
 .base-btn.is-primary {
   background: var(--a-gradient-brand);
+  color: #fff;
   box-shadow: var(--a-shadow-glow);
 }
 .base-btn.is-primary:hover:not(:disabled) {

@@ -4,13 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_owned_project
 from app.core.config import Settings, get_settings
-from app.core.tariffs import TARIFF_LIMITS
 from app.db.session import get_db
 from app.models.enums import ProjectStatus
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.project import BriefIn, ProjectOut, ProjectSummary
-from app.services.ai.orchestrator import MULTIPAGE_PAGE_COUNT, GenerationOrchestrator
+from app.services.ai.orchestrator import GenerationOrchestrator
 from app.services.safety import UnsafeInputError, assert_safe_prompt
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -51,17 +50,10 @@ async def generate_project(
     try:
         assert_safe_prompt(brief.brand_name)
         assert_safe_prompt(brief.description)
+        if brief.extra_requirements:
+            assert_safe_prompt(brief.extra_requirements)
     except UnsafeInputError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.reason) from exc
-
-    if brief.site_type.value == "multipage" and TARIFF_LIMITS[current_user.tariff].max_pages < MULTIPAGE_PAGE_COUNT:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                f"Многостраничник — это {MULTIPAGE_PAGE_COUNT} страницы, а тариф "
-                f"«{current_user.tariff.value}» ограничен {TARIFF_LIMITS[current_user.tariff].max_pages}. Повысьте тариф."
-            ),
-        )
 
     project = Project(
         owner_id=current_user.id,

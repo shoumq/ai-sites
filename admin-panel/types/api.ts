@@ -29,6 +29,7 @@ export interface BriefIn {
   brand_name: string
   description: string
   goal: SiteGoal
+  extra_requirements?: string | null
 }
 
 export type ProjectStatus = 'draft' | 'generating' | 'ready' | 'published'

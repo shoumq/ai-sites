@@ -1,22 +1,21 @@
 <script setup lang="ts">
-// Корневой узел SPA. GradientBackground рисует анимированные закатные "блобы"
-// один раз на весь апп (а не per-page), чтобы не было мигания фона между
-// переходами страниц. ToastHost/ConfirmHost — синглтон-хосты для composables
+// Корневой узел SPA. ToastHost/ConfirmHost — синглтон-хосты для composables
 // useToast()/useConfirm(), которые заменяют window.alert/window.confirm.
 // IntroSplash — короткий сплэш-интро при первой загрузке вкладки (сам решает,
 // показываться ли, через sessionStorage); рендерится поверх всего остального,
-// но не блокирует параллельное монтирование NuxtPage под собой.
+// но не блокирует параллельное монтирование NuxtPage под собой. ThemeToggle —
+// светлая/тёмная тема, доступна на всех экранах (см. stores/theme.ts).
 </script>
 
 <template>
   <div class="app-root">
-    <GradientBackground />
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
     <ToastHost />
     <ConfirmHost />
     <IntroSplash />
+    <ThemeToggle />
   </div>
 </template>
 

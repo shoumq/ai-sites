@@ -8,20 +8,7 @@ patch-структуру. В обоих случаях результат обя
 from __future__ import annotations
 
 from app.schemas.site import SiteSchema, parse_site
-
-RU_NAME_TO_TYPE: dict[str, str] = {
-    "шапк": "header",
-    "герой": "hero",
-    "услуг": "grid_3col",
-    "цен": "pricing",
-    "тариф": "pricing",
-    "отзыв": "testimonials",
-    "контакт": "contact_map",
-    "карт": "contact_map",
-    "футер": "footer",
-    "подвал": "footer",
-    "о нас": "text_image",
-}
+from app.services.block_keywords import RU_NAME_TO_TYPE, match_type_in_text
 
 
 def _find_section(site: SiteSchema, section_type: str, page_index: int = 0) -> int | None:
@@ -29,13 +16,6 @@ def _find_section(site: SiteSchema, section_type: str, page_index: int = 0) -> i
     for i, section in enumerate(page.sections):
         if section.type == section_type:
             return i
-    return None
-
-
-def _match_type_in_text(text: str) -> str | None:
-    for keyword, section_type in RU_NAME_TO_TYPE.items():
-        if keyword in text:
-            return section_type
     return None
 
 
@@ -71,7 +51,7 @@ def apply_chat_command(site: SiteSchema, message: str) -> tuple[SiteSchema, str,
 
     # 3. Удалить кнопку в блоке
     if "удали" in text and "кнопк" in text:
-        target_type = _match_type_in_text(text)
+        target_type = match_type_in_text(text)
         cta_fields = {"header": "cta_text", "hero": "cta_text", "grid_3col": "cta_text"}
         if target_type and target_type in cta_fields:
             for section in sections:

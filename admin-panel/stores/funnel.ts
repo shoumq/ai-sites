@@ -17,6 +17,7 @@ interface PersistedFunnel {
   brandName: string
   description: string
   goal: SiteGoal
+  extraRequirements: string
 }
 
 function readPersisted(): Partial<PersistedFunnel> {
@@ -38,6 +39,7 @@ export const useFunnelStore = defineStore('funnel', () => {
   const brandName = ref(initial.brandName ?? '')
   const description = ref(initial.description ?? '')
   const goal = ref<SiteGoal>(initial.goal ?? 'sales')
+  const extraRequirements = ref(initial.extraRequirements ?? '')
 
   function persist() {
     if (typeof window === 'undefined') return
@@ -48,11 +50,12 @@ export const useFunnelStore = defineStore('funnel', () => {
       brandName: brandName.value,
       description: description.value,
       goal: goal.value,
+      extraRequirements: extraRequirements.value,
     }
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot))
   }
 
-  watch([siteType, style, customHex, brandName, description, goal], persist)
+  watch([siteType, style, customHex, brandName, description, goal, extraRequirements], persist)
 
   const isBriefComplete = computed(
     () => !!siteType.value && !!style.value && brandName.value.trim().length > 0 && description.value.trim().length > 0,
@@ -67,6 +70,7 @@ export const useFunnelStore = defineStore('funnel', () => {
       brand_name: brandName.value.trim(),
       description: description.value.trim(),
       goal: goal.value,
+      extra_requirements: extraRequirements.value.trim() || null,
     }
   }
 
@@ -77,8 +81,9 @@ export const useFunnelStore = defineStore('funnel', () => {
     brandName.value = ''
     description.value = ''
     goal.value = 'sales'
+    extraRequirements.value = ''
     if (typeof window !== 'undefined') window.sessionStorage.removeItem(STORAGE_KEY)
   }
 
-  return { siteType, style, customHex, brandName, description, goal, isBriefComplete, toBrief, reset }
+  return { siteType, style, customHex, brandName, description, goal, extraRequirements, isBriefComplete, toBrief, reset }
 })

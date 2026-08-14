@@ -32,9 +32,11 @@
   --a-sunset-violet: #a25dff;
   --a-sunset-indigo: #5b6bff;
 
-  --a-gradient-brand: linear-gradient(135deg, var(--a-sunset-orange) 0%, var(--a-sunset-pink) 45%, var(--a-sunset-violet) 75%, var(--a-sunset-indigo) 100%);
-  --a-gradient-brand-soft: linear-gradient(135deg, color-mix(in srgb, var(--a-sunset-orange) 55%, transparent) 0%, color-mix(in srgb, var(--a-sunset-pink) 55%, transparent) 45%, color-mix(in srgb, var(--a-sunset-violet) 55%, transparent) 100%);
-  --a-gradient-text: linear-gradient(90deg, var(--a-sunset-orange), var(--a-sunset-pink) 50%, var(--a-sunset-violet));
+  /* Монохромный: один оттенок (акцент), градиент только по светлоте — не по
+     тону, иначе снова получится "радуга" из sunset-палитры. */
+  --a-gradient-brand: linear-gradient(135deg, color-mix(in srgb, var(--a-accent) 80%, white) 0%, var(--a-accent) 55%, color-mix(in srgb, var(--a-accent) 78%, black) 100%);
+  --a-gradient-brand-soft: linear-gradient(135deg, color-mix(in srgb, var(--a-accent) 50%, transparent) 0%, color-mix(in srgb, var(--a-accent) 28%, transparent) 100%);
+  --a-gradient-text: linear-gradient(90deg, color-mix(in srgb, var(--a-accent) 85%, white), var(--a-accent) 60%, color-mix(in srgb, var(--a-accent) 72%, black));
 
   --a-accent: var(--a-sunset-pink);
   --a-accent-2: var(--a-sunset-indigo);
@@ -104,4 +106,37 @@
   --a-z-modal-backdrop: 50;
   --a-z-modal: 51;
   --a-z-toast: 60;
+}
+
+/* Светлая тема — переключается через [data-theme] на <html>, см.
+   stores/theme.ts. Переопределяем только то, что зависит от яркости фона
+   (база/поверхности/текст/стекло); акцентные (--a-accent*) и статусные
+   цвета намеренно те же — это фирменная палитра, а не тема. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --a-bg: #f6f5fb;
+  --a-bg-elevated: #ffffff;
+  --a-surface: rgba(17, 15, 32, 0.045);
+  --a-surface-hover: rgba(17, 15, 32, 0.075);
+  --a-surface-solid: #ffffff;
+  --a-border: rgba(17, 15, 32, 0.09);
+  --a-border-strong: rgba(17, 15, 32, 0.16);
+
+  --a-text: #18172a;
+  --a-text-muted: #5f5c78;
+  --a-text-faint: #928fa8;
+
+  --a-glass-bg: rgba(255, 255, 255, 0.6);
+  --a-glass-border: rgba(17, 15, 32, 0.08);
+
+  /* Базовые тени — rgba(0,0,0,0.3-0.5), рассчитаны на тёмный фон, где почти
+     сливаются с ним. На светлом фоне та же непрозрачность читается как
+     тяжёлое чёрное пятно — здесь заметно светлее и на холодном (slate)
+     оттенке вместо чистого чёрного, тот же приём, что и в
+     site-blocks/assets/tokens.css для генерируемых сайтов. */
+  --a-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 1px rgba(15, 23, 42, 0.04);
+  --a-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08), 0 2px 8px rgba(15, 23, 42, 0.05);
+  --a-shadow-lg: 0 24px 56px rgba(15, 23, 42, 0.14), 0 8px 20px rgba(15, 23, 42, 0.08);
+  --a-shadow-glow: 0 0 0 1px rgba(17, 15, 32, 0.06), 0 12px 40px -8px color-mix(in srgb, var(--a-accent) 35%, transparent);
 }

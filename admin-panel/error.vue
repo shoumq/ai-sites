@@ -12,7 +12,6 @@ function goHome() {
 
 <template>
   <div class="error-screen">
-    <GradientBackground />
     <div class="error-card glass-card" v-motion :initial="{ opacity: 0, y: 24 }" :enter="{ opacity: 1, y: 0, transition: { duration: 420 } }">
       <div class="error-card__code text-gradient">{{ error.statusCode ?? 500 }}</div>
       <h1>{{ isNotFound ? 'Страница не найдена' : 'Что-то пошло не так' }}</h1>

@@ -114,6 +114,14 @@ function generate() {
               :maxlength="500"
               show-count
             />
+            <BaseTextarea
+              v-model="funnel.extraRequirements"
+              label="Какие блоки/функции нужны? (необязательно)"
+              placeholder="Например: нужен фильтр по категориям товаров, блок FAQ, галерея работ"
+              :rows="3"
+              :maxlength="800"
+              show-count
+            />
           </div>
 
           <BaseSelect

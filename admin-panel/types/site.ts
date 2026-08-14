@@ -1,157 +1,24 @@
 /**
- * TypeScript-контракт сайта — зеркало site-blocks/types/site.ts (который сам
- * зеркалит backend/app/schemas/site.py). Дублируется здесь физическим файлом,
- * а не импортируется из layer'а, по той же причине, что описана в
- * site-blocks/nuxt.config.ts: alias `~` внутри Nuxt-слоя резолвится
- * относительно srcDir ПОТРЕБЛЯЮЩЕГО приложения (проверено генерируемым
- * .nuxt/tsconfig.json — "~/*" маппится на корень admin-panel, а не
- * site-blocks), поэтому `~/types/site`, на который ссылаются компоненты
- * site-blocks (SectionRenderer.vue и т.д.), обязан существовать здесь.
- * Поля snake_case НЕ переименовывать без синхронной правки
- * backend/app/schemas/site.py + site-blocks/types/site.ts.
+ * TypeScript-контракт сайта — реэкспорт из site-blocks/types/site.ts (который
+ * сам зеркалит backend/app/schemas/site.py), единственный канонический источник
+ * интерфейсов. Файл физически существует здесь (а не просто импортируется в
+ * компонентах), потому что alias `~` внутри Nuxt-слоя резолвится относительно
+ * srcDir ПОТРЕБЛЯЮЩЕГО приложения (проверено генерируемым .nuxt/tsconfig.json —
+ * "~/*" маппится на корень admin-panel, а не site-blocks), поэтому
+ * `~/types/site`, на который ссылаются компоненты site-blocks (SectionRenderer.vue
+ * и т.д.), обязан существовать здесь физически. Обычный относительный импорт
+ * ниже с этой Nuxt-особенностью не конфликтует — это просто чтение соседнего
+ * .ts файла, а не alias-резолюция.
+ *
+ * Ниже — только admin-only довески (лейблы для UI, BLOCK_LIBRARY для панели
+ * вставки блока, createDefaultSection). Сами поля/типы секций не дублируются:
+ * правь их в site-blocks/types/site.ts + backend/app/schemas/site.py.
  */
+export * from '../../site-blocks/types/site'
 
-// ---- общие блоки -----------------------------------------------------------
+import type { Section, SectionType, Theme } from '../../site-blocks/types/site'
 
-export interface NavItem {
-  label: string
-  href: string
-}
-
-export interface SocialLink {
-  platform: string
-  url: string
-}
-
-export interface ServiceItem {
-  name: string
-  description: string
-  price: string
-  icon: string
-}
-
-export interface PricingPlan {
-  name: string
-  price: string
-  period: string
-  features: string[]
-  highlighted: boolean
-}
-
-export interface Testimonial {
-  author: string
-  text: string
-  avatar: string
-  rating: number
-}
-
-// ---- секции ------------------------------------------------------------------
-
-export type HeaderVariant = 'standard' | 'centered' | 'split' | 'minimal'
-export type HeroVariant = 'centered' | 'split' | 'minimal' | 'gradient' | 'overlay'
-export type Grid3ColVariant = 'cards' | 'icon_rows' | 'minimal_list' | 'icon_top' | 'compact_grid'
-export type PricingVariant = 'cards' | 'highlight' | 'table' | 'minimal'
-export type TestimonialsVariant = 'cards' | 'quotes' | 'avatars_row' | 'single_featured'
-export type ContactMapVariant = 'centered' | 'split' | 'cards'
-export type FooterVariant = 'simple' | 'columns' | 'minimal'
-
-export interface HeaderSection {
-  id: string
-  type: 'header'
-  variant: HeaderVariant
-  logo_text: string
-  nav_items: NavItem[]
-  sticky: boolean
-  cta_text: string
-  bg_color: string
-}
-
-export interface HeroSection {
-  id: string
-  type: 'hero'
-  variant: HeroVariant
-  title: string
-  subtitle: string
-  cta_text: string
-  cta_href: string
-  bg_image: string
-  bg_color: string
-}
-
-export interface TextImageSection {
-  id: string
-  type: 'text_image'
-  // у этого блока нет variant — своя ось через image_position
-  title: string
-  text: string
-  image: string
-  image_position: 'left' | 'right'
-  bg_color: string
-}
-
-export interface Grid3ColSection {
-  id: string
-  type: 'grid_3col'
-  variant: Grid3ColVariant
-  title: string
-  items: ServiceItem[]
-  cta_text: string
-  bg_color: string
-}
-
-export interface PricingSection {
-  id: string
-  type: 'pricing'
-  variant: PricingVariant
-  title: string
-  plans: PricingPlan[]
-  bg_color: string
-}
-
-export interface TestimonialsSection {
-  id: string
-  type: 'testimonials'
-  variant: TestimonialsVariant
-  title: string
-  items: Testimonial[]
-  bg_color: string
-}
-
-export interface ContactMapSection {
-  id: string
-  type: 'contact_map'
-  variant: ContactMapVariant
-  title: string
-  address: string
-  phone: string
-  email: string
-  map_embed_url: string
-  show_map: boolean
-  bg_color: string
-}
-
-export interface FooterSection {
-  id: string
-  type: 'footer'
-  variant: FooterVariant
-  company_name: string
-  copyright_text: string
-  links: NavItem[]
-  socials: SocialLink[]
-  bg_color: string
-}
-
-export type Section =
-  | HeaderSection
-  | HeroSection
-  | TextImageSection
-  | Grid3ColSection
-  | PricingSection
-  | TestimonialsSection
-  | ContactMapSection
-  | FooterSection
-
-export type SectionType = Section['type']
+export type SiteType = 'landing' | 'shop' | 'multipage' | 'crm'
 
 export const BLOCK_LIBRARY: { type: SectionType; label: string; icon: string }[] = [
   { type: 'header', label: 'Шапка', icon: 'lucide:panel-top' },
@@ -162,33 +29,12 @@ export const BLOCK_LIBRARY: { type: SectionType; label: string; icon: string }[]
   { type: 'testimonials', label: 'Отзывы', icon: 'lucide:quote' },
   { type: 'contact_map', label: 'Карта + Контакты', icon: 'lucide:map-pin' },
   { type: 'footer', label: 'Футер', icon: 'lucide:panel-bottom' },
+  { type: 'catalog_filter', label: 'Каталог с фильтром', icon: 'lucide:filter' },
+  { type: 'faq', label: 'Вопросы (FAQ)', icon: 'lucide:help-circle' },
+  { type: 'gallery', label: 'Галерея', icon: 'lucide:images' },
+  { type: 'stats', label: 'Статистика', icon: 'lucide:bar-chart-3' },
+  { type: 'custom_content', label: 'Произвольный блок', icon: 'lucide:file-text' },
 ]
-
-// ---- тема / страницы / корень --------------------------------------------------
-
-export interface Theme {
-  style: 'business' | 'warm' | 'techno' | 'custom'
-  primary_color: string
-  font: 'Inter' | 'Roboto' | 'PT Sans' | 'Montserrat'
-  logo_url: string
-  custom_css: string
-  bg_color: string
-}
-
-export interface Page {
-  slug: string
-  title: string
-  sections: Section[]
-}
-
-export type SiteType = 'landing' | 'shop' | 'multipage' | 'crm'
-
-export interface SiteSchema {
-  project_id: string
-  type: SiteType
-  theme: Theme
-  pages: Page[]
-}
 
 export const COLOR_PRESETS: Record<Theme['style'], string> = {
   business: '#2563EB',
@@ -201,7 +47,9 @@ export const FONT_OPTIONS: Theme['font'][] = ['Inter', 'Roboto', 'PT Sans', 'Mon
 
 // Зеркало SECTION_VARIANTS из backend/app/schemas/site.py — каждый тип блока
 // имеет несколько визуальных вариантов. text_image сюда не входит — у него
-// своя ось вариативности через image_position (left/right).
+// своя ось вариативности через image_position (left/right). custom_content
+// формально имеет variant, но с единственным значением 'standard' — сюда всё
+// равно включён для единообразия UI (выбирать там нечего, но поле есть).
 export const SECTION_VARIANTS: Record<Exclude<SectionType, 'text_image'>, string[]> = {
   header: ['standard', 'centered', 'split', 'minimal'],
   hero: ['centered', 'split', 'minimal', 'gradient', 'overlay'],
@@ -210,6 +58,11 @@ export const SECTION_VARIANTS: Record<Exclude<SectionType, 'text_image'>, string
   testimonials: ['cards', 'quotes', 'avatars_row', 'single_featured'],
   contact_map: ['centered', 'split', 'cards'],
   footer: ['simple', 'columns', 'minimal'],
+  catalog_filter: ['grid'],
+  faq: ['accordion'],
+  gallery: ['grid'],
+  stats: ['row'],
+  custom_content: ['standard'],
 }
 
 export const SECTION_VARIANT_LABELS: Record<string, string> = {
@@ -231,6 +84,9 @@ export const SECTION_VARIANT_LABELS: Record<string, string> = {
   columns: 'Колонки',
   gradient: 'Градиент',
   overlay: 'Фото с подложкой',
+  grid: 'Сетка',
+  accordion: 'Аккордеон',
+  row: 'Строка',
 }
 
 export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
@@ -242,6 +98,11 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   testimonials: 'Отзывы',
   contact_map: 'Карта + Контакты',
   footer: 'Футер',
+  catalog_filter: 'Каталог с фильтром',
+  faq: 'Вопросы (FAQ)',
+  gallery: 'Галерея',
+  stats: 'Статистика',
+  custom_content: 'Произвольный блок',
 }
 
 /** Значения по умолчанию для блока, вставляемого через DnD из вкладки «Блоки». */
@@ -311,5 +172,15 @@ export function createDefaultSection(type: SectionType): Section {
         socials: [],
         bg_color: '',
       }
+    case 'catalog_filter':
+      return { id, type, variant: 'grid', title: 'Каталог', categories: [], items: [], bg_color: '' }
+    case 'faq':
+      return { id, type, variant: 'accordion', title: 'Частые вопросы', items: [], bg_color: '' }
+    case 'gallery':
+      return { id, type, variant: 'grid', title: 'Галерея', items: [], bg_color: '' }
+    case 'stats':
+      return { id, type, variant: 'row', title: '', items: [], bg_color: '' }
+    case 'custom_content':
+      return { id, type, variant: 'standard', title: '', body: '', items: [], bg_color: '' }
   }
 }

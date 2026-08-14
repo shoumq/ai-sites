@@ -120,8 +120,6 @@ onBeforeUnmount(() => {
       tabindex="-1"
       @click="skip"
     >
-      <GradientBackground />
-
       <!-- аватар-плейсхолдер, пролетает по дуге на стыке акта 1 -> акта 2 -->
       <div class="intro-avatar" aria-hidden="true">
         <Icon name="lucide:user-round" />
@@ -202,6 +200,7 @@ onBeforeUnmount(() => {
   cursor: pointer;
   user-select: none;
   overflow: hidden;
+  background: var(--a-bg);
 }
 
 .intro-root-leave-active {

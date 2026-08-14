@@ -12,13 +12,12 @@ from pydantic import ValidationError
 
 from app.core.config import get_settings
 from app.core.security import decode_access_token
-from app.core.tariffs import TARIFF_LIMITS
 from app.db.session import async_session_maker
 from app.models.enums import ProjectStatus
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.project import BriefIn, GenerationProgress, ProjectOut
-from app.services.ai.orchestrator import MULTIPAGE_PAGE_COUNT, GenerationOrchestrator
+from app.services.ai.orchestrator import GenerationOrchestrator
 from app.services.safety import UnsafeInputError, assert_safe_prompt
 
 router = APIRouter()
@@ -43,19 +42,8 @@ async def ws_generate(websocket: WebSocket, token: str = Query(...)) -> None:
             brief = BriefIn.model_validate(raw_brief)
             assert_safe_prompt(brief.brand_name)
             assert_safe_prompt(brief.description)
-
-            if brief.site_type.value == "multipage" and TARIFF_LIMITS[user.tariff].max_pages < MULTIPAGE_PAGE_COUNT:
-                await websocket.send_json(
-                    {
-                        "type": "error",
-                        "message": (
-                            f"Многостраничник — это {MULTIPAGE_PAGE_COUNT} страницы, а тариф "
-                            f"«{user.tariff.value}» ограничен {TARIFF_LIMITS[user.tariff].max_pages}. Повысьте тариф."
-                        ),
-                    }
-                )
-                await websocket.close(code=4403)
-                return
+            if brief.extra_requirements:
+                assert_safe_prompt(brief.extra_requirements)
 
             project = Project(
                 owner_id=user.id,

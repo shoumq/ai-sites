@@ -39,6 +39,34 @@ export interface Testimonial {
   rating: number
 }
 
+export interface CatalogItem {
+  name: string
+  description: string
+  price: string
+  category: string
+  image: string
+}
+
+export interface FaqItem {
+  question: string
+  answer: string
+}
+
+export interface GalleryItem {
+  image: string
+  caption: string
+}
+
+export interface StatItem {
+  value: string
+  label: string
+}
+
+export interface CustomContentItem {
+  label: string
+  value: string
+}
+
 // ---- секции ------------------------------------------------------------------
 
 export interface HeaderSection {
@@ -127,6 +155,55 @@ export interface FooterSection {
   bg_color: string
 }
 
+export interface CatalogFilterSection {
+  id: string
+  type: 'catalog_filter'
+  variant: 'grid'
+  title: string
+  categories: string[]
+  items: CatalogItem[]
+  bg_color: string
+}
+
+export interface FaqSection {
+  id: string
+  type: 'faq'
+  variant: 'accordion'
+  title: string
+  items: FaqItem[]
+  bg_color: string
+}
+
+export interface GallerySection {
+  id: string
+  type: 'gallery'
+  variant: 'grid'
+  title: string
+  items: GalleryItem[]
+  bg_color: string
+}
+
+export interface StatsSection {
+  id: string
+  type: 'stats'
+  variant: 'row'
+  title: string
+  items: StatItem[]
+  bg_color: string
+}
+
+export interface CustomContentSection {
+  id: string
+  type: 'custom_content'
+  variant: 'standard'
+  // у этого блока нет variant по факту (единственное значение) — как и у
+  // text_image, своей вариативной оси не имеет
+  title: string
+  body: string
+  items: CustomContentItem[]
+  bg_color: string
+}
+
 export type Section =
   | HeaderSection
   | HeroSection
@@ -136,6 +213,11 @@ export type Section =
   | TestimonialsSection
   | ContactMapSection
   | FooterSection
+  | CatalogFilterSection
+  | FaqSection
+  | GallerySection
+  | StatsSection
+  | CustomContentSection
 
 export type SectionType = Section['type']
 

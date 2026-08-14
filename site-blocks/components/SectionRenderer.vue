@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Section, Theme } from '~/types/site'
+import { SECTION_COMPONENT_MAP } from './blockRegistry'
 
 const props = withDefaults(
   defineProps<{
@@ -38,6 +39,12 @@ function onWrapperClick() {
 // из файлов вариантов блоков. Пусто — не переопределяем, наследуется фон
 // сайта (theme.bg_color, см. composables/useSiteTheme.ts) либо дефолт.
 const wrapperStyle = computed(() => (props.section.bg_color ? { '--surface': props.section.bg_color } : undefined))
+
+const component = computed(() => SECTION_COMPONENT_MAP[props.section.type])
+// theme нужен только Header/Footer — остальным компонентам передавать
+// undefined, иначе Vue уронит объект как fallthrough-атрибут на корневой
+// элемент (theme="[object Object]"), т.к. они его не объявляют в props.
+const sectionTheme = computed(() => (props.section.type === 'header' || props.section.type === 'footer' ? props.theme : undefined))
 </script>
 
 <template>
@@ -49,55 +56,13 @@ const wrapperStyle = computed(() => (props.section.bg_color ? { '--surface': pro
     :style="wrapperStyle"
     @click="onWrapperClick"
   >
-    <Header
-      v-if="section.type === 'header'"
+    <component
+      :is="component"
       :section="section"
       :editable="editable"
-      :theme="theme"
+      :theme="sectionTheme"
       @update:section="onUpdateSection"
-    />
-    <Hero
-      v-else-if="section.type === 'hero'"
-      :section="section"
-      :editable="editable"
-      @update:section="onUpdateSection"
-    />
-    <TextImage
-      v-else-if="section.type === 'text_image'"
-      :section="section"
-      :editable="editable"
-      @update:section="onUpdateSection"
-    />
-    <Grid3Col
-      v-else-if="section.type === 'grid_3col'"
-      :section="section"
-      :editable="editable"
-      @update:section="onUpdateSection"
-    />
-    <Pricing
-      v-else-if="section.type === 'pricing'"
-      :section="section"
-      :editable="editable"
-      @update:section="onUpdateSection"
-    />
-    <Testimonials
-      v-else-if="section.type === 'testimonials'"
-      :section="section"
-      :editable="editable"
-      @update:section="onUpdateSection"
-    />
-    <ContactMap
-      v-else-if="section.type === 'contact_map'"
-      :section="section"
-      :editable="editable"
-      @update:section="onUpdateSection"
-    />
-    <Footer
-      v-else-if="section.type === 'footer'"
-      :section="section"
-      :editable="editable"
-      :theme="theme"
-      @update:section="onUpdateSection"
+      @select="emit('select')"
     />
   </div>
 </template>

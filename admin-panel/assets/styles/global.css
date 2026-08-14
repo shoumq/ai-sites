@@ -7,7 +7,7 @@
 }
 
 html {
-  color-scheme: dark;
+  /* color-scheme переключается per-теме в tokens.css (:root / [data-theme]) */
   -webkit-text-size-adjust: 100%;
 }
 
@@ -58,6 +58,15 @@ img {
   color: #fff;
 }
 
+:root[data-theme="light"] ::selection {
+  /* 45%-прозрачный акцент поверх тёмного фона читается как насыщенный тон —
+     поверх светлого фона так же прозрачным выйдет бледно-розовый, на котором
+     белый текст (см. правило выше) нечитаем, поэтому здесь берём непрозрачнее
+     и текст тёмный. */
+  background: color-mix(in srgb, var(--a-accent) 65%, white);
+  color: var(--a-text);
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--a-border-strong) transparent;
@@ -86,6 +95,25 @@ img {
 }
 
 /* -- утилиты -- */
+
+/* Общие для ConstructorPanel.vue и admin-panel/components/editors/* — вынесены
+   сюда (а не scoped в одном компоненте), т.к. каждый редактор блока — своя
+   SFC, а scoped-стили Vue не пересекают границы компонентов. */
+.field-label {
+  font-size: var(--a-fs-xs);
+  font-weight: 600;
+  color: var(--a-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: var(--a-space-2);
+  font-size: var(--a-fs-sm);
+  color: var(--a-text-muted);
+  cursor: pointer;
+}
 
 .text-gradient {
   background: var(--a-gradient-text);
