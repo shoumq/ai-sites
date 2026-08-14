@@ -16,6 +16,10 @@ class BriefIn(BaseModel):
     brand_name: str = Field(min_length=1, max_length=120)
     description: str = Field(min_length=1, max_length=500)
     goal: SiteGoal
+    # Свободный текст: какие блоки/функции нужны сверх стандартного набора
+    # (например «нужен фильтр по категориям товаров») — учитывается при подборе
+    # блоков (YandexLayoutEngine) и их наполнении контентом (YandexCopywriter).
+    extra_requirements: str | None = Field(default=None, max_length=800)
 
 
 class ProjectOut(BaseModel):

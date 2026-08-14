@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "site-renderer-static-preview",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "C:\\Users\\fredd\\AppData\\Local\\Temp\\claude\\C--Users-fredd-ai-sites\\27b58816-1dc0-493b-a3c4-a5a5c36ab36e\\scratchpad\\static-serve.mjs",
+        "C:\\Users\\fredd\\ai-sites\\site-renderer\\.output\\public",
+        "4321"
+      ],
+      "port": 4321
+    }
+  ]
+}
