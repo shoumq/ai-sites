@@ -16,7 +16,6 @@ import { createStorage, prefixStorage } from 'file:///app/node_modules/unstorage
 import unstorage_47drivers_47fs from 'file:///app/node_modules/unstorage/drivers/fs.mjs';
 import { digest, hash as hash$1 } from 'file:///app/node_modules/ohash/dist/index.mjs';
 import { klona } from 'file:///app/node_modules/klona/dist/index.mjs';
-import defu, { defuFn } from 'file:///app/node_modules/defu/dist/defu.mjs';
 import { snakeCase } from 'file:///app/node_modules/scule/dist/index.mjs';
 import { getContext } from 'file:///app/node_modules/nitropack/node_modules/unctx/dist/index.mjs';
 import { toRouteMatcher, createRouter } from 'file:///app/node_modules/radix3/dist/index.mjs';
@@ -583,6 +582,68 @@ function cloneWithProxy(obj, overrides) {
 }
 const cachedEventHandler = defineCachedEventHandler;
 
+function isPlainObject(value) {
+  if (value === null || typeof value !== "object") {
+    return false;
+  }
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== null && prototype !== Object.prototype && Object.getPrototypeOf(prototype) !== null) {
+    return false;
+  }
+  if (Symbol.iterator in value) {
+    return false;
+  }
+  if (Symbol.toStringTag in value) {
+    return Object.prototype.toString.call(value) === "[object Module]";
+  }
+  return true;
+}
+
+function _defu(baseObject, defaults, namespace = ".", merger) {
+  if (!isPlainObject(defaults)) {
+    return _defu(baseObject, {}, namespace, merger);
+  }
+  const object = { ...defaults };
+  for (const key of Object.keys(baseObject)) {
+    if (key === "__proto__" || key === "constructor") {
+      continue;
+    }
+    const value = baseObject[key];
+    if (value === null || value === void 0) {
+      continue;
+    }
+    if (merger && merger(object, key, value, namespace)) {
+      continue;
+    }
+    if (Array.isArray(value) && Array.isArray(object[key])) {
+      object[key] = [...value, ...object[key]];
+    } else if (isPlainObject(value) && isPlainObject(object[key])) {
+      object[key] = _defu(
+        value,
+        object[key],
+        (namespace ? `${namespace}.` : "") + key.toString(),
+        merger
+      );
+    } else {
+      object[key] = value;
+    }
+  }
+  return object;
+}
+function createDefu(merger) {
+  return (...arguments_) => (
+    // eslint-disable-next-line unicorn/no-array-reduce
+    arguments_.reduce((p, c) => _defu(p, c, "", merger), {})
+  );
+}
+const defu = createDefu();
+const defuFn = createDefu((object, key, currentValue) => {
+  if (object[key] !== void 0 && typeof currentValue === "function") {
+    object[key] = currentValue(object[key]);
+    return true;
+  }
+});
+
 const inlineAppConfig = {};
 
 
@@ -652,7 +713,14 @@ const _inlineRuntimeConfig = {
       }
     }
   },
-  "public": {}
+  "public": {
+    "apiBase": "http://localhost:8000/api/v1",
+    "wsBase": "ws://localhost:8000/api/v1",
+    "motion": {}
+  },
+  "icon": {
+    "serverKnownCssClasses": []
+  }
 };
 const envOptions = {
   prefix: "NITRO_",
@@ -2081,7 +2149,7 @@ const serverDiagnostics = /* #__PURE__ */ defineDiagnostics({
 	}
 });
 
-const appHead = {"meta":[{"name":"viewport","content":"width=device-width, initial-scale=1"},{"charset":"utf-8"}],"link":[],"style":[],"script":[],"noscript":[]};
+const appHead = {"meta":[{"charset":"utf-8"},{"name":"viewport","content":"width=device-width, initial-scale=1"}],"link":[],"style":[],"script":[{"innerHTML":"(function(){try{var t=localStorage.getItem('ai-sites:theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t)}catch(e){}})()"}],"noscript":[],"htmlAttrs":{"lang":"ru"},"title":"AI Sites — админка"};
 
 const appRootTag = "div";
 
@@ -2399,7 +2467,7 @@ function createSSRContext(event) {
 		url,
 		event,
 		runtimeConfig: useRuntimeConfig(event),
-		noSSR: event.context.nuxt?.noSSR || (false),
+		noSSR: true,
 		head: createHead(unheadOptions),
 		error: false,
 		nuxt: void 0,
@@ -2495,7 +2563,7 @@ const getSPARenderer = lazyCachedFunction(async () => {
 	};
 });
 function getRenderer(ssrContext) {
-	return ssrContext.noSSR ? getSPARenderer() : getSSRRenderer();
+	return getSPARenderer() ;
 }
 const getSSRStyles = lazyCachedFunction(() => Promise.resolve().then(function () { return styles$1; }).then((r) => r.default || r));
 
@@ -3155,7 +3223,7 @@ function renderPayloadJsonScript(opts) {
 		"type": "application/json",
 		"innerHTML": opts.data ? encodeForwardSlashes(stringify(opts.data, opts.ssrContext["~payloadReducers"])) : "",
 		"data-nuxt-data": appId,
-		"data-ssr": !(opts.ssrContext.noSSR)
+		"data-ssr": false
 	};
 	payload.id = "__NUXT_DATA__";
 	if (opts.src) payload["data-src"] = opts.src;
@@ -3230,7 +3298,7 @@ async function renderRoute(event, ssrError) {
 		event._path = event.node.req.url = ssrContext.url;
 		getPayloadCacheKey(ssrContext.url);
 	}
-	const renderer = await getRenderer(ssrContext);
+	const renderer = await getRenderer();
 	const canStream = NUXT_SSR_STREAMING;
 	const renderRouteContext = {
 		canStream,
