@@ -53,6 +53,7 @@ services:
       SITE_BUILDER_URL: http://site-builder:4000
       SITE_BUILDS_DIR: /builds
       PUBLIC_BACKEND_URL: http://localhost:8000
+      GENERATED_MEDIA_DIR: /generated-media
     ports:
       - "8000:8000"
     depends_on:
@@ -69,6 +70,9 @@ services:
       # Тот же build-каталог, что site-builder заполняет — backend читает готовые
       # файлы отсюда для (mock-)заливки в S3, зип-экспорта и раздачи /preview-sites.
       - builds_data:/builds:ro
+      # Куда StorageClient в mock-режиме S3 реально сохраняет байты (например,
+      # сгенерированные YandexART-картинки) — раздаётся на /media (см. main.py).
+      - generated_media_data:/generated-media
 
   admin-panel:
     build:
@@ -92,3 +96,4 @@ services:
 volumes:
   postgres_data:
   builds_data:
+  generated_media_data:

@@ -537,58 +537,18 @@ _CHAT_SYSTEM_PROMPT = (
 )
 
 
-DEEPSEEK_COMPLETION_URL = "https://api.deepseek.com/chat/completions"
-
-
-async def _call_deepseek_completion(
-    settings: Settings, system_prompt: str, user_prompt: str, model: str, temperature: float = 0.3
-) -> str | None:  # pragma: no cover — требует ключ
-    """OpenAI-совместимый вызов DeepSeek chat/completions. В отличие от Yandex,
-    честно поддерживает response_format=json_object — модель гарантированно
-    возвращает валидный JSON без markdown-обёртки, но _extract_json всё равно
-    используется как страховка (см. _call_real_api)."""
-    try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.post(
-                DEEPSEEK_COMPLETION_URL,
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {settings.deepseek_api_key}",
-                },
-                json={
-                    "model": model,
-                    "temperature": temperature,
-                    "max_tokens": 4000,
-                    "response_format": {"type": "json_object"},
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                },
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data["choices"][0]["message"]["content"]
-    except (httpx.HTTPError, KeyError, IndexError, ValueError) as exc:
-        body = exc.response.text[:500] if isinstance(exc, httpx.HTTPStatusError) else ""
-        logger.warning("DeepSeek completion call failed: %s %s", exc, body)
-        return None
-
-
 class AIChatEditor:
     """Обработчик команд вкладки «ИИ-Чат» (ТЗ п.4). Сначала пробует быстрый
     бесплатный rule-based разбор (chat_commands.py) для типовых формулировок
-    из ТЗ; если он не смог распознать команду и задан DEEPSEEK_API_KEY или
-    YANDEX_API_KEY — отправляет всю текущую JSON-схему сайта и просьбу
-    пользователя реальной модели (DeepSeek в приоритете — доступен из РФ без
-    VPN и честно поддерживает json_object; Yandex как fallback), просит
-    вернуть обновлённую схему целиком. Результат в любом случае проходит
-    parse_site() — DoD п.2 гарантирован независимо от источника правки.
+    из ТЗ; если он не смог распознать команду и задан YANDEX_API_KEY —
+    отправляет всю текущую JSON-схему сайта и просьбу пользователя YandexGPT,
+    просит вернуть обновлённую схему целиком. Результат в любом случае
+    проходит parse_site() — DoD п.2 гарантирован независимо от источника правки.
     """
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.mock = not (settings.deepseek_api_key or settings.yandex_api_key)
+        self.mock = not settings.yandex_api_key
 
     async def apply_command(self, site: SiteSchema, message: str) -> tuple[SiteSchema, str, bool]:
         updated, reply, applied = apply_chat_command(site, message)
@@ -611,14 +571,9 @@ class AIChatEditor:
 
     async def _call_real_api(self, site: SiteSchema, message: str) -> dict | None:  # pragma: no cover — требует ключ
         user_prompt = json.dumps({"site": site.model_dump(), "command": message}, ensure_ascii=False)
-        if self.settings.deepseek_api_key:
-            text = await _call_deepseek_completion(
-                self.settings, _CHAT_SYSTEM_PROMPT, user_prompt, self.settings.deepseek_model, 0.3
-            )
-        else:
-            text = await _call_yandex_completion(
-                self.settings, _CHAT_SYSTEM_PROMPT, user_prompt, self.settings.yandex_gpt_model, 0.3
-            )
+        text = await _call_yandex_completion(
+            self.settings, _CHAT_SYSTEM_PROMPT, user_prompt, self.settings.yandex_gpt_model, 0.3
+        )
         return _extract_json(text) if text else None
 
 

@@ -22,20 +22,13 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://localhost:6379/0"
 
-    # AI providers — Yandex AI Studio (YandexGPT + YandexART). Leave blank to run in mock mode.
+    # AI providers — Yandex AI Studio (YandexGPT + YandexART), единственный
+    # провайдер ИИ во всём проекте (бриф, подбор блоков, картинки, ИИ-чат).
+    # Leave blank to run in mock mode.
     yandex_api_key: str = ""
     yandex_folder_id: str = ""
     yandex_gpt_model: str = "yandexgpt/latest"
     yandex_art_model: str = "yandex-art/latest"
-
-    # ИИ-чат (вкладка «ИИ-Чат» в редакторе) — DeepSeek, доступен из РФ без VPN,
-    # OpenAI-совместимый REST + честный response_format=json_object (в отличие
-    # от YandexGPT). Приоритетнее Yandex для чата, если задан оба ключа —
-    # используется ТОЛЬКО как fallback после rule-based парсера в chat_commands.py.
-    deepseek_api_key: str = ""
-    # Старые алиасы deepseek-chat/deepseek-coder в API DeepSeek больше не
-    # работают — актуальное имя модели deepseek-v4-flash.
-    deepseek_model: str = "deepseek-v4-flash"
 
     # S3-compatible storage (VK Cloud / Yandex Cloud)
     s3_endpoint_url: str = ""
@@ -61,6 +54,11 @@ class Settings(BaseSettings):
     # раздаёт их напрямую через /preview-sites, чтобы билд можно было открыть
     # в браузере локально без облака.
     site_builds_dir: str = "/builds"
+    # Куда StorageClient реально сохраняет байты (сгенерированные YandexART
+    # картинки и т.п.) в mock-режиме S3 (без реальных S3-ключей) — раздаётся
+    # через /media (см. app/main.py), чтобы картинка открывалась в браузере
+    # локально без облака, а не превращалась в нерабочую ссылку mock://.
+    generated_media_dir: str = "/generated-media"
 
     # Yandex Metrika / integrations defaults are per-project, stored in DB
 
