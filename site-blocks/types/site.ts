@@ -49,6 +49,7 @@ export interface HeaderSection {
   nav_items: NavItem[]
   sticky: boolean
   cta_text: string
+  bg_color: string
 }
 
 export interface HeroSection {
@@ -60,6 +61,7 @@ export interface HeroSection {
   cta_text: string
   cta_href: string
   bg_image: string
+  bg_color: string
 }
 
 export interface TextImageSection {
@@ -70,6 +72,7 @@ export interface TextImageSection {
   text: string
   image: string
   image_position: 'left' | 'right'
+  bg_color: string
 }
 
 export interface Grid3ColSection {
@@ -79,6 +82,7 @@ export interface Grid3ColSection {
   title: string
   items: ServiceItem[]
   cta_text: string
+  bg_color: string
 }
 
 export interface PricingSection {
@@ -87,6 +91,7 @@ export interface PricingSection {
   variant: 'cards' | 'highlight' | 'table' | 'minimal'
   title: string
   plans: PricingPlan[]
+  bg_color: string
 }
 
 export interface TestimonialsSection {
@@ -95,6 +100,7 @@ export interface TestimonialsSection {
   variant: 'cards' | 'quotes' | 'avatars_row' | 'single_featured'
   title: string
   items: Testimonial[]
+  bg_color: string
 }
 
 export interface ContactMapSection {
@@ -107,6 +113,7 @@ export interface ContactMapSection {
   email: string
   map_embed_url: string
   show_map: boolean
+  bg_color: string
 }
 
 export interface FooterSection {
@@ -117,6 +124,7 @@ export interface FooterSection {
   copyright_text: string
   links: NavItem[]
   socials: SocialLink[]
+  bg_color: string
 }
 
 export type Section =
@@ -139,6 +147,7 @@ export interface Theme {
   font: 'Inter' | 'Roboto' | 'PT Sans' | 'Montserrat'
   logo_url: string
   custom_css: string
+  bg_color: string
 }
 
 export interface Page {

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { HeaderSection } from '~/types/site'
+import type { HeaderSection, Theme } from '~/types/site'
 
 const props = defineProps<{
   section: HeaderSection
   editable?: boolean
+  theme?: Theme
 }>()
 
 const emit = defineEmits<{
@@ -21,6 +22,7 @@ function onUpdate(patch: Partial<HeaderSection>) {
     v-if="section.variant === 'standard'"
     :section="section"
     :editable="editable"
+    :theme="theme"
     @update:section="onUpdate"
     @select="emit('select')"
   />
@@ -28,6 +30,7 @@ function onUpdate(patch: Partial<HeaderSection>) {
     v-else-if="section.variant === 'centered'"
     :section="section"
     :editable="editable"
+    :theme="theme"
     @update:section="onUpdate"
     @select="emit('select')"
   />
@@ -35,6 +38,7 @@ function onUpdate(patch: Partial<HeaderSection>) {
     v-else-if="section.variant === 'split'"
     :section="section"
     :editable="editable"
+    :theme="theme"
     @update:section="onUpdate"
     @select="emit('select')"
   />
@@ -42,6 +46,7 @@ function onUpdate(patch: Partial<HeaderSection>) {
     v-else
     :section="section"
     :editable="editable"
+    :theme="theme"
     @update:section="onUpdate"
     @select="emit('select')"
   />

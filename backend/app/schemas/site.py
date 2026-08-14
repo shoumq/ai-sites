@@ -48,6 +48,9 @@ class Testimonial(BaseModel):
 
 class SectionBase(BaseModel):
     id: str
+    # Фон конкретного блока — пусто = наследует фон сайта (theme.bg_color)
+    # либо дефолтный --surface из site-blocks/assets/tokens.css.
+    bg_color: str = ""
 
 
 class HeaderSection(SectionBase):
@@ -185,6 +188,8 @@ class Theme(BaseModel):
     primary_color: str = "#2563EB"
     font: Literal["Inter", "Roboto", "PT Sans", "Montserrat"] = "Inter"
     logo_url: str = ""
+    # Фон сайта целиком — пусто = дефолтный --surface (белый) из tokens.css.
+    bg_color: str = ""
     # Точечные CSS-правки от ИИ-чата, которые не сводятся к готовому полю секции
     # (например «сделай текст кнопки жирным»).
     custom_css: str = ""

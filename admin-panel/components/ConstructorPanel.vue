@@ -232,6 +232,17 @@ function variantOptions(type: Exclude<SectionType, 'text_image'>) {
         </ListEditor>
       </template>
 
+      <div class="field-label">Фон блока</div>
+      <div class="bg-picker">
+        <label class="bg-picker__swatch" :style="{ background: section.bg_color || 'var(--surface)' }" title="Свой цвет фона блока">
+          <input type="color" class="bg-picker__input" :value="section.bg_color || '#ffffff'" @input="patch({ bg_color: ($event.target as HTMLInputElement).value })">
+        </label>
+        <BaseButton v-if="section.bg_color" variant="ghost" size="sm" icon="lucide:rotate-ccw" @click="patch({ bg_color: '' })">
+          Сбросить
+        </BaseButton>
+        <span v-else class="bg-picker__hint">По умолчанию (фон сайта)</span>
+      </div>
+
       <div v-if="imageField" class="image-generate">
         <BaseButton variant="secondary" block :loading="imageGenerating" icon="lucide:sparkles" @click="generateImage">
           Сгенерировать изображение
@@ -265,6 +276,17 @@ function variantOptions(type: Exclude<SectionType, 'text_image'>) {
         <label class="color-swatch color-swatch--custom" :style="{ background: theme.primary_color }" title="Свой HEX-цвет">
           <input type="color" class="color-swatch__input" :value="theme.primary_color" @input="patchTheme({ style: 'custom', primary_color: ($event.target as HTMLInputElement).value })">
         </label>
+      </div>
+
+      <div class="field-label">Фон сайта</div>
+      <div class="bg-picker">
+        <label class="bg-picker__swatch" :style="{ background: theme.bg_color || 'var(--surface)' }" title="Свой цвет фона сайта">
+          <input type="color" class="bg-picker__input" :value="theme.bg_color || '#ffffff'" @input="patchTheme({ bg_color: ($event.target as HTMLInputElement).value })">
+        </label>
+        <BaseButton v-if="theme.bg_color" variant="ghost" size="sm" icon="lucide:rotate-ccw" @click="patchTheme({ bg_color: '' })">
+          Сбросить
+        </BaseButton>
+        <span v-else class="bg-picker__hint">По умолчанию (белый)</span>
       </div>
 
       <BaseSelect label="Шрифт" :model-value="theme.font" :options="FONT_OPTIONS.map((f) => ({ value: f, label: f }))" @update:model-value="patchTheme({ font: $event as Theme['font'] })" />
@@ -401,6 +423,48 @@ function variantOptions(type: Exclude<SectionType, 'text_image'>) {
   height: 100%;
   opacity: 0;
   cursor: pointer;
+}
+
+.bg-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--a-space-3);
+}
+
+.bg-picker__swatch {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: var(--a-radius-md);
+  border: 2px solid var(--a-border-strong);
+  cursor: pointer;
+  overflow: hidden;
+  background-image:
+    linear-gradient(45deg, var(--a-border) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--a-border) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--a-border) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--a-border) 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0;
+  transition: transform var(--a-transition-fast);
+}
+.bg-picker__swatch:hover {
+  transform: scale(1.06);
+}
+
+.bg-picker__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.bg-picker__hint {
+  font-size: var(--a-fs-xs);
+  color: var(--a-text-faint);
 }
 
 .logo-preview {

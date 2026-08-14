@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { HeaderSection, NavItem } from '~/types/site'
+import type { HeaderSection, NavItem, Theme } from '~/types/site'
 
 const props = defineProps<{
   section: HeaderSection
   editable?: boolean
+  theme?: Theme
 }>()
 
 const emit = defineEmits<{
@@ -22,7 +23,9 @@ const { isOpen, toggle, close } = useMobileNav()
 <template>
   <header class="header header--standard" :class="{ 'header--sticky': section.sticky }">
     <div class="header__inner">
+      <img v-if="theme?.logo_url" :src="theme.logo_url" :alt="section.logo_text || 'Логотип'" class="header__logo-img">
       <EditableText
+        v-else
         tag="span"
         class="header__logo"
         :model-value="section.logo_text"
@@ -102,6 +105,14 @@ const { isOpen, toggle, close } = useMobileNav()
   letter-spacing: -0.01em;
   margin-right: auto;
   white-space: nowrap;
+}
+
+.header__logo-img {
+  height: 32px;
+  max-width: 160px;
+  width: auto;
+  object-fit: contain;
+  margin-right: auto;
 }
 
 .header__nav {

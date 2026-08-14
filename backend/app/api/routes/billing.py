@@ -30,10 +30,18 @@ async def checkout(
     db: AsyncSession = Depends(get_db),
     app_settings: Settings = Depends(get_settings),
 ) -> CheckoutOut:
-    if payload.tariff == TariffPlan.trial:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Trial-тариф не требует оплаты.")
-
     client = YooKassaClient(app_settings)
+
+    if payload.tariff == TariffPlan.trial:
+        if not client.mock:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Trial-тариф не требует оплаты.")
+        # В mock-режиме (нет ключей ЮKassa, т.е. бета без реальных платежей) —
+        # даём свободно переключиться обратно на trial для тестирования лимитов,
+        # а не только апгрейдиться. Реальный биллинг (client.mock == False)
+        # по-прежнему требует отдельного флоу отмены подписки, не checkout.
+        current_user.tariff = TariffPlan.trial
+        await db.commit()
+        return CheckoutOut(payment_id="mock-trial-reset", confirmation_url=payload.return_url, amount=0)
     payment = await client.create_payment(payload.tariff.value, current_user.id, payload.return_url)
 
     if client.mock:
