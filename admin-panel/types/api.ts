@@ -116,6 +116,11 @@ export interface ImageGenerateOut {
   remaining_today: number
 }
 
+export interface CheckoutIn {
+  tariff: Tariff
+  return_url?: string
+}
+
 export interface CheckoutOut {
   payment_id: string
   confirmation_url: string

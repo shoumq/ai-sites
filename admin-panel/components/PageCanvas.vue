@@ -83,6 +83,7 @@ function moveSection(index: number, dir: -1 | 1) {
           <SectionRenderer
             :section="element"
             :editable="true"
+            :theme="store.site?.theme"
             @select="onSelect(element.id)"
             @update:section="(patch: Record<string, unknown>) => onUpdateSection(element.id, patch)"
           />

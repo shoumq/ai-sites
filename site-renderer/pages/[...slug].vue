@@ -23,6 +23,6 @@ useSeoMeta({
 
 <template>
   <div class="page">
-    <SectionRenderer v-for="section in page!.sections" :key="section.id" :section="section" :editable="false" />
+    <SectionRenderer v-for="section in page!.sections" :key="section.id" :section="section" :editable="false" :theme="site.theme" />
   </div>
 </template>

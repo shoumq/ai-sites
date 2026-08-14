@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ProjectSummary } from '~/types/api'
+import type { CheckoutIn, CheckoutOut, ProjectSummary, Tariff } from '~/types/api'
 
 const auth = useAuthStore()
 const api = useApi()
@@ -31,8 +31,31 @@ const TYPE_ICONS: Record<string, string> = {
 }
 const TARIFF_LABELS: Record<string, string> = {
   trial: 'Бесплатный',
-  basic: 'Базовый',
+  basic: 'Продвинутый',
   business: 'Бизнес',
+}
+// Порядок для переключателя + короткая подпись возможностей каждого тарифа.
+const TARIFF_ORDER: Tariff[] = ['trial', 'basic', 'business']
+const TARIFF_HINTS: Record<string, string> = {
+  trial: '1 страница',
+  basic: 'до 10 страниц, многостраничники',
+  business: 'до 50 страниц, экспорт кода',
+}
+
+const switchingTariff = ref<Tariff | null>(null)
+
+async function switchTariff(tariff: Tariff) {
+  if (tariff === auth.tariff || switchingTariff.value) return
+  switchingTariff.value = tariff
+  try {
+    await api.post<CheckoutOut>('/billing/checkout', { tariff } satisfies CheckoutIn)
+    await auth.fetchMe()
+    toast.success(`Тариф переключён: ${TARIFF_LABELS[tariff]}`)
+  } catch (err) {
+    toast.error(err instanceof ApiError ? err.message : 'Не удалось переключить тариф')
+  } finally {
+    switchingTariff.value = null
+  }
 }
 
 async function load() {
@@ -87,9 +110,24 @@ function logout() {
       <header class="dashboard__header">
         <div>
           <h1>Мои сайты</h1>
-          <p v-if="auth.user" class="dashboard__tariff">
-            Тариф: <BaseBadge variant="brand" size="sm">{{ TARIFF_LABELS[auth.user.tariff] }}</BaseBadge>
-          </p>
+          <div v-if="auth.user" class="tariff-switch">
+            <span class="tariff-switch__label">Тариф (бета, бесплатно):</span>
+            <div class="tariff-switch__options">
+              <button
+                v-for="t in TARIFF_ORDER"
+                :key="t"
+                type="button"
+                class="tariff-switch__option"
+                :class="{ 'is-active': auth.user.tariff === t }"
+                :disabled="switchingTariff !== null"
+                :title="TARIFF_HINTS[t]"
+                @click="switchTariff(t)"
+              >
+                <Icon v-if="switchingTariff === t" name="lucide:loader-2" class="spin" />
+                {{ TARIFF_LABELS[t] }}
+              </button>
+            </div>
+          </div>
         </div>
         <div class="dashboard__actions">
           <BaseButton variant="primary" icon="lucide:plus" to="/new">Новый сайт</BaseButton>
@@ -183,13 +221,58 @@ function logout() {
   font-size: var(--a-fs-2xl);
 }
 
-.dashboard__tariff {
-  margin-top: var(--a-space-2);
-  font-size: var(--a-fs-sm);
-  color: var(--a-text-muted);
+.tariff-switch {
+  margin-top: var(--a-space-3);
   display: flex;
   align-items: center;
-  gap: var(--a-space-2);
+  gap: var(--a-space-3);
+  flex-wrap: wrap;
+}
+
+.tariff-switch__label {
+  font-size: var(--a-fs-sm);
+  color: var(--a-text-muted);
+}
+
+.tariff-switch__options {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--a-surface);
+  border: 1px solid var(--a-border);
+  border-radius: var(--a-radius-md);
+}
+
+.tariff-switch__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--a-space-1) var(--a-space-3);
+  border: none;
+  border-radius: var(--a-radius-sm);
+  background: transparent;
+  color: var(--a-text-muted);
+  font-size: var(--a-fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--a-transition-fast), color var(--a-transition-fast);
+}
+.tariff-switch__option:hover:not(:disabled) {
+  color: var(--a-text);
+}
+.tariff-switch__option:disabled {
+  cursor: not-allowed;
+}
+.tariff-switch__option.is-active {
+  background: var(--a-gradient-brand);
+  color: #fff;
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .dashboard__actions {

@@ -34,7 +34,14 @@ const currentPage = computed(() => {
   return pages.find((p) => p.slug === slug.value) ?? pages[0]
 })
 
-const DEFAULT_THEME: Theme = { style: 'business', primary_color: '#2563EB', font: 'Inter', logo_url: '', custom_css: '' }
+const DEFAULT_THEME: Theme = {
+  style: 'business',
+  primary_color: '#2563EB',
+  font: 'Inter',
+  logo_url: '',
+  custom_css: '',
+  bg_color: '',
+}
 useSiteTheme(computed(() => project.value?.site_data.theme ?? DEFAULT_THEME))
 
 function pageHref(slugValue: string) {
@@ -65,7 +72,7 @@ function pageHref(slugValue: string) {
       </nav>
 
       <div v-for="section in currentPage.sections" :key="section.id">
-        <SectionRenderer :section="section" :editable="false" />
+        <SectionRenderer :section="section" :editable="false" :theme="project?.site_data.theme" />
       </div>
     </template>
 

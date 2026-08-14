@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { FooterSection } from '~/types/site'
+import type { FooterSection, Theme } from '~/types/site'
 
 const props = defineProps<{
   section: FooterSection
   editable?: boolean
+  theme?: Theme
 }>()
 
 const emit = defineEmits<{
@@ -21,6 +22,7 @@ function onUpdate(patch: Partial<FooterSection>) {
     v-if="section.variant === 'simple'"
     :section="section"
     :editable="editable"
+    :theme="theme"
     @update:section="onUpdate"
     @select="emit('select')"
   />
@@ -28,6 +30,7 @@ function onUpdate(patch: Partial<FooterSection>) {
     v-else-if="section.variant === 'columns'"
     :section="section"
     :editable="editable"
+    :theme="theme"
     @update:section="onUpdate"
     @select="emit('select')"
   />

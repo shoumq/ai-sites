@@ -37,12 +37,20 @@ export function useSiteTheme(theme: Ref<Theme> | Theme) {
     return FONT_STACKS[t.font] ?? FONT_STACKS.Inter
   })
 
-  const cssVars = computed<Record<string, string>>(() => ({
-    '--primary': primaryColor.value,
-    '--primary-dark': `color-mix(in srgb, ${primaryColor.value} 80%, black)`,
-    '--primary-light': `color-mix(in srgb, ${primaryColor.value} 85%, white)`,
-    '--font-family': fontFamily.value,
-  }))
+  const cssVars = computed<Record<string, string>>(() => {
+    const vars: Record<string, string> = {
+      '--primary': primaryColor.value,
+      '--primary-dark': `color-mix(in srgb, ${primaryColor.value} 80%, black)`,
+      '--primary-light': `color-mix(in srgb, ${primaryColor.value} 85%, white)`,
+      '--font-family': fontFamily.value,
+    }
+    // Пусто — не трогаем --surface, остаётся дефолтный белый из tokens.css
+    // (и SectionRenderer.vue может по-прежнему переопределить его точечно
+    // для отдельного блока через тот же механизм наследования переменной).
+    const bg = unref(themeRef).bg_color
+    if (bg) vars['--surface'] = bg
+    return vars
+  })
 
   const styleAttr = computed(() =>
     Object.entries(cssVars.value)

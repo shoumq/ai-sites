@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { FooterSection, NavItem } from '~/types/site'
+import type { FooterSection, NavItem, Theme } from '~/types/site'
 
 const props = defineProps<{
   section: FooterSection
   editable?: boolean
+  theme?: Theme
 }>()
 
 const emit = defineEmits<{
@@ -20,7 +21,9 @@ function updateLink(index: number, patch: Partial<NavItem>) {
 <template>
   <footer class="footer footer--simple">
     <div class="footer__inner">
+      <img v-if="theme?.logo_url" :src="theme.logo_url" :alt="section.company_name || 'Логотип'" class="footer__logo-img">
       <EditableText
+        v-else
         tag="span"
         class="footer__brand"
         :model-value="section.company_name"
@@ -76,6 +79,17 @@ function updateLink(index: number, patch: Partial<NavItem>) {
   margin-right: auto;
 }
 
+.footer__logo-img {
+  height: 28px;
+  max-width: 150px;
+  width: auto;
+  object-fit: contain;
+  margin-right: auto;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-sm);
+}
+
 .footer__links {
   display: flex;
   gap: var(--space-4);
@@ -106,7 +120,8 @@ function updateLink(index: number, patch: Partial<NavItem>) {
     flex-direction: column;
     align-items: flex-start;
   }
-  .footer__brand {
+  .footer__brand,
+  .footer__logo-img {
     margin-right: 0;
   }
 }

@@ -63,6 +63,7 @@ export interface HeaderSection {
   nav_items: NavItem[]
   sticky: boolean
   cta_text: string
+  bg_color: string
 }
 
 export interface HeroSection {
@@ -74,6 +75,7 @@ export interface HeroSection {
   cta_text: string
   cta_href: string
   bg_image: string
+  bg_color: string
 }
 
 export interface TextImageSection {
@@ -84,6 +86,7 @@ export interface TextImageSection {
   text: string
   image: string
   image_position: 'left' | 'right'
+  bg_color: string
 }
 
 export interface Grid3ColSection {
@@ -93,6 +96,7 @@ export interface Grid3ColSection {
   title: string
   items: ServiceItem[]
   cta_text: string
+  bg_color: string
 }
 
 export interface PricingSection {
@@ -101,6 +105,7 @@ export interface PricingSection {
   variant: PricingVariant
   title: string
   plans: PricingPlan[]
+  bg_color: string
 }
 
 export interface TestimonialsSection {
@@ -109,6 +114,7 @@ export interface TestimonialsSection {
   variant: TestimonialsVariant
   title: string
   items: Testimonial[]
+  bg_color: string
 }
 
 export interface ContactMapSection {
@@ -121,6 +127,7 @@ export interface ContactMapSection {
   email: string
   map_embed_url: string
   show_map: boolean
+  bg_color: string
 }
 
 export interface FooterSection {
@@ -131,6 +138,7 @@ export interface FooterSection {
   copyright_text: string
   links: NavItem[]
   socials: SocialLink[]
+  bg_color: string
 }
 
 export type Section =
@@ -164,6 +172,7 @@ export interface Theme {
   font: 'Inter' | 'Roboto' | 'PT Sans' | 'Montserrat'
   logo_url: string
   custom_css: string
+  bg_color: string
 }
 
 export interface Page {
@@ -240,7 +249,16 @@ export function createDefaultSection(type: SectionType): Section {
   const id = `${type}-${Math.random().toString(36).slice(2, 9)}`
   switch (type) {
     case 'header':
-      return { id, type, variant: 'standard', logo_text: 'Логотип', nav_items: [], sticky: false, cta_text: '' }
+      return {
+        id,
+        type,
+        variant: 'standard',
+        logo_text: 'Логотип',
+        nav_items: [],
+        sticky: false,
+        cta_text: '',
+        bg_color: '',
+      }
     case 'hero':
       return {
         id,
@@ -251,15 +269,24 @@ export function createDefaultSection(type: SectionType): Section {
         cta_text: 'Узнать больше',
         cta_href: '#',
         bg_image: '',
+        bg_color: '',
       }
     case 'text_image':
-      return { id, type, title: 'О нас', text: 'Расскажите о своей компании', image: '', image_position: 'right' }
+      return {
+        id,
+        type,
+        title: 'О нас',
+        text: 'Расскажите о своей компании',
+        image: '',
+        image_position: 'right',
+        bg_color: '',
+      }
     case 'grid_3col':
-      return { id, type, variant: 'cards', title: 'Наши услуги', items: [], cta_text: '' }
+      return { id, type, variant: 'cards', title: 'Наши услуги', items: [], cta_text: '', bg_color: '' }
     case 'pricing':
-      return { id, type, variant: 'cards', title: 'Тарифы', plans: [] }
+      return { id, type, variant: 'cards', title: 'Тарифы', plans: [], bg_color: '' }
     case 'testimonials':
-      return { id, type, variant: 'cards', title: 'Отзывы клиентов', items: [] }
+      return { id, type, variant: 'cards', title: 'Отзывы клиентов', items: [], bg_color: '' }
     case 'contact_map':
       return {
         id,
@@ -271,8 +298,18 @@ export function createDefaultSection(type: SectionType): Section {
         email: '',
         map_embed_url: '',
         show_map: true,
+        bg_color: '',
       }
     case 'footer':
-      return { id, type, variant: 'simple', company_name: '', copyright_text: '', links: [], socials: [] }
+      return {
+        id,
+        type,
+        variant: 'simple',
+        company_name: '',
+        copyright_text: '',
+        links: [],
+        socials: [],
+        bg_color: '',
+      }
   }
 }

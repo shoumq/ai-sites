@@ -34,7 +34,14 @@ onMounted(load)
 // site-blocks/composables/useSiteTheme.ts выставляет --primary/--font-family
 // на <html> — работает даже когда site ещё не загружен (дефолтная тема), не
 // требует условного вызова composable.
-const DEFAULT_THEME: Theme = { style: 'business', primary_color: '#2563EB', font: 'Inter', logo_url: '', custom_css: '' }
+const DEFAULT_THEME: Theme = {
+  style: 'business',
+  primary_color: '#2563EB',
+  font: 'Inter',
+  logo_url: '',
+  custom_css: '',
+  bg_color: '',
+}
 const themeForPreview = computed(() => store.site?.theme ?? DEFAULT_THEME)
 useSiteTheme(themeForPreview)
 

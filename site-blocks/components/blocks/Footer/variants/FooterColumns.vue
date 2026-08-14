@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { FooterSection, NavItem, SocialLink } from '~/types/site'
+import type { FooterSection, NavItem, SocialLink, Theme } from '~/types/site'
 
 const props = defineProps<{
   section: FooterSection
   editable?: boolean
+  theme?: Theme
 }>()
 
 const emit = defineEmits<{
@@ -26,7 +27,9 @@ function updateSocial(index: number, patch: Partial<SocialLink>) {
   <footer class="footer footer--columns">
     <div class="footer__inner">
       <div class="footer__col footer__col--brand">
+        <img v-if="theme?.logo_url" :src="theme.logo_url" :alt="section.company_name || 'Логотип'" class="footer__logo-img">
         <EditableText
+          v-else
           tag="span"
           class="footer__brand"
           :model-value="section.company_name"
@@ -107,6 +110,16 @@ function updateSocial(index: number, patch: Partial<SocialLink>) {
 .footer__brand {
   font-weight: 700;
   font-size: var(--fs-xl);
+}
+
+.footer__logo-img {
+  height: 32px;
+  max-width: 160px;
+  width: auto;
+  object-fit: contain;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-sm);
 }
 
 .footer__socials {

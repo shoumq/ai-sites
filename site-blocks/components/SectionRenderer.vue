@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import type { Section } from '~/types/site'
+import type { Section, Theme } from '~/types/site'
 
 const props = withDefaults(
   defineProps<{
     section: Section
     editable?: boolean
+    // Нужна только Header/Footer (лого — theme.logo_url), но проп общий и
+    // необязательный — остальным блокам передавать не нужно.
+    theme?: Theme
   }>(),
   { editable: false },
 )
@@ -27,6 +30,14 @@ function onUpdateSection(patch: Record<string, unknown>) {
 function onWrapperClick() {
   if (props.editable) emit('select')
 }
+
+// Фон блока: --surface — обычная CSS-переменная, наследуется вниз по DOM
+// независимо от Vue scoped-стилей. Задав её инлайн-стилем на этой обёртке,
+// переопределяем фон ВНУТРИ конкретного блока (все варианты уже используют
+// background: var(--surface) в своих корневых селекторах), не трогая ни один
+// из файлов вариантов блоков. Пусто — не переопределяем, наследуется фон
+// сайта (theme.bg_color, см. composables/useSiteTheme.ts) либо дефолт.
+const wrapperStyle = computed(() => (props.section.bg_color ? { '--surface': props.section.bg_color } : undefined))
 </script>
 
 <template>
@@ -35,12 +46,14 @@ function onWrapperClick() {
     :data-block-id="section.id"
     :data-block-type="section.type"
     :class="{ 'is-editable': editable }"
+    :style="wrapperStyle"
     @click="onWrapperClick"
   >
     <Header
       v-if="section.type === 'header'"
       :section="section"
       :editable="editable"
+      :theme="theme"
       @update:section="onUpdateSection"
     />
     <Hero
@@ -83,6 +96,7 @@ function onWrapperClick() {
       v-else-if="section.type === 'footer'"
       :section="section"
       :editable="editable"
+      :theme="theme"
       @update:section="onUpdateSection"
     />
   </div>
