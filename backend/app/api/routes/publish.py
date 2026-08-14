@@ -1,6 +1,6 @@
 import re
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,7 +13,8 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas.settings import ProjectSettings
 from app.schemas.site import parse_site
-from app.services.publish import publish_project, render_page_html
+from app.services.publish import export_zip, publish_project
+from app.services.site_builder_client import SiteBuildError
 from app.services.storage import StorageClient
 
 router = APIRouter(prefix="/projects/{project_id}", tags=["publish"])
@@ -43,7 +44,10 @@ async def publish(
     storage = StorageClient(app_settings)
     subdomain = _slugify(project.name)
 
-    url = publish_project(site, project_settings, current_user.tariff, storage, subdomain)
+    try:
+        url = await publish_project(app_settings, site, project_settings, current_user.tariff, storage, subdomain)
+    except SiteBuildError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
     project.status = ProjectStatus.published
     project.published_url = url
@@ -56,11 +60,10 @@ async def export_code(
     project: Project = Depends(get_owned_project),
     current_user: User = Depends(get_current_user),
     app_settings: Settings = Depends(get_settings),
-) -> dict[str, str]:
-    """Экспорт HTML+CSS+JS — доступен только на тарифе «Бизнес» (ТЗ п.6).
-    Возвращает словарь {slug: html}; в проде — упаковывается в zip и отдаётся
-    как файловый ответ.
-    """
+) -> Response:
+    """Экспорт статической Vue/Nuxt-сборки как zip-архива — доступен только на
+    тарифе «Бизнес» (ТЗ п.6). Раньше здесь была лишь заглушка-комментарий,
+    теперь реальный `nuxi generate` + упаковка в zip (см. app/services/publish.py)."""
     if not TARIFF_LIMITS[current_user.tariff].code_export:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -71,4 +74,15 @@ async def export_code(
 
     site = parse_site(project.site_data)
     project_settings = ProjectSettings.model_validate(project.settings or {})
-    return {page.slug: render_page_html(page, site, project_settings, current_user.tariff) for page in site.pages}
+    subdomain = _slugify(project.name)
+
+    try:
+        archive = await export_zip(app_settings, site, project_settings, current_user.tariff, subdomain)
+    except SiteBuildError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+
+    return Response(
+        content=archive,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{subdomain}.zip"'},
+    )

@@ -42,6 +42,8 @@ async def ws_generate(websocket: WebSocket, token: str = Query(...)) -> None:
             brief = BriefIn.model_validate(raw_brief)
             assert_safe_prompt(brief.brand_name)
             assert_safe_prompt(brief.description)
+            if brief.extra_requirements:
+                assert_safe_prompt(brief.extra_requirements)
 
             project = Project(
                 owner_id=user.id,

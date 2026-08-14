@@ -50,6 +50,8 @@ async def generate_project(
     try:
         assert_safe_prompt(brief.brand_name)
         assert_safe_prompt(brief.description)
+        if brief.extra_requirements:
+            assert_safe_prompt(brief.extra_requirements)
     except UnsafeInputError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.reason) from exc
 

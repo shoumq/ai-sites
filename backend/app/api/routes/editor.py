@@ -11,9 +11,10 @@ from app.models.user import User
 from app.schemas.chat import ChatCommandIn, ChatCommandOut
 from app.schemas.project import SiteUpdateIn
 from app.schemas.site import parse_site
-from app.services.ai.providers import AIChatEditor, YandexImageGenerator
+from app.services.ai.providers import AIChatEditor, YandexArtImageGenerator
 from app.services.quota import check_and_increment_image_quota
 from app.services.safety import UnsafeInputError, assert_safe_prompt
+from app.services.storage import StorageClient
 
 router = APIRouter(prefix="/projects/{project_id}", tags=["editor"])
 
@@ -86,6 +87,6 @@ async def generate_block_image(
             detail="Дневной лимит генераций изображений исчерпан для вашего тарифа.",
         )
 
-    generator = YandexImageGenerator(settings)
+    generator = YandexArtImageGenerator(settings, StorageClient(settings))
     url = await generator.generate_image(payload.prompt)
     return ImageGenerateOut(url=url, remaining_today=remaining)

@@ -1,0 +1,61 @@
+{
+  "project_id": "test-project-001",
+  "type": "multipage",
+  "theme": {
+    "style": "business",
+    "primary_color": "#2563EB",
+    "font": "Inter",
+    "logo_url": "",
+    "custom_css": ""
+  },
+  "pages": [
+    {
+      "slug": "main",
+      "title": "Локальная тестовая сборка — site-renderer",
+      "sections": [
+        { "id": "header-1", "type": "header", "variant": "split", "logo_text": "Acme Studio", "nav_items": [{ "label": "Услуги", "href": "#services" }, { "label": "Тарифы", "href": "#pricing" }, { "label": "Отзывы", "href": "#reviews" }, { "label": "Контакты", "href": "#contact" }], "sticky": true, "cta_text": "Связаться" },
+        { "id": "hero-1", "type": "hero", "variant": "gradient", "title": "Премиальные сайты для вашего бизнеса", "subtitle": "Конструктор собирает статичный Nuxt-сайт из вашего JSON за секунды", "cta_text": "Начать бесплатно", "cta_href": "#pricing", "bg_image": "" },
+        { "id": "textimage-1", "type": "text_image", "title": "Как это работает", "text": "ИИ формирует строгий JSON по схеме сайта, а site-renderer собирает из него полностью статический Nuxt 4 сайт без единого рантайм-запроса.", "image": "", "image_position": "right" },
+        { "id": "grid-1", "type": "grid_3col", "variant": "icon_top", "title": "Наши услуги", "items": [{ "name": "Лендинг", "description": "Одностраничный сайт под рекламу", "price": "от 15 000 ₽", "icon": "🚀" }, { "name": "Интернет-магазин", "description": "Каталог, корзина, оплата", "price": "от 45 000 ₽", "icon": "🛒" }, { "name": "Корпоративный сайт", "description": "Многостраничный сайт компании", "price": "от 35 000 ₽", "icon": "🏢" }], "cta_text": "Все услуги" },
+        { "id": "grid-2", "type": "grid_3col", "variant": "cards", "title": "Дополнительные пакеты", "items": [{ "name": "SEO-базовый", "description": "Мета-теги, sitemap, robots.txt", "price": "5 000 ₽", "icon": "🔍" }, { "name": "Аналитика", "description": "Яндекс.Метрика и цели", "price": "3 000 ₽", "icon": "📊" }, { "name": "Мультиязычность", "description": "Второй язык сайта", "price": "10 000 ₽", "icon": "🌐" }], "cta_text": "" },
+        { "id": "grid-3", "type": "grid_3col", "variant": "icon_rows", "title": "Процесс работы", "items": [{ "name": "Бриф", "description": "Заполняете анкету за 5 минут", "price": "", "icon": "📝" }, { "name": "Генерация", "description": "ИИ собирает сайт по вашему брифу", "price": "", "icon": "🤖" }, { "name": "Публикация", "description": "Сайт публикуется на вашем домене", "price": "", "icon": "🌍" }], "cta_text": "" },
+        { "id": "grid-4", "type": "grid_3col", "variant": "minimal_list", "title": "Прайс-лист", "items": [{ "name": "Домен .ru на год", "description": "", "price": "990 ₽", "icon": "" }, { "name": "SSL-сертификат", "description": "", "price": "0 ₽", "icon": "" }, { "name": "Хостинг в месяц", "description": "", "price": "490 ₽", "icon": "" }], "cta_text": "" },
+        { "id": "grid-5", "type": "grid_3col", "variant": "compact_grid", "title": "Опции", "items": [{ "name": "Форма обратной связи", "description": "", "price": "1 500 ₽", "icon": "📮" }, { "name": "Онлайн-чат", "description": "", "price": "2 000 ₽", "icon": "💬" }, { "name": "Каталог товаров", "description": "", "price": "8 000 ₽", "icon": "📦" }, { "name": "Блог", "description": "", "price": "4 000 ₽", "icon": "✍️" }], "cta_text": "" },
+        { "id": "pricing-1", "type": "pricing", "variant": "highlight", "title": "Тарифы", "plans": [{ "name": "Старт", "price": "9 900 ₽", "period": "мес", "features": ["1 страница", "Хостинг включён", "Базовая SEO"], "highlighted": false }, { "name": "Бизнес", "price": "19 900 ₽", "period": "мес", "features": ["До 5 страниц", "Хостинг включён", "Расширенная SEO", "Приоритетная поддержка"], "highlighted": true }, { "name": "Про", "price": "34 900 ₽", "period": "мес", "features": ["Неограниченно страниц", "Интернет-магазин", "Персональный менеджер"], "highlighted": false }] },
+        { "id": "pricing-2", "type": "pricing", "variant": "cards", "title": "Разовые пакеты", "plans": [{ "name": "Разово", "price": "25 000 ₽", "period": "проект", "features": ["Сайт под ключ", "Без подписки"], "highlighted": false }, { "name": "Годовой", "price": "180 000 ₽", "period": "год", "features": ["Сайт + поддержка", "Экономия 25%"], "highlighted": true }, { "name": "Агентство", "price": "по запросу", "period": "", "features": ["Индивидуальные условия"], "highlighted": false }] },
+        { "id": "pricing-3", "type": "pricing", "variant": "table", "title": "Сравнение тарифов", "plans": [{ "name": "Старт", "price": "9 900 ₽", "period": "мес", "features": ["1 страница", "SSL"], "highlighted": false }, { "name": "Бизнес", "price": "19 900 ₽", "period": "мес", "features": ["5 страниц", "SSL", "SEO"], "highlighted": true }] },
+        { "id": "pricing-4", "type": "pricing", "variant": "minimal", "title": "Простой выбор", "plans": [{ "name": "Мини", "price": "5 000 ₽", "period": "мес", "features": [], "highlighted": false }, { "name": "Макси", "price": "15 000 ₽", "period": "мес", "features": [], "highlighted": true }, { "name": "Компания", "price": "40 000 ₽", "period": "мес", "features": [], "highlighted": false }] },
+        { "id": "testi-1", "type": "testimonials", "variant": "cards", "title": "Отзывы клиентов", "items": [{ "author": "Игорь Петров", "text": "Сайт сделали за два дня, всё работает отлично.", "avatar": "", "rating": 5 }, { "author": "Мария Соколова", "text": "Приятно удивил результат, рекомендую.", "avatar": "", "rating": 4 }, { "author": "Дмитрий Орлов", "text": "Гибкая система, легко редактировать самому.", "avatar": "", "rating": 5 }] },
+        { "id": "testi-2", "type": "testimonials", "variant": "quotes", "title": "Что говорят о нас", "items": [{ "author": "Анна Ким", "text": "Лучший опыт запуска сайта из всех, что у меня были.", "avatar": "", "rating": 5 }, { "author": "Сергей Волков", "text": "Команда на связи 24/7, всё оперативно.", "avatar": "", "rating": 5 }] },
+        { "id": "testi-3", "type": "testimonials", "variant": "avatars_row", "title": "Короткие отзывы", "items": [{ "author": "Ольга Ким", "text": "Удобно и быстро.", "avatar": "", "rating": 5 }, { "author": "Павел Носов", "text": "Всё понравилось.", "avatar": "", "rating": 4 }] },
+        { "id": "testi-4", "type": "testimonials", "variant": "single_featured", "title": "Отзыв недели", "items": [{ "author": "Екатерина Белова", "text": "Отдельное спасибо за скорость и внимание к деталям — сайт превзошёл ожидания.", "avatar": "", "rating": 5 }] },
+        { "id": "contact-1", "type": "contact_map", "variant": "cards", "title": "Свяжитесь с нами", "address": "г. Москва, ул. Тверская, д. 1", "phone": "+7 (495) 000-00-00", "email": "hello@example.com", "map_embed_url": "", "show_map": true },
+        { "id": "footer-1", "type": "footer", "variant": "columns", "company_name": "Acme Studio", "copyright_text": "© 2026 Acme Studio. Все права защищены.", "links": [{ "label": "Политика конфиденциальности", "href": "/privacy" }, { "label": "Условия использования", "href": "/terms" }], "socials": [{ "platform": "Telegram", "url": "https://t.me/example" }, { "platform": "VK", "url": "https://vk.com/example" }] }
+      ]
+    },
+    {
+      "slug": "about",
+      "title": "О компании",
+      "sections": [
+        { "id": "header-2", "type": "header", "variant": "minimal", "logo_text": "Acme Studio", "nav_items": [], "sticky": false, "cta_text": "На главную" },
+        { "id": "hero-2", "type": "hero", "variant": "overlay", "title": "О нашей команде", "subtitle": "Делаем сайты, которые продают", "cta_text": "", "cta_href": "#", "bg_image": "" },
+        { "id": "textimage-2", "type": "text_image", "title": "Наша миссия", "text": "Мы верим, что каждый бизнес заслуживает сайт премиального качества без месяцев ожидания и без разработчиков.", "image": "", "image_position": "left" },
+        { "id": "contact-2", "type": "contact_map", "variant": "split", "title": "Наш офис", "address": "г. Санкт-Петербург, Невский пр., д. 10", "phone": "+7 (812) 000-00-00", "email": "spb@example.com", "map_embed_url": "", "show_map": true },
+        { "id": "footer-2", "type": "footer", "variant": "minimal", "company_name": "Acme Studio", "copyright_text": "© 2026 Acme Studio", "links": [], "socials": [] }
+      ]
+    },
+    {
+      "slug": "variants-coverage",
+      "title": "Проверка оставшихся вариантов",
+      "sections": [
+        { "id": "header-3", "type": "header", "variant": "standard", "logo_text": "Acme Studio", "nav_items": [{ "label": "Главная", "href": "/" }, { "label": "О нас", "href": "/about" }], "sticky": false, "cta_text": "Заказать" },
+        { "id": "header-4", "type": "header", "variant": "centered", "logo_text": "Acme Studio", "nav_items": [{ "label": "Главная", "href": "/" }, { "label": "О нас", "href": "/about" }], "sticky": false, "cta_text": "Заказать" },
+        { "id": "hero-3", "type": "hero", "variant": "centered", "title": "Заголовок hero centered", "subtitle": "Проверка варианта centered", "cta_text": "Кнопка", "cta_href": "#", "bg_image": "" },
+        { "id": "hero-4", "type": "hero", "variant": "split", "title": "Заголовок hero split", "subtitle": "Проверка варианта split", "cta_text": "Кнопка", "cta_href": "#", "bg_image": "" },
+        { "id": "hero-5", "type": "hero", "variant": "minimal", "title": "Заголовок hero minimal", "subtitle": "Проверка варианта minimal", "cta_text": "Кнопка", "cta_href": "#", "bg_image": "" },
+        { "id": "contact-3", "type": "contact_map", "variant": "centered", "title": "Контакты (centered)", "address": "г. Казань, ул. Баумана, д. 5", "phone": "+7 (843) 000-00-00", "email": "kzn@example.com", "map_embed_url": "", "show_map": false },
+        { "id": "footer-3", "type": "footer", "variant": "simple", "company_name": "Acme Studio", "copyright_text": "© 2026 Acme Studio. Проверка варианта simple.", "links": [{ "label": "Контакты", "href": "#" }], "socials": [] }
+      ]
+    }
+  ]
+}
