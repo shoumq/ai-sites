@@ -45,6 +45,18 @@ export default defineNuxtConfig({
     },
   },
 
+  // У Nuxt свой watcher поверх Vite'овского — он отвечает за ПОЯВЛЕНИЕ новых
+  // файлов (авто-импорт компонентов/composables, регистрация страниц). Без
+  // polling здесь новый файл в components/ или pages/ на Windows-бинде не
+  // виден до перезапуска контейнера: Vite подхватывал правки существующих
+  // файлов, а новый <StructurePicker> падал с "Failed to resolve component".
+  watchers: {
+    chokidar: {
+      usePolling: true,
+      interval: 300,
+    },
+  },
+
   runtimeConfig: {
     public: {
       // Переопределяются через NUXT_PUBLIC_API_BASE / NUXT_PUBLIC_WS_BASE

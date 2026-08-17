@@ -134,15 +134,18 @@
     "../node_modules/runtime/server",
     "../node_modules/dist/runtime/server",
     "../server/**/*",
+    "../../site-blocks/server/**/*",
     "../shared/**/*.d.ts",
+    "../../site-blocks/shared/**/*.d.ts",
     "./types/nitro.d.ts"
   ],
   "exclude": [
     "../node_modules",
     "../node_modules/nuxt/node_modules",
+    "../../site-blocks/node_modules",
+    "../node_modules/@vueuse/motion/node_modules",
     "../node_modules/@pinia/nuxt/node_modules",
     "../node_modules/@nuxt/icon/node_modules",
-    "../node_modules/@vueuse/motion/node_modules",
     "../node_modules/@nuxt/devtools/node_modules",
     "../node_modules/@nuxt/telemetry/node_modules",
     "../dist"

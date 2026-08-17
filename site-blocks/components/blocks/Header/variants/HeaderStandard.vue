@@ -48,6 +48,7 @@ const { isOpen, toggle, close } = useMobileNav()
         />
       </nav>
 
+      <CartButton v-if="section.show_cart" :editable="editable" />
       <EditableText
         v-if="section.cta_text || editable"
         tag="span"

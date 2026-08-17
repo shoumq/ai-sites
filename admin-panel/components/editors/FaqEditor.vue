@@ -3,9 +3,16 @@ import type { FaqSection } from '~/types/site'
 
 defineProps<{ section: FaqSection }>()
 const emit = defineEmits<{ patch: [p: Record<string, unknown>] }>()
+const { variantOptions } = useVariantOptions()
 </script>
 
 <template>
+  <BaseSelect
+    label="Вариант блока"
+    :model-value="section.variant"
+    :options="variantOptions('faq')"
+    @update:model-value="emit('patch', { variant: $event })"
+  />
   <BaseInput label="Заголовок блока" :model-value="section.title" @update:model-value="emit('patch', { title: $event })" />
   <div class="field-label">Вопросы и ответы</div>
   <ListEditor

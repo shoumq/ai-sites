@@ -3,9 +3,16 @@ import type { GallerySection } from '~/types/site'
 
 defineProps<{ section: GallerySection }>()
 const emit = defineEmits<{ patch: [p: Record<string, unknown>] }>()
+const { variantOptions } = useVariantOptions()
 </script>
 
 <template>
+  <BaseSelect
+    label="Вариант блока"
+    :model-value="section.variant"
+    :options="variantOptions('gallery')"
+    @update:model-value="emit('patch', { variant: $event })"
+  />
   <BaseInput label="Заголовок галереи" :model-value="section.title" @update:model-value="emit('patch', { title: $event })" />
   <div class="field-label">Фотографии</div>
   <ListEditor

@@ -35,6 +35,13 @@ class ProjectStatus(str, enum.Enum):
     published = "published"
 
 
+class LeadKind(str, enum.Enum):
+    """Заявка (форма/кнопка «оставить заявку») или заказ из корзины магазина."""
+
+    lead = "lead"
+    order = "order"
+
+
 class GenerationStage(str, enum.Enum):
     writing_copy = "writing_copy"
     building_layout = "building_layout"

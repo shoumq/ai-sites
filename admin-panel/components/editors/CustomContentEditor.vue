@@ -3,9 +3,16 @@ import type { CustomContentSection } from '~/types/site'
 
 defineProps<{ section: CustomContentSection }>()
 const emit = defineEmits<{ patch: [p: Record<string, unknown>] }>()
+const { variantOptions } = useVariantOptions()
 </script>
 
 <template>
+  <BaseSelect
+    label="Вариант блока"
+    :model-value="section.variant"
+    :options="variantOptions('custom_content')"
+    @update:model-value="emit('patch', { variant: $event })"
+  />
   <BaseInput label="Заголовок" :model-value="section.title" @update:model-value="emit('patch', { title: $event })" />
   <BaseTextarea
     label="Текст"

@@ -23,6 +23,17 @@ const { variantOptions } = useVariantOptions()
     >
     Липкая шапка (position: sticky)
   </label>
+  <label class="checkbox-row">
+    <input
+      type="checkbox"
+      :checked="section.show_cart"
+      @change="emit('patch', { show_cart: ($event.target as HTMLInputElement).checked })"
+    >
+    Иконка корзины со счётчиком
+  </label>
+  <p class="field-hint">
+    Корзина появится на сайте, только если хотя бы у одного блока каталога/услуг выбрано действие «В корзину».
+  </p>
   <div class="field-label">Пункты меню</div>
   <ListEditor
     :items="section.nav_items"
@@ -36,3 +47,11 @@ const { variantOptions } = useVariantOptions()
     </template>
   </ListEditor>
 </template>
+
+<style scoped>
+.field-hint {
+  font-size: var(--a-fs-xs);
+  color: var(--a-text-faint);
+  margin: calc(var(--a-space-2) * -1) 0 0;
+}
+</style>

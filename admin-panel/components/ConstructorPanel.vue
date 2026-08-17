@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { COLOR_PRESETS, FONT_OPTIONS } from '~/types/site'
+import { COLOR_PRESETS, FONT_OPTIONS, THEME_AXES, THEME_AXIS_LABELS, THEME_AXIS_VALUE_LABELS } from '~/types/site'
 import type { Theme } from '~/types/site'
 import { EDITOR_COMPONENT_MAP } from './editors/editorRegistry'
 
@@ -145,6 +145,18 @@ async function generateImage() {
       </div>
 
       <BaseSelect label="Шрифт" :model-value="theme.font" :options="FONT_OPTIONS.map((f) => ({ value: f, label: f }))" @update:model-value="patchTheme({ font: $event as Theme['font'] })" />
+
+      <!-- Оси вёрстки: меняют пропорции и характер всех блоков сайта сразу,
+           без пересборки схемы (см. site-blocks/composables/useSiteTheme.ts). -->
+      <div class="field-label">Характер вёрстки</div>
+      <BaseSelect
+        v-for="(values, axis) in THEME_AXES"
+        :key="axis"
+        :label="THEME_AXIS_LABELS[axis] ?? axis"
+        :model-value="(theme as any)[axis] ?? values[0]"
+        :options="values.map((v) => ({ value: v, label: THEME_AXIS_VALUE_LABELS[v] ?? v }))"
+        @update:model-value="patchTheme({ [axis]: $event } as Partial<Theme>)"
+      />
 
       <BaseInput label="Логотип — URL картинки" placeholder="https://…/logo.svg" :model-value="theme.logo_url" @update:model-value="patchTheme({ logo_url: $event })" />
       <div v-if="theme.logo_url" class="logo-preview">

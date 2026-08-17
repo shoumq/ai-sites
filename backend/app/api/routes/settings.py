@@ -15,7 +15,9 @@ router = APIRouter(prefix="/projects/{project_id}/settings", tags=["settings"])
 
 @router.get("", response_model=ProjectSettings)
 async def get_settings_(project: Project = Depends(get_owned_project)) -> ProjectSettings:
-    return ProjectSettings.model_validate(project.settings or {})
+    # migrate_legacy — чтобы уже настроенный в старой версии счётчик Метрики
+    # (integrations.yandex_metrika_id) показался в новой вкладке «Аналитика».
+    return ProjectSettings.model_validate(project.settings or {}).migrate_legacy()
 
 
 @router.put("", response_model=ProjectSettings)
@@ -41,7 +43,7 @@ async def check_domain(
     project: Project = Depends(get_owned_project),
     app_settings: Settings = Depends(get_settings),
 ) -> DnsCheckResult:
-    current_settings = ProjectSettings.model_validate(project.settings or {})
+    current_settings = ProjectSettings.model_validate(project.settings or {}).migrate_legacy()
     if not current_settings.domain.custom_domain:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Домен не указан в настройках проекта.")
     return await check_domain_cname(current_settings.domain.custom_domain, app_settings)

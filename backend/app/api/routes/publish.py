@@ -1,5 +1,3 @@
-import re
-
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,16 +11,11 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas.settings import ProjectSettings
 from app.schemas.site import parse_site
-from app.services.publish import export_zip, publish_project
+from app.services.publish import export_zip, publish_project, slugify_project_name
 from app.services.site_builder_client import SiteBuildError
 from app.services.storage import StorageClient
 
 router = APIRouter(prefix="/projects/{project_id}", tags=["publish"])
-
-
-def _slugify(name: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
-    return slug or "site"
 
 
 class PublishOut(BaseModel):
@@ -40,9 +33,9 @@ async def publish(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Сначала сгенерируйте сайт.")
 
     site = parse_site(project.site_data)
-    project_settings = ProjectSettings.model_validate(project.settings or {})
+    project_settings = ProjectSettings.model_validate(project.settings or {}).migrate_legacy()
     storage = StorageClient(app_settings)
-    subdomain = _slugify(project.name)
+    subdomain = slugify_project_name(project.name)
 
     try:
         url = await publish_project(app_settings, site, project_settings, current_user.tariff, storage, subdomain)
@@ -73,8 +66,8 @@ async def export_code(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Сначала сгенерируйте сайт.")
 
     site = parse_site(project.site_data)
-    project_settings = ProjectSettings.model_validate(project.settings or {})
-    subdomain = _slugify(project.name)
+    project_settings = ProjectSettings.model_validate(project.settings or {}).migrate_legacy()
+    subdomain = slugify_project_name(project.name)
 
     try:
         archive = await export_zip(app_settings, site, project_settings, current_user.tariff, subdomain)

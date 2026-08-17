@@ -32,6 +32,9 @@ class ServiceItem(BaseModel):
     description: str = ""
     price: str = ""
     icon: str = ""
+    # Картинка карточки — используется вариантами вёрстки с медиа (photo_cards)
+    # и как превью товара, если grid_3col работает каталогом магазина.
+    image: str = ""
 
 
 class PricingPlan(BaseModel):
@@ -53,8 +56,16 @@ class CatalogItem(BaseModel):
     name: str
     description: str = ""
     price: str = ""
+    # Зачёркнутая «старая» цена — рисуется только если непустая.
+    old_price: str = ""
     category: str = ""
     image: str = ""
+    # Плашка поверх карточки («Хит», «-20%», «Новинка»).
+    badge: str = ""
+    # Артикул/VIN — попадает в заявку/заказ, чтобы владелец сайта понимал,
+    # о каком именно товаре речь, даже если названия повторяются.
+    sku: str = ""
+    in_stock: bool = True
 
 
 class FaqItem(BaseModel):
@@ -77,6 +88,28 @@ class CustomContentItem(BaseModel):
     value: str = ""
 
 
+class LeadFormField(BaseModel):
+    """Поле формы заявки. `name` уходит ключом в payload заявки, поэтому он
+    latin-slug, а не человекочитаемая подпись (это `label`)."""
+
+    name: str
+    label: str
+    type: Literal["text", "tel", "email", "textarea", "select"] = "text"
+    required: bool = False
+    placeholder: str = ""
+    # Только для type="select".
+    options: list[str] = Field(default_factory=list)
+
+
+# Что делает кнопка на карточке товара/услуги. Ровно та ось, которая отличает
+# каталог автомобилей (заявка, но никакой корзины) от интернет-магазина
+# (добавление в корзину и оформление заказа):
+#   none — карточка без кнопки, просто витрина;
+#   lead — «Оставить заявку»: открывает модальную форму с контекстом товара;
+#   cart — «В корзину»: кладёт товар в корзину сайта (см. site-blocks/composables/useCart.ts).
+ItemAction = Literal["none", "lead", "cart"]
+
+
 # ---- секции (обязательное поле id уникально в пределах страницы) ----------
 
 
@@ -97,6 +130,10 @@ class HeaderSection(SectionBase):
     nav_items: list[NavItem] = Field(default_factory=list)
     sticky: bool = False
     cta_text: str = ""
+    # Иконка корзины со счётчиком в шапке — включается автоматически для
+    # интернет-магазина (см. GenerationOrchestrator), для каталога с заявками
+    # остаётся выключенной.
+    show_cart: bool = False
 
 
 class HeroSection(SectionBase):
@@ -115,6 +152,10 @@ class HeroSection(SectionBase):
 
 class TextImageSection(SectionBase):
     type: Literal["text_image"] = "text_image"
+    # standard — классические две колонки; overlap — картинка «наезжает» на
+    # цветную подложку текста; card — текст и картинка в одной карточке с
+    # тенью. Ось image_position (left/right) работает поверх любого варианта.
+    variant: Literal["standard", "overlap", "card"] = "standard"
     title: str = ""
     text: str = ""
     image: str = ""
@@ -126,11 +167,15 @@ class Grid3ColSection(SectionBase):
     # cards — карточки с рамкой; icon_rows — горизонтальные строки с номером;
     # minimal_list — компактный список «название — цена» без описаний;
     # icon_top — карточки с крупной иконкой (поле icon) над названием;
-    # compact_grid — плотная сетка 2 колонки без описаний, только цена
-    variant: Literal["cards", "icon_rows", "minimal_list", "icon_top", "compact_grid"] = "cards"
+    # compact_grid — плотная сетка 2 колонки без описаний, только цена;
+    # photo_cards — карточки с фотографией (поле image) во всю ширину сверху
+    variant: Literal["cards", "icon_rows", "minimal_list", "icon_top", "compact_grid", "photo_cards"] = "cards"
     title: str = ""
     items: list[ServiceItem] = Field(default_factory=list)
     cta_text: str = ""
+    # Кнопка на карточке: заявка или корзина (см. ItemAction).
+    action: ItemAction = "none"
+    action_text: str = ""
 
 
 class PricingSection(SectionBase):
@@ -178,38 +223,78 @@ class FooterSection(SectionBase):
 
 
 class CatalogFilterSection(SectionBase):
-    """Каталог товаров/услуг с клиентской фильтрацией по категории — единственный
-    интерактивный блок, состояние фильтра живёт на клиенте (см.
-    site-blocks/composables/useCatalogFilter.ts), а не генерируется ИИ."""
+    """Каталог товаров/услуг с клиентской фильтрацией по категории — состояние
+    фильтра живёт на клиенте (см. site-blocks/composables/useCatalogFilter.ts),
+    а не генерируется ИИ.
+
+    `action` определяет модель поведения каталога: витрина без кнопок, каталог
+    с заявками (автосалон, недвижимость, услуги) или полноценный магазин с
+    корзиной. Это осознанно ОДИН блок с переключателем, а не три разных типа:
+    вёрстка карточки одна и та же, разница только в кнопке и её обработчике.
+    """
 
     type: Literal["catalog_filter"] = "catalog_filter"
-    variant: Literal["grid"] = "grid"
+    # grid — сетка карточек; list — широкие строки с фото слева и характеристиками
+    # справа (удобно для авто/недвижимости); showcase — крупная витрина 2 колонки
+    # с большими фото
+    variant: Literal["grid", "list", "showcase"] = "grid"
     title: str = ""
     # Явный порядок чипов фильтра; если пусто — фронт сам соберёт уникальные
     # category из items.
     categories: list[str] = Field(default_factory=list)
     items: list[CatalogItem] = Field(default_factory=list)
+    action: ItemAction = "none"
+    action_text: str = ""
+    # Клиентский поиск по названию/описанию поверх фильтра по категориям.
+    show_search: bool = False
 
 
 class FaqSection(SectionBase):
     type: Literal["faq"] = "faq"
-    variant: Literal["accordion"] = "accordion"
+    # accordion — раскрывающиеся вопросы; two_columns — два столбца сразу
+    # раскрытых пар вопрос/ответ; plain — простой список без рамок
+    variant: Literal["accordion", "two_columns", "plain"] = "accordion"
     title: str = ""
     items: list[FaqItem] = Field(default_factory=list)
 
 
 class GallerySection(SectionBase):
     type: Literal["gallery"] = "gallery"
-    variant: Literal["grid"] = "grid"
+    # grid — ровная сетка; masonry — «кирпичная кладка» разной высоты;
+    # slider — горизонтальная лента с прокруткой (scroll-snap, без JS-библиотек)
+    variant: Literal["grid", "masonry", "slider"] = "grid"
     title: str = ""
     items: list[GalleryItem] = Field(default_factory=list)
 
 
 class StatsSection(SectionBase):
     type: Literal["stats"] = "stats"
-    variant: Literal["row"] = "row"
+    # row — цифры в один ряд; cards — каждая цифра в своей карточке;
+    # big_numbers — очень крупные цифры в две колонки с разделителями
+    variant: Literal["row", "cards", "big_numbers"] = "row"
     title: str = ""
     items: list[StatItem] = Field(default_factory=list)
+
+
+class LeadFormSection(SectionBase):
+    """Блок формы заявки. Куда именно уходит заявка, секция НЕ знает — это
+    настройка проекта (ProjectSettings.leads), общая для всех форм сайта.
+    Здесь только внешний вид и состав полей."""
+
+    type: Literal["lead_form"] = "lead_form"
+    # split — форма справа, текст/картинка слева; card — форма карточкой по
+    # центру; inline — компактная строка полей в одну линию (подписка/быстрый
+    # звонок)
+    variant: Literal["split", "card", "inline"] = "split"
+    title: str = ""
+    subtitle: str = ""
+    fields: list[LeadFormField] = Field(default_factory=list)
+    submit_text: str = "Отправить"
+    success_text: str = "Спасибо! Мы свяжемся с вами в ближайшее время."
+    # Пусто = взять текст согласия из настроек проекта (152-ФЗ).
+    consent_text: str = ""
+    # Картинка для варианта split.
+    image: str = ""
 
 
 class CustomContentSection(SectionBase):
@@ -220,7 +305,9 @@ class CustomContentSection(SectionBase):
     произвольного HTML."""
 
     type: Literal["custom_content"] = "custom_content"
-    variant: Literal["standard"] = "standard"
+    # standard — обычный текстовый блок; callout — текст на цветной подложке с
+    # акцентной полосой слева; columns — текст слева, пары label/value справа
+    variant: Literal["standard", "callout", "columns"] = "standard"
     title: str = ""
     body: str = ""
     items: list[CustomContentItem] = Field(default_factory=list)
@@ -239,6 +326,7 @@ BLOCK_LIBRARY: dict[str, type[BaseModel]] = {
     "faq": FaqSection,
     "gallery": GallerySection,
     "stats": StatsSection,
+    "lead_form": LeadFormSection,
     "custom_content": CustomContentSection,
 }
 
@@ -259,12 +347,23 @@ def _variants_of(model: type[BaseModel]) -> list[str]:
 # используется и Pydantic-моделями выше (Literal), и YandexLayoutEngine при
 # формировании промпта/санитайзинге ответа (см. app/services/ai/providers.py),
 # чтобы каждый сгенерированный сайт выглядел по-разному, а не по одному шаблону.
-# Выводится из BLOCK_LIBRARY, а не дублируется вручную — типы без поля variant
-# (text_image, custom_content) естественным образом дают пустой список.
+# Выводится из BLOCK_LIBRARY, а не дублируется вручную.
 SECTION_VARIANTS: dict[str, list[str]] = {name: _variants_of(model) for name, model in BLOCK_LIBRARY.items()}
 
 
 class Theme(BaseModel):
+    """Тема сайта. Кроме цвета/шрифта содержит «оси вёрстки» — сквозные
+    параметры, которые меняют пропорции и характер ВСЕХ блоков сразу
+    (скругления, плотность, ширина контента, оформление заголовков и кнопок,
+    разделители секций). Именно они дают разным сайтам разный характер даже
+    при совпадающем наборе блоков — раньше вариативность держалась только на
+    variant отдельных блоков, и сайты выходили однотипными.
+
+    Все оси реализованы CSS-переменными и классами на <html> (см.
+    site-blocks/composables/useSiteTheme.ts + assets/tokens.css) — новых
+    Vue-компонентов не требуют.
+    """
+
     style: Literal["business", "warm", "techno", "custom"] = "business"
     primary_color: str = "#2563EB"
     font: Literal["Inter", "Roboto", "PT Sans", "Montserrat"] = "Inter"
@@ -274,6 +373,30 @@ class Theme(BaseModel):
     # Точечные CSS-правки от ИИ-чата, которые не сводятся к готовому полю секции
     # (например «сделай текст кнопки жирным»).
     custom_css: str = ""
+
+    # ---- оси вёрстки ----
+    # sharp — прямые углы; soft — умеренные скругления; round — сильно скруглённые
+    radius: Literal["sharp", "soft", "round"] = "soft"
+    # Вертикальные отступы секций и внутренние отступы карточек
+    density: Literal["compact", "cozy", "airy"] = "cozy"
+    # Максимальная ширина контентной колонки
+    container_width: Literal["narrow", "normal", "wide"] = "normal"
+    # plain — обычный заголовок; eyebrow — мелкая акцентная надстрочная подпись;
+    # underline — акцентное подчёркивание под заголовком; gradient — заголовок
+    # залит фирменным градиентом
+    heading_style: Literal["plain", "eyebrow", "underline", "gradient"] = "plain"
+    button_style: Literal["solid", "outline", "pill", "ghost"] = "solid"
+    # Как визуально разделяются соседние секции
+    section_divider: Literal["none", "line", "tilt", "wave"] = "none"
+
+
+# Оси темы, которые подбираются под бриф (не цвет/шрифт/логотип) — единый
+# список для промпта YandexLayoutEngine, санитайзинга его ответа и ручного
+# выбора структуры в воронке админки.
+THEME_AXES: dict[str, list[str]] = {
+    name: list(get_args(Theme.model_fields[name].annotation))
+    for name in ("radius", "density", "container_width", "heading_style", "button_style", "section_divider")
+}
 
 
 class Page(BaseModel):
@@ -312,3 +435,14 @@ def parse_site(data: dict) -> SiteSchema:
     при поломанной структуре — используется и генератором, и обработчиком ИИ-чата,
     чтобы гарантировать DoD п.2 (JSON никогда не сохраняется в невалидном виде)."""
     return SiteSchema.model_validate(data)
+
+
+def site_uses_cart(site: SiteSchema) -> bool:
+    """Есть ли на сайте хоть один блок с кнопкой «в корзину». Используется
+    рендерером/сборщиком, чтобы не тащить корзину и оформление заказа на сайты,
+    где корзины нет (каталог с заявками, лендинг, портфолио)."""
+    return any(
+        getattr(section, "action", None) == "cart" or getattr(section, "show_cart", False)
+        for page in site.pages
+        for section in page.sections
+    )

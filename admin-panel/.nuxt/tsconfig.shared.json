@@ -144,7 +144,12 @@
     "../modules/*/shared/**/*",
     "../layers/*/shared/**/*",
     "../*.d.ts",
-    "../layers/*/*.d.ts"
+    "../layers/*/*.d.ts",
+    "../../site-blocks/shared/**/*",
+    "../../site-blocks/modules/*/shared/**/*",
+    "../../site-blocks/layers/*/shared/**/*",
+    "../../site-blocks/*.d.ts",
+    "../../site-blocks/layers/*/*.d.ts"
   ],
   "exclude": []
 }

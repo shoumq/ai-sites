@@ -80,6 +80,9 @@ export function useApi() {
     put<T>(url: string, body?: unknown, opts?: Record<string, unknown>) {
       return request<T>(url, { method: 'PUT', body, ...opts })
     },
+    patch<T>(url: string, body?: unknown, opts?: Record<string, unknown>) {
+      return request<T>(url, { method: 'PATCH', body, ...opts })
+    },
     del<T>(url: string, opts?: Record<string, unknown>) {
       return request<T>(url, { method: 'DELETE', ...opts })
     },

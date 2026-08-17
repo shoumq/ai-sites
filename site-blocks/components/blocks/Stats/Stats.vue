@@ -17,5 +17,19 @@ function onUpdate(patch: Partial<StatsSection>) {
 </script>
 
 <template>
-  <StatsRow :section="section" :editable="editable" @update:section="onUpdate" @select="emit('select')" />
+  <StatsCards
+    v-if="section.variant === 'cards'"
+    :section="section"
+    :editable="editable"
+    @update:section="onUpdate"
+    @select="emit('select')"
+  />
+  <StatsBigNumbers
+    v-else-if="section.variant === 'big_numbers'"
+    :section="section"
+    :editable="editable"
+    @update:section="onUpdate"
+    @select="emit('select')"
+  />
+  <StatsRow v-else :section="section" :editable="editable" @update:section="onUpdate" @select="emit('select')" />
 </template>

@@ -13,6 +13,7 @@ import CatalogFilterEditor from './CatalogFilterEditor.vue'
 import FaqEditor from './FaqEditor.vue'
 import GalleryEditor from './GalleryEditor.vue'
 import StatsEditor from './StatsEditor.vue'
+import LeadFormEditor from './LeadFormEditor.vue'
 import CustomContentEditor from './CustomContentEditor.vue'
 
 /** type -> компонент формы полей в ConstructorPanel.vue. Явная статическая
@@ -30,5 +31,6 @@ export const EDITOR_COMPONENT_MAP: Record<SectionType, Component> = {
   faq: FaqEditor,
   gallery: GalleryEditor,
   stats: StatsEditor,
+  lead_form: LeadFormEditor,
   custom_content: CustomContentEditor,
 }

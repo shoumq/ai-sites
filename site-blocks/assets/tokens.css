@@ -59,6 +59,99 @@
   --primary-dark: #1d4ed8;
   --primary-light: #dbeafe;
   --font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* -- оси вёрстки (theme.radius/density/container_width/button_style) --
+     Значения ниже — фолбэк «soft/cozy/normal/solid»; реальные подставляет
+     useSiteTheme() на <html>. Блоки обязаны использовать именно эти
+     переменные (а не --radius-lg/--space-8 напрямую) там, где ось должна
+     на них влиять — иначе смена оси темы блок не заденет. */
+  --radius-block: var(--radius-lg);
+  --radius-control: var(--radius-md);
+  --section-py: var(--space-8);
+  --card-p: var(--space-5);
+  --stack-gap: var(--space-5);
+  --container: 1200px;
+  --btn-radius: var(--radius-control);
+}
+
+/* ---- ось theme.section_divider: как соседние секции отделяются друг от друга.
+   Реализовано на обёртке .site-section, поэтому работает для любого блока и
+   не требует правок в самих вариантах вёрстки. header/footer исключены —
+   разделитель под шапкой и над футером выглядит артефактом. */
+:where(html.divider-line) :where(.site-section + .site-section:not([data-block-type='footer'])) {
+  border-top: 1px solid var(--border-color);
+}
+
+:where(html.divider-tilt) :where(.site-section:not([data-block-type='header']):not([data-block-type='footer'])) {
+  clip-path: polygon(0 2vw, 100% 0, 100% 100%, 0 100%);
+  margin-top: -2vw;
+}
+
+:where(html.divider-wave) :where(.site-section:not([data-block-type='header']):not([data-block-type='footer'])) {
+  border-radius: 40px 40px 0 0;
+  margin-top: -28px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ---- ось theme.heading_style: оформление заголовков секций.
+   Селектор целится в первый h2 внутри блока — это и есть заголовок секции во
+   всех вариантах вёрстки. */
+:where(html.heading-underline) :where(.site-section) :where(h2)::after {
+  content: '';
+  display: block;
+  width: 56px;
+  height: 3px;
+  margin-top: var(--space-3);
+  border-radius: 3px;
+  background: var(--primary);
+}
+
+:where(html.heading-underline) :where(.site-section) :where(h2[style*='center'], .is-centered h2)::after {
+  margin-inline: auto;
+}
+
+:where(html.heading-gradient) :where(.site-section) :where(h2) {
+  background: linear-gradient(96deg, var(--primary) 0%, var(--primary-dark) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* eyebrow — короткая акцентная «бровь» НАД заголовком. Рисуется псевдо-
+   элементом без текста: собственного контента у неё нет ни в одной секции
+   схемы сайта, а выдумывать надпись за пользователя незачем. */
+:where(html.heading-eyebrow) :where(.site-section:not([data-block-type='hero'])) :where(h2)::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin-bottom: var(--space-3);
+  border-radius: 4px;
+  background: var(--primary);
+}
+
+:where(html.heading-eyebrow) :where(.site-section) :where(.is-centered h2)::before {
+  margin-inline: auto;
+}
+
+/* ---- ось theme.button_style: единый вид всех кнопок сайта.
+   Классы .btn-primary/.btn-ghost проставляют сами блоки; здесь ось лишь
+   переопределяет их форму и заливку. */
+:where(html.buttons-pill) :where(.site-section) :where(button, a.btn, .btn-primary, .btn-ghost) {
+  border-radius: 999px;
+}
+
+:where(html.buttons-outline) :where(.site-section) :where(.btn-primary) {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+}
+
+:where(html.buttons-ghost) :where(.site-section) :where(.btn-primary) {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+  border: 1px solid transparent;
 }
 
 /* Базовый сброс + типографика для генерируемого сайта. Скоуп через :where(),

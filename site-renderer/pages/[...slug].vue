@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import siteData from '~/data/site.json'
+import runtimeData from '~/data/runtime.json'
 import type { Page, SiteSchema } from '~/types/site'
 
 // Единый catch-all роут для всех страниц сайта. slug сегменты пусты для корня.
@@ -16,8 +17,12 @@ if (!page) {
   throw createError({ statusCode: 404, statusMessage: 'Страница не найдена', fatal: true })
 }
 
+// SEO-заголовок из настроек проекта важнее служебного title страницы: его
+// владелец сайта задаёт осознанно под поисковую выдачу. Но только для главной —
+// на внутренних страницах он затёр бы их собственные названия.
+const seoTitle = (runtimeData as Record<string, any>).seo?.title
 useSeoMeta({
-  title: page.title || site.project_id,
+  title: (pageSlug === 'main' && seoTitle) || page.title || site.project_id,
 })
 </script>
 

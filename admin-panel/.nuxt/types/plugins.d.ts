@@ -23,8 +23,8 @@ type NuxtAppInjections =
   InjectionType<typeof import("../../node_modules/nuxt/dist/pages/runtime/plugins/check-if-page-unused.js")> &
   InjectionType<typeof import("../../node_modules/@nuxt/devtools/dist/runtime/plugins/devtools.server.js")> &
   InjectionType<typeof import("../../node_modules/@nuxt/devtools/dist/runtime/plugins/devtools.client.js")> &
-  InjectionType<typeof import("../../node_modules/@vueuse/motion/dist/nuxt/runtime/templates/motion.js")> &
   InjectionType<typeof import("../../node_modules/@nuxt/icon/dist/runtime/plugin.js")> &
+  InjectionType<typeof import("../../node_modules/@vueuse/motion/dist/nuxt/runtime/templates/motion.js")> &
   InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/warn.dev.server.js")> &
   InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/check-if-layout-used.js")>
 

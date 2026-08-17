@@ -1,4 +1,14 @@
 <script setup lang="ts">
+/**
+ * Произвольный текстовый блок. Все три варианта вёрстки (standard/callout/
+ * columns) живут в этом файле и различаются модификатором-классом.
+ *
+ * Отдельными файлами в variants/ их делать нельзя без вреда: разметка тела
+ * блока — это разбор лёгкого markdown в текстовые узлы БЕЗ v-html (см.
+ * useLiteMarkdown.ts), два десятка строк шаблона. Три копии этой разметки
+ * разъехались бы при первой правке, а различаются варианты только подложкой и
+ * расположением колонок — чистый CSS.
+ */
 import type { CustomContentSection, CustomContentItem } from '~/types/site'
 
 const props = defineProps<{
@@ -23,7 +33,7 @@ function updateItem(index: number, patch: Partial<CustomContentItem>) {
 </script>
 
 <template>
-  <section class="custom-content">
+  <section class="custom-content" :class="`custom-content--${section.variant || 'standard'}`">
     <div class="custom-content__inner">
       <EditableText
         v-if="section.title || editable"
@@ -92,7 +102,7 @@ function updateItem(index: number, patch: Partial<CustomContentItem>) {
 
 <style scoped>
 .custom-content {
-  padding: var(--space-8) var(--space-5);
+  padding: var(--section-py) var(--space-5);
   background: var(--surface);
 }
 
@@ -102,6 +112,58 @@ function updateItem(index: number, patch: Partial<CustomContentItem>) {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+}
+
+/* callout — текст на акцентной подложке с полосой слева: выделенное
+   объявление, условие акции, важное предупреждение. */
+.custom-content--callout .custom-content__inner {
+  padding: var(--space-6);
+  border-radius: var(--radius-block);
+  border-left: 4px solid var(--primary);
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+}
+
+/* columns — текст слева, пары label/value отдельной колонкой справа:
+   характеристики, реквизиты, режим работы. */
+.custom-content--columns .custom-content__inner {
+  max-width: var(--container);
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  grid-template-areas:
+    'title items'
+    'body items';
+  column-gap: var(--space-7);
+  align-items: start;
+}
+
+.custom-content--columns .custom-content__title {
+  grid-area: title;
+}
+
+.custom-content--columns .custom-content__body {
+  grid-area: body;
+}
+
+.custom-content--columns .custom-content__items {
+  grid-area: items;
+  flex-direction: column;
+  margin-top: 0;
+}
+
+.custom-content--columns .custom-content-item {
+  width: 100%;
+  justify-content: space-between;
+}
+
+@container (max-width: 760px) {
+  .custom-content--columns .custom-content__inner {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'title'
+      'body'
+      'items';
+    row-gap: var(--space-4);
+  }
 }
 
 .custom-content__title {
@@ -152,7 +214,7 @@ function updateItem(index: number, patch: Partial<CustomContentItem>) {
   align-items: baseline;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-control);
   background: var(--surface-muted);
   border: 1px solid var(--border-color);
 }

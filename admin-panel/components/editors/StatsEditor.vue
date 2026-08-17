@@ -3,9 +3,16 @@ import type { StatsSection } from '~/types/site'
 
 defineProps<{ section: StatsSection }>()
 const emit = defineEmits<{ patch: [p: Record<string, unknown>] }>()
+const { variantOptions } = useVariantOptions()
 </script>
 
 <template>
+  <BaseSelect
+    label="Вариант блока"
+    :model-value="section.variant"
+    :options="variantOptions('stats')"
+    @update:model-value="emit('patch', { variant: $event })"
+  />
   <BaseInput label="Заголовок (необязательно)" :model-value="section.title" @update:model-value="emit('patch', { title: $event })" />
   <div class="field-label">Показатели</div>
   <ListEditor

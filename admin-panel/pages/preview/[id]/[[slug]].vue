@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { siteUsesCart } from '~/types/site'
 import type { ProjectOut } from '~/types/api'
 import type { Theme } from '~/types/site'
 
@@ -41,8 +42,26 @@ const DEFAULT_THEME: Theme = {
   logo_url: '',
   custom_css: '',
   bg_color: '',
+  radius: 'soft',
+  density: 'cozy',
+  container_width: 'normal',
+  heading_style: 'plain',
+  button_style: 'solid',
+  section_divider: 'none',
 }
 useSiteTheme(computed(() => project.value?.site_data.theme ?? DEFAULT_THEME))
+
+// preview: true — корзина и модалка заявки работают визуально (можно
+// прощёлкать сценарий покупки), но формы НИЧЕГО не отправляют: превью не
+// должно засорять владельцу сайта список настоящих заявок.
+const runtime = setSiteRuntime({ preview: true })
+watch(
+  () => project.value?.site_data,
+  (site) => {
+    runtime.value = { ...runtime.value, cartEnabled: site ? siteUsesCart(site) : false }
+  },
+  { immediate: true },
+)
 
 function pageHref(slugValue: string) {
   return slugValue === 'main' ? `/preview/${projectId}` : `/preview/${projectId}/${slugValue}`
@@ -74,6 +93,8 @@ function pageHref(slugValue: string) {
       <div v-for="section in currentPage.sections" :key="section.id">
         <SectionRenderer :section="section" :editable="false" :theme="project?.site_data.theme" />
       </div>
+
+      <SiteOverlays />
     </template>
 
     <div v-else class="preview-page__loading">

@@ -27,6 +27,10 @@ const SITE_RENDERER_DIR = process.env.SITE_RENDERER_DIR
   : path.resolve(__dirname, '..', 'site-renderer')
 
 const SITE_DATA_PATH = path.join(SITE_RENDERER_DIR, 'data', 'site.json')
+// Аналитика/SEO/корзина/адрес приёма заявок — публичная часть настроек проекта.
+// Раньше бэкенд передавал settings, но сборщик их игнорировал, и счётчик
+// Яндекс.Метрики в опубликованный сайт не попадал вообще.
+const SITE_RUNTIME_PATH = path.join(SITE_RENDERER_DIR, 'data', 'runtime.json')
 const OUTPUT_PUBLIC_DIR = path.join(SITE_RENDERER_DIR, '.output', 'public')
 
 // Точка монтирования будущего docker-volume. На хосте вне контейнера (например,
@@ -84,9 +88,12 @@ function validateBuildRequest(body) {
   return errors
 }
 
-async function writeSiteData(site) {
+async function writeSiteData(site, runtime) {
   await fs.promises.mkdir(path.dirname(SITE_DATA_PATH), { recursive: true })
   await fs.promises.writeFile(SITE_DATA_PATH, JSON.stringify(site, null, 2), 'utf-8')
+  // Пишем всегда, даже при пустом runtime: site-renderer импортирует этот файл
+  // статически, и его отсутствие уронило бы сборку на резолве импорта.
+  await fs.promises.writeFile(SITE_RUNTIME_PATH, JSON.stringify(runtime ?? {}, null, 2), 'utf-8')
 }
 
 async function runNuxiGenerate() {
@@ -130,11 +137,11 @@ app.post('/build', async (req, res) => {
     return res.status(400).json({ error: 'Некорректный запрос', details: errors })
   }
 
-  const { subdomain, build_id: buildId, site } = req.body
+  const { subdomain, build_id: buildId, site, runtime } = req.body
 
   const release = await buildMutex.acquire()
   try {
-    await writeSiteData(site)
+    await writeSiteData(site, runtime)
 
     const result = await runNuxiGenerate()
     if (!result.ok) {

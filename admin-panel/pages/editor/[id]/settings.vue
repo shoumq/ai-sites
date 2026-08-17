@@ -13,6 +13,11 @@ const loaded = ref(false)
 const checking = ref(false)
 const dnsResult = ref<DnsCheckResult | null>(null)
 
+const CHECKOUT_MODES = [
+  { value: 'order', label: 'Заявка на заказ (менеджер перезвонит)' },
+  { value: 'payment', label: 'Заявка + онлайн-оплата через ЮKassa' },
+]
+
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 const saveStatus = ref<'idle' | 'saving' | 'saved' | 'error'>('idle')
 
@@ -110,6 +115,15 @@ function onDomainInput(value: string) {
           <BaseInput label="Title" placeholder="Кафе Ромашка — уютная кофейня в центре города" v-model="settings.seo.title" />
           <BaseTextarea label="Description" placeholder="Домашняя выпечка, авторские десерты…" v-model="settings.seo.description" />
           <BaseInput label="Keywords" placeholder="кофейня, кафе, десерты, доставка" v-model="settings.seo.keywords" />
+          <BaseInput label="Картинка для соцсетей (og:image)" placeholder="https://…/og.png" v-model="settings.seo.og_image" />
+          <BaseInput label="Favicon" placeholder="https://…/favicon.png" v-model="settings.seo.favicon_url" />
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-row__label">Закрыть от индексации</div>
+              <div class="toggle-row__hint">Добавит meta robots noindex — для черновиков и тестовых сборок</div>
+            </div>
+            <button type="button" class="toggle" :class="{ 'is-on': settings.seo.noindex }" @click="settings.seo.noindex = !settings.seo.noindex" />
+          </div>
         </section>
 
         <section class="settings-card glass-card" v-motion :initial="{ opacity: 0, y: 16 }" :enter="{ opacity: 1, y: 0, transition: { duration: 320, delay: 120 } }">
@@ -123,6 +137,9 @@ function onDomainInput(value: string) {
           </div>
           <BaseInput label="ИНН" placeholder="7712345678" v-model="settings.legal.inn" />
           <BaseInput label="ОГРН" placeholder="1157746112233" v-model="settings.legal.ogrn" />
+          <BaseInput label="Юридическое название" placeholder="ООО «Ромашка»" v-model="settings.legal.company_legal_name" />
+          <BaseInput label="Ссылка на политику конфиденциальности" placeholder="https://…/privacy" v-model="settings.legal.privacy_policy_url" />
+          <BaseInput label="Текст согласия под формами" v-model="settings.legal.consent_text" />
         </section>
 
         <section class="settings-card glass-card" v-motion :initial="{ opacity: 0, y: 16 }" :enter="{ opacity: 1, y: 0, transition: { duration: 320, delay: 180 } }">
@@ -137,6 +154,107 @@ function onDomainInput(value: string) {
             <button type="button" class="toggle" :class="{ 'is-on': settings.integrations.dgis_enabled }" @click="settings.integrations.dgis_enabled = !settings.integrations.dgis_enabled" />
           </div>
           <BaseInput label="WhatsApp — номер телефона" placeholder="+7900…" v-model="settings.integrations.whatsapp_widget_phone" />
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-row__label">Кнопка WhatsApp на сайте</div>
+              <div class="toggle-row__hint">Плавающая кнопка в правом нижнем углу</div>
+            </div>
+            <button type="button" class="toggle" :class="{ 'is-on': settings.leads.whatsapp_button }" @click="settings.leads.whatsapp_button = !settings.leads.whatsapp_button" />
+          </div>
+        </section>
+
+        <section class="settings-card glass-card" v-motion :initial="{ opacity: 0, y: 16 }" :enter="{ opacity: 1, y: 0, transition: { duration: 320, delay: 240 } }">
+          <h2><Icon name="lucide:bar-chart-3" /> Аналитика и вебмастер</h2>
+          <p class="card-hint">Всё отсюда попадает в &lt;head&gt; опубликованного сайта официальными сниппетами сервисов.</p>
+          <BaseInput label="Яндекс.Метрика — номер счётчика" placeholder="109993128" v-model="settings.analytics.yandex_metrika_id" />
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-row__label">Вебвизор</div>
+              <div class="toggle-row__hint">Запись действий посетителей в Метрике</div>
+            </div>
+            <button type="button" class="toggle" :class="{ 'is-on': settings.analytics.metrika_webvisor }" @click="settings.analytics.metrika_webvisor = !settings.analytics.metrika_webvisor" />
+          </div>
+          <BaseInput
+            label="Яндекс.Вебмастер — код подтверждения"
+            placeholder="fa1304247066b37e"
+            v-model="settings.analytics.yandex_verification"
+          />
+          <BaseInput label="Google Analytics 4" placeholder="G-XXXXXXXXXX" v-model="settings.analytics.google_analytics_id" />
+          <BaseInput label="Google Tag Manager" placeholder="GTM-XXXXXXX" v-model="settings.analytics.google_tag_manager_id" />
+          <BaseInput
+            label="Google Search Console — код подтверждения"
+            placeholder="google-site-verification"
+            v-model="settings.analytics.google_verification"
+          />
+          <BaseInput label="VK Пиксель" placeholder="VK-RTRG-000000-XXXXX" v-model="settings.analytics.vk_pixel_id" />
+          <BaseInput label="top@Mail.ru / VK Ads — счётчик" placeholder="3300000" v-model="settings.analytics.mailru_counter_id" />
+          <BaseTextarea
+            label="Свой код в &lt;head&gt;"
+            placeholder="<script>…</script> — для счётчика, которого нет в списке выше"
+            :rows="3"
+            v-model="settings.analytics.custom_head_html"
+          />
+          <BaseTextarea
+            label="Свой код перед &lt;/body&gt;"
+            :rows="3"
+            v-model="settings.analytics.custom_body_html"
+          />
+        </section>
+
+        <section class="settings-card glass-card" v-motion :initial="{ opacity: 0, y: 16 }" :enter="{ opacity: 1, y: 0, transition: { duration: 320, delay: 300 } }">
+          <h2><Icon name="lucide:shopping-cart" /> Корзина и заказы</h2>
+          <p class="card-hint">
+            Корзина появляется на сайте, только если хотя бы у одного блока каталога выбрано действие «В корзину».
+          </p>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-row__label">Корзина включена</div>
+              <div class="toggle-row__hint">Выключите, чтобы убрать корзину со всего сайта</div>
+            </div>
+            <button type="button" class="toggle" :class="{ 'is-on': settings.commerce.cart_enabled }" @click="settings.commerce.cart_enabled = !settings.commerce.cart_enabled" />
+          </div>
+          <BaseInput label="Валюта" placeholder="₽" v-model="settings.commerce.currency" />
+          <BaseSelect
+            label="Оформление заказа"
+            :model-value="settings.commerce.checkout_mode"
+            :options="CHECKOUT_MODES"
+            @update:model-value="settings.commerce.checkout_mode = $event as 'order' | 'payment'"
+          />
+          <template v-if="settings.commerce.checkout_mode === 'payment'">
+            <BaseInput label="ЮKassa — shopId магазина" v-model="settings.commerce.yookassa_shop_id" />
+            <BaseInput label="ЮKassa — секретный ключ" v-model="settings.commerce.yookassa_secret_key" />
+            <p class="card-hint">
+              Ключ хранится только на сервере и в статический сайт не попадает: платёж создаёт бэкенд, а сумму
+              считает по ценам из схемы сайта.
+            </p>
+          </template>
+          <BaseInput
+            label="Минимальная сумма заказа"
+            type="number"
+            :model-value="String(settings.commerce.min_order_total)"
+            @update:model-value="settings.commerce.min_order_total = Number($event) || 0"
+          />
+          <BaseTextarea label="Текст после оформления заказа" :rows="2" v-model="settings.commerce.success_text" />
+        </section>
+
+        <section class="settings-card glass-card" v-motion :initial="{ opacity: 0, y: 16 }" :enter="{ opacity: 1, y: 0, transition: { duration: 320, delay: 360 } }">
+          <h2><Icon name="lucide:inbox" /> Куда уходят заявки</h2>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-row__label">Сохранять в платформе</div>
+              <div class="toggle-row__hint">Заявки и заказы видны на вкладке «Заявки»</div>
+            </div>
+            <button type="button" class="toggle" :class="{ 'is-on': settings.leads.store_in_platform }" @click="settings.leads.store_in_platform = !settings.leads.store_in_platform" />
+          </div>
+          <BaseInput label="Вебхук (POST с JSON заявки)" placeholder="https://…/hook" v-model="settings.leads.webhook_url" />
+          <BaseInput label="Telegram — токен бота" placeholder="123456:AA…" v-model="settings.leads.telegram_bot_token" />
+          <BaseInput label="Telegram — chat_id" placeholder="-1001234567890" v-model="settings.leads.telegram_chat_id" />
+          <p class="card-hint">
+            Рассылку делает сервер, а не сайт: токен бота и адрес вебхука в исходники страницы не попадают.
+          </p>
+          <NuxtLink :to="`/editor/${projectId}/leads`" class="card-link">
+            <Icon name="lucide:list" /> Открыть список заявок
+          </NuxtLink>
         </section>
       </div>
     </div>
@@ -192,6 +310,23 @@ function onDomainInput(value: string) {
   grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: var(--a-space-5);
   align-items: start;
+}
+
+.card-hint {
+  font-size: var(--a-fs-xs);
+  color: var(--a-text-faint);
+  line-height: 1.5;
+}
+
+.card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  color: var(--a-accent);
+  text-decoration: none;
+  font-size: var(--a-fs-sm);
+  font-weight: 600;
 }
 
 .settings-card {

@@ -45,6 +45,13 @@ function onUpdate(patch: Partial<Grid3ColSection>) {
     @update:section="onUpdate"
     @select="emit('select')"
   />
+  <Grid3ColPhotoCards
+    v-else-if="section.variant === 'photo_cards'"
+    :section="section"
+    :editable="editable"
+    @update:section="onUpdate"
+    @select="emit('select')"
+  />
   <Grid3ColCompactGrid
     v-else
     :section="section"

@@ -52,6 +52,7 @@ const { isOpen, toggle, close } = useMobileNav()
       <div v-else class="header__col header__col--center" />
 
       <div class="header__col header__col--end">
+        <CartButton v-if="section.show_cart" :editable="editable" />
         <EditableText
           v-if="section.cta_text || editable"
           tag="span"

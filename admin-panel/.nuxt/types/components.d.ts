@@ -18,9 +18,11 @@ interface _GlobalComponents {
   ChatPanel: typeof import("../../components/ChatPanel.vue")['default']
   ConfirmHost: typeof import("../../components/ConfirmHost.vue")['default']
   ConstructorPanel: typeof import("../../components/ConstructorPanel.vue")['default']
+  DeployModal: typeof import("../../components/DeployModal.vue")['default']
   IntroSplash: typeof import("../../components/IntroSplash.vue")['default']
   ListEditor: typeof import("../../components/ListEditor.vue")['default']
   PageCanvas: typeof import("../../components/PageCanvas.vue")['default']
+  StructurePicker: typeof import("../../components/StructurePicker.vue")['default']
   ThemeToggle: typeof import("../../components/ThemeToggle.vue")['default']
   ToastHost: typeof import("../../components/ToastHost.vue")['default']
   BaseBadge: typeof import("../../components/base/BaseBadge.vue")['default']
@@ -43,11 +45,81 @@ interface _GlobalComponents {
   EditorsGrid3ColEditor: typeof import("../../components/editors/Grid3ColEditor.vue")['default']
   EditorsHeaderEditor: typeof import("../../components/editors/HeaderEditor.vue")['default']
   EditorsHeroEditor: typeof import("../../components/editors/HeroEditor.vue")['default']
+  EditorsLeadFormEditor: typeof import("../../components/editors/LeadFormEditor.vue")['default']
   EditorsPricingEditor: typeof import("../../components/editors/PricingEditor.vue")['default']
   EditorsStatsEditor: typeof import("../../components/editors/StatsEditor.vue")['default']
   EditorsTestimonialsEditor: typeof import("../../components/editors/TestimonialsEditor.vue")['default']
   EditorsTextImageEditor: typeof import("../../components/editors/TextImageEditor.vue")['default']
   EditorsEditorRegistry: typeof import("../../components/editors/editorRegistry")['default']
+  CartButton: typeof import("../../../site-blocks/components/CartButton.vue")['default']
+  CartDrawer: typeof import("../../../site-blocks/components/CartDrawer.vue")['default']
+  EditableText: typeof import("../../../site-blocks/components/EditableText.vue")['default']
+  ImagePlaceholder: typeof import("../../../site-blocks/components/ImagePlaceholder.vue")['default']
+  ItemActionButton: typeof import("../../../site-blocks/components/ItemActionButton.vue")['default']
+  LeadFormFields: typeof import("../../../site-blocks/components/LeadFormFields.vue")['default']
+  LeadModal: typeof import("../../../site-blocks/components/LeadModal.vue")['default']
+  SectionRenderer: typeof import("../../../site-blocks/components/SectionRenderer.vue")['default']
+  SiteOverlays: typeof import("../../../site-blocks/components/SiteOverlays.vue")['default']
+  BlockRegistry: typeof import("../../../site-blocks/components/blockRegistry")['default']
+  CatalogFilter: typeof import("../../../site-blocks/components/blocks/CatalogFilter/CatalogFilter.vue")['default']
+  CatalogFilterGrid: typeof import("../../../site-blocks/components/blocks/CatalogFilter/variants/CatalogFilterGrid.vue")['default']
+  CatalogFilterList: typeof import("../../../site-blocks/components/blocks/CatalogFilter/variants/CatalogFilterList.vue")['default']
+  CatalogFilterShowcase: typeof import("../../../site-blocks/components/blocks/CatalogFilter/variants/CatalogFilterShowcase.vue")['default']
+  ContactMap: typeof import("../../../site-blocks/components/blocks/ContactMap/ContactMap.vue")['default']
+  ContactMapCards: typeof import("../../../site-blocks/components/blocks/ContactMap/variants/ContactMapCards.vue")['default']
+  ContactMapCentered: typeof import("../../../site-blocks/components/blocks/ContactMap/variants/ContactMapCentered.vue")['default']
+  ContactMapSplit: typeof import("../../../site-blocks/components/blocks/ContactMap/variants/ContactMapSplit.vue")['default']
+  CustomContent: typeof import("../../../site-blocks/components/blocks/CustomContent/CustomContent.vue")['default']
+  CustomContentStandard: typeof import("../../../site-blocks/components/blocks/CustomContent/variants/CustomContentStandard.vue")['default']
+  Faq: typeof import("../../../site-blocks/components/blocks/Faq/Faq.vue")['default']
+  FaqAccordion: typeof import("../../../site-blocks/components/blocks/Faq/variants/FaqAccordion.vue")['default']
+  FaqPlain: typeof import("../../../site-blocks/components/blocks/Faq/variants/FaqPlain.vue")['default']
+  FaqTwoColumns: typeof import("../../../site-blocks/components/blocks/Faq/variants/FaqTwoColumns.vue")['default']
+  Footer: typeof import("../../../site-blocks/components/blocks/Footer/Footer.vue")['default']
+  FooterColumns: typeof import("../../../site-blocks/components/blocks/Footer/variants/FooterColumns.vue")['default']
+  FooterMinimal: typeof import("../../../site-blocks/components/blocks/Footer/variants/FooterMinimal.vue")['default']
+  FooterSimple: typeof import("../../../site-blocks/components/blocks/Footer/variants/FooterSimple.vue")['default']
+  Gallery: typeof import("../../../site-blocks/components/blocks/Gallery/Gallery.vue")['default']
+  GalleryGrid: typeof import("../../../site-blocks/components/blocks/Gallery/variants/GalleryGrid.vue")['default']
+  GalleryMasonry: typeof import("../../../site-blocks/components/blocks/Gallery/variants/GalleryMasonry.vue")['default']
+  GallerySlider: typeof import("../../../site-blocks/components/blocks/Gallery/variants/GallerySlider.vue")['default']
+  Grid3Col: typeof import("../../../site-blocks/components/blocks/Grid3Col/Grid3Col.vue")['default']
+  Grid3ColCards: typeof import("../../../site-blocks/components/blocks/Grid3Col/variants/Grid3ColCards.vue")['default']
+  Grid3ColCompactGrid: typeof import("../../../site-blocks/components/blocks/Grid3Col/variants/Grid3ColCompactGrid.vue")['default']
+  Grid3ColIconRows: typeof import("../../../site-blocks/components/blocks/Grid3Col/variants/Grid3ColIconRows.vue")['default']
+  Grid3ColIconTop: typeof import("../../../site-blocks/components/blocks/Grid3Col/variants/Grid3ColIconTop.vue")['default']
+  Grid3ColMinimalList: typeof import("../../../site-blocks/components/blocks/Grid3Col/variants/Grid3ColMinimalList.vue")['default']
+  Grid3ColPhotoCards: typeof import("../../../site-blocks/components/blocks/Grid3Col/variants/Grid3ColPhotoCards.vue")['default']
+  Header: typeof import("../../../site-blocks/components/blocks/Header/Header.vue")['default']
+  HeaderCentered: typeof import("../../../site-blocks/components/blocks/Header/variants/HeaderCentered.vue")['default']
+  HeaderMinimal: typeof import("../../../site-blocks/components/blocks/Header/variants/HeaderMinimal.vue")['default']
+  HeaderSplit: typeof import("../../../site-blocks/components/blocks/Header/variants/HeaderSplit.vue")['default']
+  HeaderStandard: typeof import("../../../site-blocks/components/blocks/Header/variants/HeaderStandard.vue")['default']
+  Hero: typeof import("../../../site-blocks/components/blocks/Hero/Hero.vue")['default']
+  HeroCentered: typeof import("../../../site-blocks/components/blocks/Hero/variants/HeroCentered.vue")['default']
+  HeroGradient: typeof import("../../../site-blocks/components/blocks/Hero/variants/HeroGradient.vue")['default']
+  HeroMinimal: typeof import("../../../site-blocks/components/blocks/Hero/variants/HeroMinimal.vue")['default']
+  HeroOverlay: typeof import("../../../site-blocks/components/blocks/Hero/variants/HeroOverlay.vue")['default']
+  HeroSplit: typeof import("../../../site-blocks/components/blocks/Hero/variants/HeroSplit.vue")['default']
+  LeadForm: typeof import("../../../site-blocks/components/blocks/LeadForm/LeadForm.vue")['default']
+  LeadFormCard: typeof import("../../../site-blocks/components/blocks/LeadForm/variants/LeadFormCard.vue")['default']
+  LeadFormInline: typeof import("../../../site-blocks/components/blocks/LeadForm/variants/LeadFormInline.vue")['default']
+  LeadFormSplit: typeof import("../../../site-blocks/components/blocks/LeadForm/variants/LeadFormSplit.vue")['default']
+  Pricing: typeof import("../../../site-blocks/components/blocks/Pricing/Pricing.vue")['default']
+  PricingCards: typeof import("../../../site-blocks/components/blocks/Pricing/variants/PricingCards.vue")['default']
+  PricingHighlight: typeof import("../../../site-blocks/components/blocks/Pricing/variants/PricingHighlight.vue")['default']
+  PricingMinimal: typeof import("../../../site-blocks/components/blocks/Pricing/variants/PricingMinimal.vue")['default']
+  PricingTable: typeof import("../../../site-blocks/components/blocks/Pricing/variants/PricingTable.vue")['default']
+  Stats: typeof import("../../../site-blocks/components/blocks/Stats/Stats.vue")['default']
+  StatsBigNumbers: typeof import("../../../site-blocks/components/blocks/Stats/variants/StatsBigNumbers.vue")['default']
+  StatsCards: typeof import("../../../site-blocks/components/blocks/Stats/variants/StatsCards.vue")['default']
+  StatsRow: typeof import("../../../site-blocks/components/blocks/Stats/variants/StatsRow.vue")['default']
+  Testimonials: typeof import("../../../site-blocks/components/blocks/Testimonials/Testimonials.vue")['default']
+  TestimonialsAvatarsRow: typeof import("../../../site-blocks/components/blocks/Testimonials/variants/TestimonialsAvatarsRow.vue")['default']
+  TestimonialsCards: typeof import("../../../site-blocks/components/blocks/Testimonials/variants/TestimonialsCards.vue")['default']
+  TestimonialsQuotes: typeof import("../../../site-blocks/components/blocks/Testimonials/variants/TestimonialsQuotes.vue")['default']
+  TestimonialsSingleFeatured: typeof import("../../../site-blocks/components/blocks/Testimonials/variants/TestimonialsSingleFeatured.vue")['default']
+  TextImage: typeof import("../../../site-blocks/components/blocks/TextImage/TextImage.vue")['default']
   NuxtWelcome: typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']
   NuxtLayout: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
   NuxtErrorBoundary: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']
@@ -61,9 +133,9 @@ interface _GlobalComponents {
   NuxtAnnouncer: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-announcer")['default']
   NuxtImg: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']
   NuxtPicture: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']
-  Icon: typeof import("../../node_modules/@nuxt/icon/dist/runtime/components/index")['default']
   Motion: typeof import("@vueuse/motion")['MotionComponent']
   MotionGroup: typeof import("@vueuse/motion")['MotionGroupComponent']
+  Icon: typeof import("../../node_modules/@nuxt/icon/dist/runtime/components/index")['default']
   NuxtPage: typeof import("../../node_modules/nuxt/dist/pages/runtime/page")['default']
   NoScript: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['NoScript']
   Link: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Link']
@@ -79,9 +151,11 @@ interface _GlobalComponents {
   LazyChatPanel: LazyComponent<typeof import("../../components/ChatPanel.vue")['default']>
   LazyConfirmHost: LazyComponent<typeof import("../../components/ConfirmHost.vue")['default']>
   LazyConstructorPanel: LazyComponent<typeof import("../../components/ConstructorPanel.vue")['default']>
+  LazyDeployModal: LazyComponent<typeof import("../../components/DeployModal.vue")['default']>
   LazyIntroSplash: LazyComponent<typeof import("../../components/IntroSplash.vue")['default']>
   LazyListEditor: LazyComponent<typeof import("../../components/ListEditor.vue")['default']>
   LazyPageCanvas: LazyComponent<typeof import("../../components/PageCanvas.vue")['default']>
+  LazyStructurePicker: LazyComponent<typeof import("../../components/StructurePicker.vue")['default']>
   LazyThemeToggle: LazyComponent<typeof import("../../components/ThemeToggle.vue")['default']>
   LazyToastHost: LazyComponent<typeof import("../../components/ToastHost.vue")['default']>
   LazyBaseBadge: LazyComponent<typeof import("../../components/base/BaseBadge.vue")['default']>
@@ -104,11 +178,81 @@ interface _GlobalComponents {
   LazyEditorsGrid3ColEditor: LazyComponent<typeof import("../../components/editors/Grid3ColEditor.vue")['default']>
   LazyEditorsHeaderEditor: LazyComponent<typeof import("../../components/editors/HeaderEditor.vue")['default']>
   LazyEditorsHeroEditor: LazyComponent<typeof import("../../components/editors/HeroEditor.vue")['default']>
+  LazyEditorsLeadFormEditor: LazyComponent<typeof import("../../components/editors/LeadFormEditor.vue")['default']>
   LazyEditorsPricingEditor: LazyComponent<typeof import("../../components/editors/PricingEditor.vue")['default']>
   LazyEditorsStatsEditor: LazyComponent<typeof import("../../components/editors/StatsEditor.vue")['default']>
   LazyEditorsTestimonialsEditor: LazyComponent<typeof import("../../components/editors/TestimonialsEditor.vue")['default']>
   LazyEditorsTextImageEditor: LazyComponent<typeof import("../../components/editors/TextImageEditor.vue")['default']>
   LazyEditorsEditorRegistry: LazyComponent<typeof import("../../components/editors/editorRegistry")['default']>
+  LazyCartButton: LazyComponent<typeof import("../../../site-blocks/components/CartButton.vue")['default']>
+  LazyCartDrawer: LazyComponent<typeof import("../../../site-blocks/components/CartDrawer.vue")['default']>
+  LazyEditableText: LazyComponent<typeof import("../../../site-blocks/components/EditableText.vue")['default']>
+  LazyImagePlaceholder: LazyComponent<typeof import("../../../site-blocks/components/ImagePlaceholder.vue")['default']>
+  LazyItemActionButton: LazyComponent<typeof import("../../../site-blocks/components/ItemActionButton.vue")['default']>
+  LazyLeadFormFields: LazyComponent<typeof import("../../../site-blocks/components/LeadFormFields.vue")['default']>
+  LazyLeadModal: LazyComponent<typeof import("../../../site-blocks/components/LeadModal.vue")['default']>
+  LazySectionRenderer: LazyComponent<typeof import("../../../site-blocks/components/SectionRenderer.vue")['default']>
+  LazySiteOverlays: LazyComponent<typeof import("../../../site-blocks/components/SiteOverlays.vue")['default']>
+  LazyBlockRegistry: LazyComponent<typeof import("../../../site-blocks/components/blockRegistry")['default']>
+  LazyCatalogFilter: LazyComponent<typeof import("../../../site-blocks/components/blocks/CatalogFilter/CatalogFilter.vue")['default']>
+  LazyCatalogFilterGrid: LazyComponent<typeof import("../../../site-blocks/components/blocks/CatalogFilter/variants/CatalogFilterGrid.vue")['default']>
+  LazyCatalogFilterList: LazyComponent<typeof import("../../../site-blocks/components/blocks/CatalogFilter/variants/CatalogFilterList.vue")['default']>
+  LazyCatalogFilterShowcase: LazyComponent<typeof import("../../../site-blocks/components/blocks/CatalogFilter/variants/CatalogFilterShowcase.vue")['default']>
+  LazyContactMap: LazyComponent<typeof import("../../../site-blocks/components/blocks/ContactMap/ContactMap.vue")['default']>
+  LazyContactMapCards: LazyComponent<typeof import("../../../site-blocks/components/blocks/ContactMap/variants/ContactMapCards.vue")['default']>
+  LazyContactMapCentered: LazyComponent<typeof import("../../../site-blocks/components/blocks/ContactMap/variants/ContactMapCentered.vue")['default']>
+  LazyContactMapSplit: LazyComponent<typeof import("../../../site-blocks/components/blocks/ContactMap/variants/ContactMapSplit.vue")['default']>
+  LazyCustomContent: LazyComponent<typeof import("../../../site-blocks/components/blocks/CustomContent/CustomContent.vue")['default']>
+  LazyCustomContentStandard: LazyComponent<typeof import("../../../site-blocks/components/blocks/CustomContent/variants/CustomContentStandard.vue")['default']>
+  LazyFaq: LazyComponent<typeof import("../../../site-blocks/components/blocks/Faq/Faq.vue")['default']>
+  LazyFaqAccordion: LazyComponent<typeof import("../../../site-blocks/components/blocks/Faq/variants/FaqAccordion.vue")['default']>
+  LazyFaqPlain: LazyComponent<typeof import("../../../site-blocks/components/blocks/Faq/variants/FaqPlain.vue")['default']>
+  LazyFaqTwoColumns: LazyComponent<typeof import("../../../site-blocks/components/blocks/Faq/variants/FaqTwoColumns.vue")['default']>
+  LazyFooter: LazyComponent<typeof import("../../../site-blocks/components/blocks/Footer/Footer.vue")['default']>
+  LazyFooterColumns: LazyComponent<typeof import("../../../site-blocks/components/blocks/Footer/variants/FooterColumns.vue")['default']>
+  LazyFooterMinimal: LazyComponent<typeof import("../../../site-blocks/components/blocks/Footer/variants/FooterMinimal.vue")['default']>
+  LazyFooterSimple: LazyComponent<typeof import("../../../site-blocks/components/blocks/Footer/variants/FooterSimple.vue")['default']>
+  LazyGallery: LazyComponent<typeof import("../../../site-blocks/components/blocks/Gallery/Gallery.vue")['default']>
+  LazyGalleryGrid: LazyComponent<typeof import("../../../site-blocks/components/blocks/Gallery/variants/GalleryGrid.vue")['default']>
+  LazyGalleryMasonry: LazyComponent<typeof import("../../../site-blocks/components/blocks/Gallery/variants/GalleryMasonry.vue")['default']>
+  LazyGallerySlider: LazyComponent<typeof import("../../../site-blocks/components/blocks/Gallery/variants/GallerySlider.vue")['default']>
+  LazyGrid3Col: LazyComponent<typeof import("../../../site-blocks/components/blocks/Grid3Col/Grid3Col.vue")['default']>
+  LazyGrid3ColCards: LazyComponent<typeof import("../../../site-blocks/components/blocks/Grid3Col/variants/Grid3ColCards.vue")['default']>
+  LazyGrid3ColCompactGrid: LazyComponent<typeof import("../../../site-blocks/components/blocks/Grid3Col/variants/Grid3ColCompactGrid.vue")['default']>
+  LazyGrid3ColIconRows: LazyComponent<typeof import("../../../site-blocks/components/blocks/Grid3Col/variants/Grid3ColIconRows.vue")['default']>
+  LazyGrid3ColIconTop: LazyComponent<typeof import("../../../site-blocks/components/blocks/Grid3Col/variants/Grid3ColIconTop.vue")['default']>
+  LazyGrid3ColMinimalList: LazyComponent<typeof import("../../../site-blocks/components/blocks/Grid3Col/variants/Grid3ColMinimalList.vue")['default']>
+  LazyGrid3ColPhotoCards: LazyComponent<typeof import("../../../site-blocks/components/blocks/Grid3Col/variants/Grid3ColPhotoCards.vue")['default']>
+  LazyHeader: LazyComponent<typeof import("../../../site-blocks/components/blocks/Header/Header.vue")['default']>
+  LazyHeaderCentered: LazyComponent<typeof import("../../../site-blocks/components/blocks/Header/variants/HeaderCentered.vue")['default']>
+  LazyHeaderMinimal: LazyComponent<typeof import("../../../site-blocks/components/blocks/Header/variants/HeaderMinimal.vue")['default']>
+  LazyHeaderSplit: LazyComponent<typeof import("../../../site-blocks/components/blocks/Header/variants/HeaderSplit.vue")['default']>
+  LazyHeaderStandard: LazyComponent<typeof import("../../../site-blocks/components/blocks/Header/variants/HeaderStandard.vue")['default']>
+  LazyHero: LazyComponent<typeof import("../../../site-blocks/components/blocks/Hero/Hero.vue")['default']>
+  LazyHeroCentered: LazyComponent<typeof import("../../../site-blocks/components/blocks/Hero/variants/HeroCentered.vue")['default']>
+  LazyHeroGradient: LazyComponent<typeof import("../../../site-blocks/components/blocks/Hero/variants/HeroGradient.vue")['default']>
+  LazyHeroMinimal: LazyComponent<typeof import("../../../site-blocks/components/blocks/Hero/variants/HeroMinimal.vue")['default']>
+  LazyHeroOverlay: LazyComponent<typeof import("../../../site-blocks/components/blocks/Hero/variants/HeroOverlay.vue")['default']>
+  LazyHeroSplit: LazyComponent<typeof import("../../../site-blocks/components/blocks/Hero/variants/HeroSplit.vue")['default']>
+  LazyLeadForm: LazyComponent<typeof import("../../../site-blocks/components/blocks/LeadForm/LeadForm.vue")['default']>
+  LazyLeadFormCard: LazyComponent<typeof import("../../../site-blocks/components/blocks/LeadForm/variants/LeadFormCard.vue")['default']>
+  LazyLeadFormInline: LazyComponent<typeof import("../../../site-blocks/components/blocks/LeadForm/variants/LeadFormInline.vue")['default']>
+  LazyLeadFormSplit: LazyComponent<typeof import("../../../site-blocks/components/blocks/LeadForm/variants/LeadFormSplit.vue")['default']>
+  LazyPricing: LazyComponent<typeof import("../../../site-blocks/components/blocks/Pricing/Pricing.vue")['default']>
+  LazyPricingCards: LazyComponent<typeof import("../../../site-blocks/components/blocks/Pricing/variants/PricingCards.vue")['default']>
+  LazyPricingHighlight: LazyComponent<typeof import("../../../site-blocks/components/blocks/Pricing/variants/PricingHighlight.vue")['default']>
+  LazyPricingMinimal: LazyComponent<typeof import("../../../site-blocks/components/blocks/Pricing/variants/PricingMinimal.vue")['default']>
+  LazyPricingTable: LazyComponent<typeof import("../../../site-blocks/components/blocks/Pricing/variants/PricingTable.vue")['default']>
+  LazyStats: LazyComponent<typeof import("../../../site-blocks/components/blocks/Stats/Stats.vue")['default']>
+  LazyStatsBigNumbers: LazyComponent<typeof import("../../../site-blocks/components/blocks/Stats/variants/StatsBigNumbers.vue")['default']>
+  LazyStatsCards: LazyComponent<typeof import("../../../site-blocks/components/blocks/Stats/variants/StatsCards.vue")['default']>
+  LazyStatsRow: LazyComponent<typeof import("../../../site-blocks/components/blocks/Stats/variants/StatsRow.vue")['default']>
+  LazyTestimonials: LazyComponent<typeof import("../../../site-blocks/components/blocks/Testimonials/Testimonials.vue")['default']>
+  LazyTestimonialsAvatarsRow: LazyComponent<typeof import("../../../site-blocks/components/blocks/Testimonials/variants/TestimonialsAvatarsRow.vue")['default']>
+  LazyTestimonialsCards: LazyComponent<typeof import("../../../site-blocks/components/blocks/Testimonials/variants/TestimonialsCards.vue")['default']>
+  LazyTestimonialsQuotes: LazyComponent<typeof import("../../../site-blocks/components/blocks/Testimonials/variants/TestimonialsQuotes.vue")['default']>
+  LazyTestimonialsSingleFeatured: LazyComponent<typeof import("../../../site-blocks/components/blocks/Testimonials/variants/TestimonialsSingleFeatured.vue")['default']>
+  LazyTextImage: LazyComponent<typeof import("../../../site-blocks/components/blocks/TextImage/TextImage.vue")['default']>
   LazyNuxtWelcome: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
   LazyNuxtLayout: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
   LazyNuxtErrorBoundary: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']>
@@ -122,9 +266,9 @@ interface _GlobalComponents {
   LazyNuxtAnnouncer: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-announcer")['default']>
   LazyNuxtImg: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']>
   LazyNuxtPicture: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']>
-  LazyIcon: LazyComponent<typeof import("../../node_modules/@nuxt/icon/dist/runtime/components/index")['default']>
   LazyMotion: LazyComponent<typeof import("@vueuse/motion")['MotionComponent']>
   LazyMotionGroup: LazyComponent<typeof import("@vueuse/motion")['MotionGroupComponent']>
+  LazyIcon: LazyComponent<typeof import("../../node_modules/@nuxt/icon/dist/runtime/components/index")['default']>
   LazyNuxtPage: LazyComponent<typeof import("../../node_modules/nuxt/dist/pages/runtime/page")['default']>
   LazyNoScript: LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['NoScript']>
   LazyLink: LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Link']>

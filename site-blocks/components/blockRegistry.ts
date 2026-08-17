@@ -13,6 +13,7 @@ import CatalogFilter from './blocks/CatalogFilter/CatalogFilter.vue'
 import Faq from './blocks/Faq/Faq.vue'
 import Gallery from './blocks/Gallery/Gallery.vue'
 import Stats from './blocks/Stats/Stats.vue'
+import LeadForm from './blocks/LeadForm/LeadForm.vue'
 import CustomContent from './blocks/CustomContent/CustomContent.vue'
 
 /**
@@ -36,5 +37,6 @@ export const SECTION_COMPONENT_MAP: Record<SectionType, Component> = {
   faq: Faq,
   gallery: Gallery,
   stats: Stats,
+  lead_form: LeadForm,
   custom_content: CustomContent,
 }

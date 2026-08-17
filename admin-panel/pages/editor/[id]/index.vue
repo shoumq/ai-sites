@@ -69,6 +69,7 @@ const previewMode = ref<'desktop' | 'mobile'>('desktop')
 const activeTab = ref<'constructor' | 'blocks' | 'chat'>('constructor')
 const publishing = ref(false)
 const exporting = ref(false)
+const deployOpen = ref(false)
 const publishedUrl = ref<string | null>(null)
 
 const STATUS_LABELS: Record<string, string> = {
@@ -204,6 +205,9 @@ const publishedHref = computed(() => {
           >
             <Icon name="lucide:smartphone" />
           </button>
+          <NuxtLink :to="`/editor/${projectId}/leads`" class="icon-btn" title="Заявки и заказы">
+            <Icon name="lucide:inbox" />
+          </NuxtLink>
           <NuxtLink :to="`/editor/${projectId}/settings`" class="icon-btn" title="Настройки">
             <Icon name="lucide:settings" />
           </NuxtLink>
@@ -219,6 +223,9 @@ const publishedHref = computed(() => {
             @click="handleExport"
           >
             Экспорт кода
+          </BaseButton>
+          <BaseButton variant="secondary" size="sm" icon="lucide:git-branch" @click="deployOpen = true">
+            Деплой в Git
           </BaseButton>
           <BaseButton variant="primary" size="sm" icon="lucide:rocket" :loading="publishing" @click="handlePublish">
             Опубликовать
@@ -268,6 +275,8 @@ const publishedHref = computed(() => {
           </div>
         </aside>
       </div>
+
+      <DeployModal v-model="deployOpen" :project-id="projectId" :project-name="store.project?.name ?? 'site'" />
     </template>
   </div>
 </template>

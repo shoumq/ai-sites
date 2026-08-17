@@ -27,6 +27,7 @@ const emit = defineEmits<{
         @update:model-value="(v) => emit('update:section', { logo_text: v })"
       />
 
+      <CartButton v-if="section.show_cart" :editable="editable" />
       <EditableText
         v-if="section.cta_text || editable"
         tag="span"

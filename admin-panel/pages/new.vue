@@ -27,7 +27,14 @@ const GOALS: { value: SiteGoal; label: string }[] = [
   { value: 'info', label: 'Информирование' },
 ]
 
-const canGoNext = computed(() => (step.value === 0 && funnel.siteType) || (step.value === 1 && funnel.style) || step.value === 2)
+// Экран с брифом (после него генерацию уже можно запускать) и последний экран
+// воронки — необязательный выбор структуры.
+const BRIEF_STEP = 2
+const LAST_STEP = 3
+
+const canGoNext = computed(
+  () => (step.value === 0 && !!funnel.siteType) || (step.value === 1 && !!funnel.style) || step.value >= 2,
+)
 
 function back() {
   if (step.value === 0) router.push('/')
@@ -35,7 +42,7 @@ function back() {
 }
 
 function next() {
-  if (step.value < 2 && canGoNext.value) step.value += 1
+  if (step.value < LAST_STEP && canGoNext.value) step.value += 1
 }
 
 function generate() {
@@ -48,7 +55,7 @@ function generate() {
   <div class="page-shell">
     <div class="container funnel">
       <div class="funnel__dots">
-        <span v-for="i in 3" :key="i" class="funnel__dot" :class="{ 'is-active': i - 1 <= step }" />
+        <span v-for="i in 4" :key="i" class="funnel__dot" :class="{ 'is-active': i - 1 <= step }" />
       </div>
 
       <Transition name="funnel-step" mode="out-in">
@@ -94,7 +101,7 @@ function generate() {
           </div>
         </div>
 
-        <div v-else key="2" class="funnel__step">
+        <div v-else-if="step === 2" key="2" class="funnel__step">
           <h2>Расскажите о бренде</h2>
           <p class="funnel__subtitle">Это и есть промпт для ИИ — чем точнее опишете, тем точнее будут тексты сайта.</p>
 
@@ -131,14 +138,39 @@ function generate() {
             @update:model-value="funnel.goal = $event as SiteGoal"
           />
         </div>
+
+        <div v-else key="3" class="funnel__step">
+          <h2>Структура сайта</h2>
+          <p class="funnel__subtitle">
+            Необязательный шаг. Можно оставить всё на ИИ, а можно собрать страницу самому — вплоть до варианта
+            вёрстки каждого блока.
+          </p>
+          <StructurePicker v-model="funnel.layout" :site-type="funnel.siteType ?? ''" />
+        </div>
       </Transition>
 
       <div class="funnel__nav">
         <BaseButton variant="ghost" icon="lucide:arrow-left" @click="back">Назад</BaseButton>
-        <BaseButton v-if="step < 2" variant="primary" :disabled="!canGoNext" @click="next">Далее</BaseButton>
-        <BaseButton v-else variant="primary" icon="lucide:sparkles" :disabled="!funnel.isBriefComplete" @click="generate">
-          Сгенерировать
-        </BaseButton>
+
+        <div class="funnel__nav-right">
+          <!-- Экран «Структура» необязательный, поэтому с экрана брифа должен
+               остаться прямой путь к генерации — как было до его появления.
+               Иначе пользователь, заполнивший бриф, упирается в «Далее» и не
+               понимает, где кнопка «Сгенерировать». -->
+          <BaseButton
+            v-if="step === BRIEF_STEP"
+            variant="ghost"
+            icon="lucide:sparkles"
+            :disabled="!funnel.isBriefComplete"
+            @click="generate"
+          >
+            Сгенерировать сразу
+          </BaseButton>
+          <BaseButton v-if="step < LAST_STEP" variant="primary" :disabled="!canGoNext" @click="next">Далее</BaseButton>
+          <BaseButton v-else variant="primary" icon="lucide:sparkles" :disabled="!funnel.isBriefComplete" @click="generate">
+            Сгенерировать
+          </BaseButton>
+        </div>
       </div>
     </div>
   </div>
@@ -146,7 +178,7 @@ function generate() {
 
 <style scoped>
 .funnel {
-  max-width: 780px;
+  max-width: 880px;
   padding-top: var(--a-space-7);
   padding-bottom: var(--a-space-8);
   display: flex;
@@ -281,6 +313,11 @@ function generate() {
 .funnel__nav {
   display: flex;
   justify-content: space-between;
+  gap: var(--a-space-3);
+}
+
+.funnel__nav-right {
+  display: flex;
   gap: var(--a-space-3);
 }
 

@@ -3,6 +3,7 @@ export {}
 declare global {
   const $fetch: typeof import('../fetch.mjs').$fetch
   const ApiError: typeof import('../../composables/useApi').ApiError
+  const DEFAULT_SITE_RUNTIME: typeof import('../../../site-blocks/composables/useSiteRuntime').DEFAULT_SITE_RUNTIME
   const abortNavigation: typeof import('../../node_modules/nuxt/dist/app/composables/router').abortNavigation
   const acceptHMRUpdate: typeof import('../../node_modules/@pinia/nuxt/dist/runtime/composables').acceptHMRUpdate
   const addRouteMiddleware: typeof import('../../node_modules/nuxt/dist/app/composables/router').addRouteMiddleware
@@ -31,12 +32,14 @@ declare global {
   const defineStore: typeof import('../../node_modules/@pinia/nuxt/dist/runtime/composables').defineStore
   const effect: typeof import('vue').effect
   const effectScope: typeof import('vue').effectScope
+  const formatMoney: typeof import('../../../site-blocks/composables/useCart').formatMoney
   const getAppManifest: typeof import('../../node_modules/nuxt/dist/app/composables/manifest').getAppManifest
   const getCurrentInstance: typeof import('vue').getCurrentInstance
   const getCurrentScope: typeof import('vue').getCurrentScope
   const getRouteRules: typeof import('../../node_modules/nuxt/dist/app/composables/manifest').getRouteRules
   const h: typeof import('vue').h
   const hasInjectionContext: typeof import('vue').hasInjectionContext
+  const initCart: typeof import('../../../site-blocks/composables/useCart').initCart
   const inject: typeof import('vue').inject
   const injectHead: typeof import('../../node_modules/nuxt/dist/app/composables/head').injectHead
   const isNuxtError: typeof import('../../node_modules/nuxt/dist/app/composables/error').isNuxtError
@@ -70,6 +73,8 @@ declare global {
   const onUnmounted: typeof import('vue').onUnmounted
   const onUpdated: typeof import('vue').onUpdated
   const onWatcherCleanup: typeof import('vue').onWatcherCleanup
+  const parseLiteMarkdown: typeof import('../../../site-blocks/composables/useLiteMarkdown').parseLiteMarkdown
+  const parsePrice: typeof import('../../../site-blocks/composables/useCart').parsePrice
   const prefetchComponents: typeof import('../../node_modules/nuxt/dist/app/composables/preload').prefetchComponents
   const preloadComponents: typeof import('../../node_modules/nuxt/dist/app/composables/preload').preloadComponents
   const preloadPayload: typeof import('../../node_modules/nuxt/dist/app/composables/payload').preloadPayload
@@ -90,6 +95,7 @@ declare global {
   const setInterval: typeof import('../../node_modules/nuxt/dist/app/compat/interval').setInterval
   const setPageLayout: typeof import('../../node_modules/nuxt/dist/app/composables/router').setPageLayout
   const setResponseStatus: typeof import('../../node_modules/nuxt/dist/app/composables/ssr').setResponseStatus
+  const setSiteRuntime: typeof import('../../../site-blocks/composables/useSiteRuntime').setSiteRuntime
   const shallowReactive: typeof import('vue').shallowReactive
   const shallowReadonly: typeof import('vue').shallowReadonly
   const shallowRef: typeof import('vue').shallowRef
@@ -109,6 +115,8 @@ declare global {
   const useAsyncData: typeof import('../../node_modules/nuxt/dist/app/composables/asyncData').useAsyncData
   const useAttrs: typeof import('vue').useAttrs
   const useAuthStore: typeof import('../../stores/auth').useAuthStore
+  const useCart: typeof import('../../../site-blocks/composables/useCart').useCart
+  const useCatalogFilter: typeof import('../../../site-blocks/composables/useCatalogFilter').useCatalogFilter
   const useConfirm: typeof import('../../composables/useConfirm').useConfirm
   const useCookie: typeof import('../../node_modules/nuxt/dist/app/composables/cookie').useCookie
   const useCssModule: typeof import('vue').useCssModule
@@ -126,8 +134,10 @@ declare global {
   const useLayout: typeof import('../../node_modules/nuxt/dist/app/composables/layout').useLayout
   const useLazyAsyncData: typeof import('../../node_modules/nuxt/dist/app/composables/asyncData').useLazyAsyncData
   const useLazyFetch: typeof import('../../node_modules/nuxt/dist/app/composables/fetch').useLazyFetch
+  const useLeadModal: typeof import('../../../site-blocks/composables/useSiteForms').useLeadModal
   const useLink: typeof import('../../node_modules/vue-router').useLink
   const useLoadingIndicator: typeof import('../../node_modules/nuxt/dist/app/composables/loading-indicator').useLoadingIndicator
+  const useMobileNav: typeof import('../../../site-blocks/composables/useMobileNav').useMobileNav
   const useModel: typeof import('vue').useModel
   const useMotion: typeof import('../../node_modules/@vueuse/motion/dist/nuxt/runtime/composables/index').useMotion
   const useMotionControls: typeof import('../../node_modules/@vueuse/motion/dist/nuxt/runtime/composables/index').useMotionControls
@@ -200,6 +210,10 @@ declare global {
   const useServerHeadSafe: typeof import('../../node_modules/nuxt/dist/app/composables/head').useServerHeadSafe
   const useServerSeoMeta: typeof import('../../node_modules/nuxt/dist/app/composables/head').useServerSeoMeta
   const useShadowRoot: typeof import('vue').useShadowRoot
+  const useSiteAnalytics: typeof import('../../../site-blocks/composables/useSiteAnalytics').useSiteAnalytics
+  const useSiteForms: typeof import('../../../site-blocks/composables/useSiteForms').useSiteForms
+  const useSiteRuntime: typeof import('../../../site-blocks/composables/useSiteRuntime').useSiteRuntime
+  const useSiteTheme: typeof import('../../../site-blocks/composables/useSiteTheme').useSiteTheme
   const useSlots: typeof import('vue').useSlots
   const useSpring: typeof import('../../node_modules/@vueuse/motion/dist/nuxt/runtime/composables/index').useSpring
   const useState: typeof import('../../node_modules/nuxt/dist/app/composables/state').useState
@@ -237,6 +251,21 @@ declare global {
   export type { ToastType, ToastItem } from '../../composables/useToast'
   import('../../composables/useToast')
   // @ts-ignore
+  export type { CartItem } from '../../../site-blocks/composables/useCart'
+  import('../../../site-blocks/composables/useCart')
+  // @ts-ignore
+  export type { LiteMdSpan, LiteMdParagraph, LiteMdList, LiteMdBlock } from '../../../site-blocks/composables/useLiteMarkdown'
+  import('../../../site-blocks/composables/useLiteMarkdown')
+  // @ts-ignore
+  export type { AnalyticsConfig, SeoConfig } from '../../../site-blocks/composables/useSiteAnalytics'
+  import('../../../site-blocks/composables/useSiteAnalytics')
+  // @ts-ignore
+  export type { LeadPayload, LeadModalState } from '../../../site-blocks/composables/useSiteForms'
+  import('../../../site-blocks/composables/useSiteForms')
+  // @ts-ignore
+  export type { SiteRuntime } from '../../../site-blocks/composables/useSiteRuntime'
+  import('../../../site-blocks/composables/useSiteRuntime')
+  // @ts-ignore
   export type { SaveStatus } from '../../stores/editor'
   import('../../stores/editor')
   // @ts-ignore
@@ -249,6 +278,7 @@ declare module 'vue' {
   interface ComponentCustomProperties {
     readonly $fetch: UnwrapRef<typeof import('../fetch.mjs')['$fetch']>
     readonly ApiError: UnwrapRef<typeof import('../../composables/useApi')['ApiError']>
+    readonly DEFAULT_SITE_RUNTIME: UnwrapRef<typeof import('../../../site-blocks/composables/useSiteRuntime')['DEFAULT_SITE_RUNTIME']>
     readonly abortNavigation: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/router')['abortNavigation']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('../../node_modules/@pinia/nuxt/dist/runtime/composables')['acceptHMRUpdate']>
     readonly addRouteMiddleware: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/router')['addRouteMiddleware']>
@@ -277,12 +307,14 @@ declare module 'vue' {
     readonly defineStore: UnwrapRef<typeof import('../../node_modules/@pinia/nuxt/dist/runtime/composables')['defineStore']>
     readonly effect: UnwrapRef<typeof import('vue')['effect']>
     readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
+    readonly formatMoney: UnwrapRef<typeof import('../../../site-blocks/composables/useCart')['formatMoney']>
     readonly getAppManifest: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/manifest')['getAppManifest']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
     readonly getRouteRules: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/manifest')['getRouteRules']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
     readonly hasInjectionContext: UnwrapRef<typeof import('vue')['hasInjectionContext']>
+    readonly initCart: UnwrapRef<typeof import('../../../site-blocks/composables/useCart')['initCart']>
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly injectHead: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/head')['injectHead']>
     readonly isNuxtError: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/error')['isNuxtError']>
@@ -316,6 +348,8 @@ declare module 'vue' {
     readonly onUnmounted: UnwrapRef<typeof import('vue')['onUnmounted']>
     readonly onUpdated: UnwrapRef<typeof import('vue')['onUpdated']>
     readonly onWatcherCleanup: UnwrapRef<typeof import('vue')['onWatcherCleanup']>
+    readonly parseLiteMarkdown: UnwrapRef<typeof import('../../../site-blocks/composables/useLiteMarkdown')['parseLiteMarkdown']>
+    readonly parsePrice: UnwrapRef<typeof import('../../../site-blocks/composables/useCart')['parsePrice']>
     readonly prefetchComponents: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/preload')['prefetchComponents']>
     readonly preloadComponents: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/preload')['preloadComponents']>
     readonly preloadPayload: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/payload')['preloadPayload']>
@@ -336,6 +370,7 @@ declare module 'vue' {
     readonly setInterval: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/compat/interval')['setInterval']>
     readonly setPageLayout: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/router')['setPageLayout']>
     readonly setResponseStatus: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/ssr')['setResponseStatus']>
+    readonly setSiteRuntime: UnwrapRef<typeof import('../../../site-blocks/composables/useSiteRuntime')['setSiteRuntime']>
     readonly shallowReactive: UnwrapRef<typeof import('vue')['shallowReactive']>
     readonly shallowReadonly: UnwrapRef<typeof import('vue')['shallowReadonly']>
     readonly shallowRef: UnwrapRef<typeof import('vue')['shallowRef']>
@@ -355,6 +390,8 @@ declare module 'vue' {
     readonly useAsyncData: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/asyncData')['useAsyncData']>
     readonly useAttrs: UnwrapRef<typeof import('vue')['useAttrs']>
     readonly useAuthStore: UnwrapRef<typeof import('../../stores/auth')['useAuthStore']>
+    readonly useCart: UnwrapRef<typeof import('../../../site-blocks/composables/useCart')['useCart']>
+    readonly useCatalogFilter: UnwrapRef<typeof import('../../../site-blocks/composables/useCatalogFilter')['useCatalogFilter']>
     readonly useConfirm: UnwrapRef<typeof import('../../composables/useConfirm')['useConfirm']>
     readonly useCookie: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/cookie')['useCookie']>
     readonly useCssModule: UnwrapRef<typeof import('vue')['useCssModule']>
@@ -372,8 +409,10 @@ declare module 'vue' {
     readonly useLayout: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/layout')['useLayout']>
     readonly useLazyAsyncData: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/asyncData')['useLazyAsyncData']>
     readonly useLazyFetch: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/fetch')['useLazyFetch']>
+    readonly useLeadModal: UnwrapRef<typeof import('../../../site-blocks/composables/useSiteForms')['useLeadModal']>
     readonly useLink: UnwrapRef<typeof import('../../node_modules/vue-router')['useLink']>
     readonly useLoadingIndicator: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/loading-indicator')['useLoadingIndicator']>
+    readonly useMobileNav: UnwrapRef<typeof import('../../../site-blocks/composables/useMobileNav')['useMobileNav']>
     readonly useModel: UnwrapRef<typeof import('vue')['useModel']>
     readonly useMotion: UnwrapRef<typeof import('../../node_modules/@vueuse/motion/dist/nuxt/runtime/composables/index')['useMotion']>
     readonly useMotionControls: UnwrapRef<typeof import('../../node_modules/@vueuse/motion/dist/nuxt/runtime/composables/index')['useMotionControls']>
@@ -446,6 +485,10 @@ declare module 'vue' {
     readonly useServerHeadSafe: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/head')['useServerHeadSafe']>
     readonly useServerSeoMeta: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/head')['useServerSeoMeta']>
     readonly useShadowRoot: UnwrapRef<typeof import('vue')['useShadowRoot']>
+    readonly useSiteAnalytics: UnwrapRef<typeof import('../../../site-blocks/composables/useSiteAnalytics')['useSiteAnalytics']>
+    readonly useSiteForms: UnwrapRef<typeof import('../../../site-blocks/composables/useSiteForms')['useSiteForms']>
+    readonly useSiteRuntime: UnwrapRef<typeof import('../../../site-blocks/composables/useSiteRuntime')['useSiteRuntime']>
+    readonly useSiteTheme: UnwrapRef<typeof import('../../../site-blocks/composables/useSiteTheme')['useSiteTheme']>
     readonly useSlots: UnwrapRef<typeof import('vue')['useSlots']>
     readonly useSpring: UnwrapRef<typeof import('../../node_modules/@vueuse/motion/dist/nuxt/runtime/composables/index')['useSpring']>
     readonly useState: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/state')['useState']>

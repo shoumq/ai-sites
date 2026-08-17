@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import io
+import re
 import zipfile
 from pathlib import Path
 
@@ -19,6 +20,14 @@ from app.schemas.settings import ProjectSettings
 from app.schemas.site import SiteSchema
 from app.services.site_builder_client import build_site
 from app.services.storage import StorageClient, new_build_id
+
+
+def slugify_project_name(name: str) -> str:
+    """Имя проекта -> безопасный сегмент пути/поддомена. Живёт здесь, а не в
+    роуте, потому что нужно и публикации, и деплою в git (там же становится
+    названием репозитория по умолчанию)."""
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    return slug or "site"
 
 
 async def publish_project(

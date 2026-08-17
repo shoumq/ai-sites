@@ -13,7 +13,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <section class="text-image" :class="`text-image--${section.image_position}`">
+  <section class="text-image" :class="[`text-image--${section.image_position}`, `text-image--v-${section.variant || 'standard'}`]">
     <div class="text-image__grid">
       <div
         class="text-image__text"
@@ -55,17 +55,68 @@ const emit = defineEmits<{
 
 <style scoped>
 .text-image {
-  padding: var(--space-8) var(--space-5);
+  padding: var(--section-py) var(--space-5);
   background: var(--surface);
 }
 
 .text-image__grid {
-  max-width: 1200px;
+  max-width: var(--container);
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-7);
   align-items: center;
+}
+
+/* Варианты вёрстки этого блока сделаны модификаторами-классами, а не
+   отдельными файлами в variants/: разметка у всех трёх одна и та же (текст +
+   картинка), различаются только пропорции и подложка. Три копии одного
+   шаблона ради этого разъехались бы при первой же правке контента. */
+
+/* overlap — картинка «наезжает» на цветную подложку с текстом */
+.text-image--v-overlap .text-image__grid {
+  grid-template-columns: 1.15fr 1fr;
+  gap: 0;
+  align-items: stretch;
+}
+
+.text-image--v-overlap .text-image__text {
+  padding: var(--space-7);
+  border-radius: var(--radius-block);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  justify-content: center;
+}
+
+.text-image--v-overlap .text-image__media {
+  align-self: center;
+  margin-inline-start: calc(var(--space-6) * -1);
+  z-index: 1;
+}
+
+.text-image--v-overlap.text-image--left .text-image__media {
+  margin-inline-start: 0;
+  margin-inline-end: calc(var(--space-6) * -1);
+}
+
+/* card — текст и картинка в одной карточке с рамкой и тенью */
+.text-image--v-card .text-image__grid {
+  gap: 0;
+  align-items: stretch;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-block);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.text-image--v-card .text-image__text {
+  padding: var(--space-7);
+  justify-content: center;
+}
+
+.text-image--v-card .text-image__media {
+  border-radius: 0;
+  box-shadow: none;
+  aspect-ratio: auto;
 }
 
 .text-image--right .text-image__text {
@@ -121,8 +172,16 @@ const emit = defineEmits<{
 }
 
 @container (max-width: 860px) {
-  .text-image__grid {
+  .text-image__grid,
+  .text-image--v-overlap .text-image__grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Наезд картинки на текст на узком экране превращается в кашу — на мобильном
+     все три варианта схлопываются в обычную вертикаль. */
+  .text-image--v-overlap .text-image__media,
+  .text-image--v-overlap.text-image--left .text-image__media {
+    margin-inline: 0;
   }
   .text-image--right .text-image__text,
   .text-image--left .text-image__text {

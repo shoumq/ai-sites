@@ -32,3 +32,4 @@ class Project(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     owner: Mapped["User"] = relationship(back_populates="projects")
+    leads: Mapped[list["Lead"]] = relationship(back_populates="project", cascade="all, delete-orphan")  # noqa: F821

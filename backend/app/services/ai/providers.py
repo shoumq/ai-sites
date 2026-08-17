@@ -28,7 +28,7 @@ import httpx
 
 from app.core.config import Settings
 from app.schemas.project import BriefIn
-from app.schemas.site import BLOCK_LIBRARY, SECTION_VARIANTS, SiteSchema, parse_site
+from app.schemas.site import BLOCK_LIBRARY, SECTION_VARIANTS, THEME_AXES, SiteSchema, parse_site
 from app.services.ai.block_schema import describe_block_fields
 from app.services.block_keywords import match_type_in_text
 from app.services.chat_commands import apply_chat_command
@@ -82,6 +82,11 @@ def _count_hint(section_type: str, items_count: int) -> str:
         "gallery": "4-8 items",
         "stats": "3-4 items",
         "catalog_filter": "6 items на 2-3 категории (поле category), заполни и categories, и items",
+        "lead_form": (
+            "короткий заголовок и подзаголовок формы заявки + текст кнопки (submit_text) и "
+            "текст благодарности (success_text). Сам состав полей формы не придумывай — "
+            "он задаётся отдельно"
+        ),
         "custom_content": (
             "используй, только если задача пользователя явно не покрывается другими блоками "
             "библиотеки; body — 1-3 абзаца текста (можно **жирный**/*курсив*/списки через \"- \"), "
@@ -129,6 +134,33 @@ def _seeded_choice(seed: str, options: list[str]) -> str:
     настоящей случайности (одинаковый бриф всегда даёт одинаковый результат)."""
     digest = hashlib.sha1(seed.encode("utf-8")).hexdigest()
     return options[int(digest, 16) % len(options)]
+
+
+def _seeded_subset(seed: str, options: list[str], minimum: int, maximum: int) -> list[str]:
+    """Детерминированно выбирает подмножество из `options` размером
+    minimum..maximum, сохраняя исходный порядок.
+
+    Нужен именно подбор ПОДМНОЖЕСТВА, а не всего пула: раньше фолбэк-макет
+    (он же единственный источник структуры в mock-режиме, то есть по умолчанию
+    без ключей Yandex) складывал в сайт весь список блоков целиком, и все
+    сгенерированные сайты одного типа выходили с одинаковым набором и порядком
+    секций. Теперь состав меняется от брифа к брифу, оставаясь воспроизводимым
+    для одного и того же брифа.
+    """
+    if not options:
+        return []
+    digest = hashlib.sha1(seed.encode("utf-8")).hexdigest()
+    value = int(digest, 16)
+
+    upper = min(maximum, len(options))
+    lower = min(minimum, upper)
+    count = lower + (value % (upper - lower + 1))
+
+    # Каждому элементу — свой стабильный ранг; берём count лучших и
+    # возвращаем их в исходном порядке пула.
+    ranked = sorted(options, key=lambda option: hashlib.sha1(f"{seed}|{option}".encode("utf-8")).hexdigest())
+    chosen = set(ranked[:count])
+    return [option for option in options if option in chosen]
 
 
 def _yandex_headers(settings: Settings) -> dict[str, str]:
@@ -224,7 +256,11 @@ _LIST_REQUIRED_KEYS: dict[str, tuple[str, ...]] = {
     "stats": ("value", "label"),
     "custom_content": ("label",),
 }
-_FLAT_TYPES = {"hero", "footer"}
+# «Плоские» типы без списочного поля — их контент мерджится целиком через
+# _merge_dict. lead_form сюда входит намеренно: тексты формы (заголовок, кнопка,
+# благодарность) пишет копирайтер, а состав полей задаёт оркестратор — модели
+# незачем изобретать имена полей, по которым потом ходит код приёма заявок.
+_FLAT_TYPES = {"hero", "footer", "lead_form"}
 
 
 class YandexCopywriter:
@@ -350,6 +386,7 @@ class YandexCopywriter:
             "faq": self._mock_faq,
             "gallery": self._mock_gallery,
             "stats": self._mock_stats,
+            "lead_form": self._mock_lead_form,
             "custom_content": self._mock_custom_content,
         }.get(section_type)
         return generator(brief) if generator else {}
@@ -452,6 +489,20 @@ class YandexCopywriter:
             ],
         }
 
+    def _mock_lead_form(self, brief: BriefIn) -> dict:
+        titles = {
+            "shop": "Не нашли нужный товар?",
+            "crm": "Запросить демо-доступ",
+            "multipage": "Остались вопросы?",
+        }
+        buttons = {"booking": "Записаться", "sales": "Оставить заявку", "portfolio": "Обсудить проект", "info": "Написать нам"}
+        return {
+            "title": titles.get(brief.site_type.value, "Оставьте заявку"),
+            "subtitle": f"Расскажем подробнее об услугах «{brief.brand_name}» и ответим на вопросы.",
+            "submit_text": buttons[brief.goal.value],
+            "success_text": "Спасибо! Мы свяжемся с вами в ближайшее время.",
+        }
+
     def _mock_custom_content(self, brief: BriefIn) -> dict:
         return {
             "title": (brief.extra_requirements or "Дополнительно")[:60],
@@ -487,18 +538,26 @@ class YandexLayoutEngine:
     # автоматически при добавлении нового типа в реестр, без правки здесь.
     ALLOWED_MIDDLE_SECTIONS = [t for t in BLOCK_LIBRARY if t not in ("header", "hero", "footer")]
 
-    # Какие средние блоки в принципе уместны для типа сайта — сам выбор
-    # варианта и итоговый порядок в реальном режиме решает ИИ; в mock-режиме
-    # (и как фолбэк при сбое реального вызова) в сайт попадают ВСЕ блоки из
-    # пула для данного site_type — это единственное место, где список нужно
-    # расширять руками при добавлении нового типа (осознанный выбор кураторов,
-    # не выводится из BLOCK_LIBRARY механически).
-    DEFAULT_MIDDLE_SECTIONS = {
-        "landing": ["grid_3col", "pricing", "testimonials", "contact_map", "faq", "gallery", "stats"],
+    # Блоки, без которых сайт данного типа не имеет смысла — попадают в него
+    # всегда. Осознанный выбор кураторов, из BLOCK_LIBRARY не выводится.
+    REQUIRED_MIDDLE_SECTIONS = {
+        "landing": ["grid_3col", "contact_map"],
+        "shop": ["catalog_filter", "contact_map"],
+        "crm": ["grid_3col", "pricing"],
+        "multipage": ["grid_3col", "contact_map"],
+    }
+
+    # Пул «по желанию»: из него фолбэк добирает 2-4 блока ДЕТЕРМИНИРОВАННО, но
+    # по-разному для разных брифов (см. _seeded_subset). Раньше сюда попадал
+    # весь пул целиком — из-за чего каждый сайт в mock-режиме получал один и
+    # тот же набор блоков в одном и том же порядке, что и было главной
+    # причиной «однотипных» сайтов без ключа Yandex.
+    OPTIONAL_MIDDLE_SECTIONS = {
+        "landing": ["stats", "pricing", "testimonials", "faq", "gallery", "lead_form", "text_image"],
         # pricing нарочно нет — магазин с отдельными товарами, а не подпиской
-        "shop": ["grid_3col", "testimonials", "contact_map", "catalog_filter", "faq"],
-        "crm": ["text_image", "pricing", "contact_map", "faq", "stats"],
-        "multipage": ["text_image", "grid_3col", "testimonials", "contact_map", "faq", "gallery"],
+        "shop": ["stats", "grid_3col", "testimonials", "gallery", "faq", "text_image"],
+        "crm": ["stats", "text_image", "testimonials", "faq", "lead_form", "contact_map"],
+        "multipage": ["stats", "text_image", "testimonials", "gallery", "faq", "lead_form"],
     }
 
     def __init__(self, settings: Settings):
@@ -507,16 +566,24 @@ class YandexLayoutEngine:
 
     async def plan_layout(self, brief: BriefIn) -> dict:
         """Возвращает {"primary_color", "font", "style", "header_variant",
-        "hero_variant", "footer_variant", "sections": [{"type","variant"}, ...]}."""
+        "hero_variant", "footer_variant", "sections": [{"type","variant"}, ...],
+        "axes": {"radius": ..., "density": ..., ...}}.
+
+        Ручной выбор пользователя (brief.layout) имеет приоритет над всем —
+        и над ИИ, и над фолбэком: если человек явно выбрал структуру на экране
+        «Структура», подменять её моделью нельзя.
+        """
         preset = dict(self.PRESET_THEMES[brief.style.value])
         if brief.style.value == "custom" and brief.custom_hex_color:
             preset["primary_color"] = brief.custom_hex_color
         fallback = self._fallback_layout(brief)
 
-        if not self.mock:
+        if self.mock:
+            layout = {**preset, "style": brief.style.value, **fallback}
+        else:
             raw = await self._call_real_api(brief)
             if raw:
-                return {
+                layout = {
                     "primary_color": raw.get("primary_color") if _is_hex_color(raw.get("primary_color")) else preset["primary_color"],
                     "font": raw.get("font") if raw.get("font") in self.ALLOWED_FONTS else preset["font"],
                     "style": brief.style.value,
@@ -524,38 +591,104 @@ class YandexLayoutEngine:
                     "hero_variant": self._pick_variant("hero", raw.get("hero_variant"), fallback["hero_variant"]),
                     "footer_variant": self._pick_variant("footer", raw.get("footer_variant"), fallback["footer_variant"]),
                     "sections": self._sanitize_sections(raw.get("sections")) or fallback["sections"],
+                    "axes": self._sanitize_axes(raw.get("axes"), fallback["axes"]),
                 }
+            else:
+                layout = {**preset, "style": brief.style.value, **fallback}
 
-        return {**preset, "style": brief.style.value, **fallback}
+        return self._apply_preferences(layout, brief)
+
+    def _apply_preferences(self, layout: dict, brief: BriefIn) -> dict:
+        """Накладывает ручной выбор со экрана «Структура» поверх подобранного
+        макета. Пустые поля предпочтений означают «оставить как подобрано»."""
+        prefs = brief.layout
+        for key, section_type in (("header_variant", "header"), ("hero_variant", "hero"), ("footer_variant", "footer")):
+            chosen = getattr(prefs, key)
+            if chosen in SECTION_VARIANTS[section_type]:
+                layout[key] = chosen
+
+        for axis, allowed in THEME_AXES.items():
+            chosen = getattr(prefs, axis, "")
+            if chosen in allowed:
+                layout["axes"][axis] = chosen
+
+        if prefs.mode == "manual" and prefs.blocks:
+            seed = f"{brief.brand_name}|{brief.description}"
+            manual: list[dict] = []
+            seen: set[str] = set()
+            for block in prefs.blocks:
+                if block.type not in self.ALLOWED_MIDDLE_SECTIONS or block.type in seen:
+                    continue
+                seen.add(block.type)
+                options = SECTION_VARIANTS.get(block.type) or []
+                if not options:
+                    manual.append({"type": block.type, "variant": ""})
+                elif block.variant in options:
+                    manual.append({"type": block.type, "variant": block.variant})
+                else:
+                    # Пользователь выбрал блок, но не вариант — подбираем сами.
+                    manual.append({"type": block.type, "variant": _seeded_choice(f"{seed}|{block.type}", options)})
+            if manual:
+                layout["sections"] = manual
+        return layout
 
     def _fallback_layout(self, brief: BriefIn) -> dict:
         """Детерминированный (по бренду) фолбэк для mock-режима и для сбоя
-        реального вызова. Варианты выбираются псевдослучайно по хэшу брифа,
-        поэтому разные проекты выглядят по-разному даже без ключа Yandex.
+        реального вызова. Варианты и сам состав блоков выбираются
+        псевдослучайно по хэшу брифа, поэтому разные проекты выглядят
+        по-разному даже без ключа Yandex.
         brief.extra_requirements проверяется по ключевым словам (см.
         block_keywords.py) — свободный текст влияет на подбор блоков даже без
         реального вызова YandexGPT."""
         seed = f"{brief.brand_name}|{brief.description}"
-        middle_types = list(self.DEFAULT_MIDDLE_SECTIONS.get(brief.site_type.value, self.DEFAULT_MIDDLE_SECTIONS["multipage"]))
+        site_type = brief.site_type.value
+
+        required = list(self.REQUIRED_MIDDLE_SECTIONS.get(site_type, self.REQUIRED_MIDDLE_SECTIONS["multipage"]))
+        optional = [
+            t
+            for t in self.OPTIONAL_MIDDLE_SECTIONS.get(site_type, self.OPTIONAL_MIDDLE_SECTIONS["multipage"])
+            if t not in required
+        ]
+        middle_types = _seeded_subset(f"{seed}|blocks", optional, minimum=2, maximum=4)
+
         if brief.extra_requirements:
             # Ключевое слово не нашлось — не отбрасываем пожелание молча,
             # берём универсальный запасной блок (custom_content).
             matched = match_type_in_text(brief.extra_requirements.lower()) or "custom_content"
-            if matched in self.ALLOWED_MIDDLE_SECTIONS and matched not in middle_types:
+            if matched in self.ALLOWED_MIDDLE_SECTIONS and matched not in middle_types and matched not in required:
                 middle_types.append(matched)
+
+        # contact_map всегда последним из «средних» — контакты внизу страницы
+        # ожидаются пользователями, а не в середине между отзывами и FAQ.
+        ordered = [t for t in required if t != "contact_map"] + middle_types
+        if "contact_map" in required:
+            ordered.append("contact_map")
+
         return {
             "header_variant": _seeded_choice(f"{seed}|header", SECTION_VARIANTS["header"]),
             "hero_variant": _seeded_choice(f"{seed}|hero", SECTION_VARIANTS["hero"]),
             "footer_variant": _seeded_choice(f"{seed}|footer", SECTION_VARIANTS["footer"]),
             "sections": [
                 {"type": t, "variant": _seeded_choice(f"{seed}|{t}", SECTION_VARIANTS[t]) if SECTION_VARIANTS.get(t) else ""}
-                for t in middle_types
+                for t in ordered
             ],
+            "axes": {axis: _seeded_choice(f"{seed}|{axis}", options) for axis, options in THEME_AXES.items()},
         }
 
     @staticmethod
     def _pick_variant(section_type: str, raw_value: object, fallback_value: str) -> str:
         return raw_value if raw_value in SECTION_VARIANTS[section_type] else fallback_value
+
+    @staticmethod
+    def _sanitize_axes(raw: object, fallback: dict[str, str]) -> dict[str, str]:
+        """Оси темы от модели: каждое значение принимается только если входит в
+        допустимый набор, иначе берётся детерминированный фолбэк."""
+        if not isinstance(raw, dict):
+            return dict(fallback)
+        return {
+            axis: raw.get(axis) if raw.get(axis) in options else fallback[axis]
+            for axis, options in THEME_AXES.items()
+        }
 
     def _sanitize_sections(self, sections: object) -> list[dict]:
         """Отфильтровывает несуществующие типы/варианты и убирает повторы —
@@ -585,6 +718,7 @@ class YandexLayoutEngine:
         variant_lines = "\n".join(
             f"- variant блока {t}: {SECTION_VARIANTS[t]}" for t in self.ALLOWED_MIDDLE_SECTIONS if SECTION_VARIANTS.get(t)
         )
+        axes_lines = "\n".join(f"- {axis}: {options}" for axis, options in THEME_AXES.items())
         system_prompt = (
             "Ты фронтенд-архитектор AI-конструктора сайтов. Библиотека Vue-блоков "
             "может расширяться — ниже актуальный список типов и их визуальных "
@@ -603,12 +737,21 @@ class YandexLayoutEngine:
             "правила по типу сайта выше) и порядок их показа под задачу пользователя. "
             f"Если пользователь просит что-то конкретное — сопоставь с ближайшим типом: "
             f"{_EXTRA_REQUIREMENTS_HINTS}. "
-            "Плюс акцентный HEX-цвет и шрифт. "
+            "Плюс акцентный HEX-цвет и шрифт.\n\n"
+            "Отдельно подбери ОСИ ВЁРСТКИ — сквозные параметры, которые задают характер "
+            "всего сайта сразу (скругления, плотность отступов, ширина контента, оформление "
+            "заголовков и кнопок, разделители секций). Их тоже выбирай под характер бизнеса "
+            "и по-разному для разных задач: строгой юридической компании подойдут sharp/compact/"
+            "narrow, детскому центру — round/airy, техно-стартапу — gradient-заголовки. "
+            "Допустимые значения осей:\n"
+            f"{axes_lines}\n\n"
             "Верни строго JSON без markdown и пояснений: "
             '{"primary_color": "#RRGGBB", '
             '"font": "Inter" | "Roboto" | "PT Sans" | "Montserrat", '
             '"header_variant": "...", "hero_variant": "...", "footer_variant": "...", '
-            '"sections": [{"type": "...", "variant": "..."}, ...]}'
+            '"sections": [{"type": "...", "variant": "..."}, ...], '
+            '"axes": {"radius": "...", "density": "...", "container_width": "...", '
+            '"heading_style": "...", "button_style": "...", "section_divider": "..."}}'
         )
         user_prompt = (
             f"Тип сайта: {brief.site_type.value}\nПресет настроения: {brief.style.value}\n"
@@ -700,6 +843,7 @@ def _build_chat_system_prompt() -> str:
         variant_note = f", variant один из {variants}" if variants else ", у этого типа нет variant"
         library_lines.append(f'- "{section_type}"{variant_note}: {shape}')
     library_text = "\n".join(library_lines)
+    axes_text = "\n".join(f'- theme.{axis}: один из {options}' for axis, options in THEME_AXES.items())
     return (
         "Ты редактор JSON-схемы сайта в AI-конструкторе. Тебе дают текущую схему сайта "
         '(поле "site") и команду пользователя на естественном языке (поле "command"). '
@@ -708,6 +852,14 @@ def _build_chat_system_prompt() -> str:
         "фон сайта целиком (theme.bg_color) или фон конкретного блока (поле bg_color внутри секции — "
         "пустая строка означает 'без переопределения, наследует фон сайта'), "
         "шрифт (theme.font), порядок секций и т.д.\n\n"
+        "Кроме цвета и шрифта у темы есть ОСИ ВЁРСТКИ — меняй их, когда пользователь просит "
+        "поменять общий характер сайта («сделай построже», «побольше воздуха», «скругли всё», "
+        "«сделай контент уже»):\n"
+        f"{axes_text}\n\n"
+        "У каталога (catalog_filter) и услуг (grid_3col) есть поле action: \"none\" — карточки без "
+        "кнопки, \"lead\" — кнопка «Оставить заявку» с модальной формой, \"cart\" — кнопка «В корзину». "
+        "Меняй его, когда просят добавить/убрать корзину или заявки на карточках; если включаешь "
+        "\"cart\", включи и show_cart у header.\n\n"
         "Строгие правила:\n"
         '- Верни строго JSON без markdown: {"site": <полная обновлённая схема той же '
         'структуры, что и во входном "site">, "reply": "<короткий ответ на русском, '

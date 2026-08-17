@@ -69,6 +69,15 @@ function updateItem(index: number, patch: Partial<ServiceItem>) {
             placeholder="Цена"
             @update:model-value="(v) => updateItem(i, { price: v })"
           />
+          <ItemActionButton
+            :action="section.action"
+            :label="section.action_text"
+            :name="item.name"
+            :price="item.price"
+            :image="item.image"
+            :sku="item.sku"
+            :editable="editable"
+          />
         </article>
       </div>
 

@@ -17,5 +17,19 @@ function onUpdate(patch: Partial<FaqSection>) {
 </script>
 
 <template>
-  <FaqAccordion :section="section" :editable="editable" @update:section="onUpdate" @select="emit('select')" />
+  <FaqTwoColumns
+    v-if="section.variant === 'two_columns'"
+    :section="section"
+    :editable="editable"
+    @update:section="onUpdate"
+    @select="emit('select')"
+  />
+  <FaqPlain
+    v-else-if="section.variant === 'plain'"
+    :section="section"
+    :editable="editable"
+    @update:section="onUpdate"
+    @select="emit('select')"
+  />
+  <FaqAccordion v-else :section="section" :editable="editable" @update:section="onUpdate" @select="emit('select')" />
 </template>

@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { ITEM_ACTION_LABELS } from '~/types/site'
 import type { Grid3ColSection } from '~/types/site'
 
 defineProps<{ section: Grid3ColSection }>()
 const emit = defineEmits<{ patch: [p: Record<string, unknown>] }>()
 const { variantOptions } = useVariantOptions()
+
+const ACTION_OPTIONS = Object.entries(ITEM_ACTION_LABELS).map(([value, label]) => ({ value, label }))
 </script>
 
 <template>
@@ -19,11 +22,23 @@ const { variantOptions } = useVariantOptions()
     :model-value="section.cta_text"
     @update:model-value="emit('patch', { cta_text: $event })"
   />
+  <BaseSelect
+    label="Кнопка на карточке"
+    :model-value="section.action"
+    :options="ACTION_OPTIONS"
+    @update:model-value="emit('patch', { action: $event })"
+  />
+  <BaseInput
+    v-if="section.action !== 'none'"
+    label="Текст кнопки на карточке (пусто — по умолчанию)"
+    :model-value="section.action_text"
+    @update:model-value="emit('patch', { action_text: $event })"
+  />
   <div class="field-label">Список услуг</div>
   <ListEditor
     :items="section.items"
     add-label="услугу"
-    :new-item="() => ({ name: 'Услуга', description: '', price: '', icon: '' })"
+    :new-item="() => ({ name: 'Услуга', description: '', price: '', icon: '', image: '' })"
     @update:items="emit('patch', { items: $event })"
   >
     <template #default="{ item, update }">
@@ -34,6 +49,11 @@ const { variantOptions } = useVariantOptions()
         placeholder="Иконка-эмодзи (для варианта «С иконкой»)"
         :model-value="item.icon"
         @update:model-value="update({ icon: $event })"
+      />
+      <BaseInput
+        placeholder="Ссылка на фото (для варианта «С фото»)"
+        :model-value="item.image"
+        @update:model-value="update({ image: $event })"
       />
     </template>
   </ListEditor>

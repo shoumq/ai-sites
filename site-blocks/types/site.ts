@@ -22,6 +22,7 @@ export interface ServiceItem {
   description: string
   price: string
   icon: string
+  image: string
 }
 
 export interface PricingPlan {
@@ -43,8 +44,12 @@ export interface CatalogItem {
   name: string
   description: string
   price: string
+  old_price: string
   category: string
   image: string
+  badge: string
+  sku: string
+  in_stock: boolean
 }
 
 export interface FaqItem {
@@ -67,6 +72,25 @@ export interface CustomContentItem {
   value: string
 }
 
+export interface LeadFormField {
+  name: string
+  label: string
+  type: 'text' | 'tel' | 'email' | 'textarea' | 'select'
+  required: boolean
+  placeholder: string
+  options: string[]
+}
+
+/**
+ * Что делает кнопка на карточке товара/услуги:
+ *  none — витрина без кнопки;
+ *  lead — «Оставить заявку», открывает модальную форму с контекстом товара;
+ *  cart — «В корзину» (см. composables/useCart.ts).
+ * Ровно эта ось отличает каталог автомобилей (заявки, без корзины) от
+ * интернет-магазина (корзина и оформление заказа).
+ */
+export type ItemAction = 'none' | 'lead' | 'cart'
+
 // ---- секции ------------------------------------------------------------------
 
 export interface HeaderSection {
@@ -77,6 +101,7 @@ export interface HeaderSection {
   nav_items: NavItem[]
   sticky: boolean
   cta_text: string
+  show_cart: boolean
   bg_color: string
 }
 
@@ -95,7 +120,8 @@ export interface HeroSection {
 export interface TextImageSection {
   id: string
   type: 'text_image'
-  // у этого блока нет variant — своя ось через image_position
+  // Ось image_position (left/right) работает поверх любого варианта.
+  variant: 'standard' | 'overlap' | 'card'
   title: string
   text: string
   image: string
@@ -106,10 +132,12 @@ export interface TextImageSection {
 export interface Grid3ColSection {
   id: string
   type: 'grid_3col'
-  variant: 'cards' | 'icon_rows' | 'minimal_list' | 'icon_top' | 'compact_grid'
+  variant: 'cards' | 'icon_rows' | 'minimal_list' | 'icon_top' | 'compact_grid' | 'photo_cards'
   title: string
   items: ServiceItem[]
   cta_text: string
+  action: ItemAction
+  action_text: string
   bg_color: string
 }
 
@@ -158,17 +186,20 @@ export interface FooterSection {
 export interface CatalogFilterSection {
   id: string
   type: 'catalog_filter'
-  variant: 'grid'
+  variant: 'grid' | 'list' | 'showcase'
   title: string
   categories: string[]
   items: CatalogItem[]
+  action: ItemAction
+  action_text: string
+  show_search: boolean
   bg_color: string
 }
 
 export interface FaqSection {
   id: string
   type: 'faq'
-  variant: 'accordion'
+  variant: 'accordion' | 'two_columns' | 'plain'
   title: string
   items: FaqItem[]
   bg_color: string
@@ -177,7 +208,7 @@ export interface FaqSection {
 export interface GallerySection {
   id: string
   type: 'gallery'
-  variant: 'grid'
+  variant: 'grid' | 'masonry' | 'slider'
   title: string
   items: GalleryItem[]
   bg_color: string
@@ -186,18 +217,30 @@ export interface GallerySection {
 export interface StatsSection {
   id: string
   type: 'stats'
-  variant: 'row'
+  variant: 'row' | 'cards' | 'big_numbers'
   title: string
   items: StatItem[]
+  bg_color: string
+}
+
+export interface LeadFormSection {
+  id: string
+  type: 'lead_form'
+  variant: 'split' | 'card' | 'inline'
+  title: string
+  subtitle: string
+  fields: LeadFormField[]
+  submit_text: string
+  success_text: string
+  consent_text: string
+  image: string
   bg_color: string
 }
 
 export interface CustomContentSection {
   id: string
   type: 'custom_content'
-  variant: 'standard'
-  // у этого блока нет variant по факту (единственное значение) — как и у
-  // text_image, своей вариативной оси не имеет
+  variant: 'standard' | 'callout' | 'columns'
   title: string
   body: string
   items: CustomContentItem[]
@@ -217,12 +260,20 @@ export type Section =
   | FaqSection
   | GallerySection
   | StatsSection
+  | LeadFormSection
   | CustomContentSection
 
 export type SectionType = Section['type']
 
 // ---- тема / страницы / корень --------------------------------------------------
 
+/**
+ * Оси вёрстки темы — сквозные параметры, меняющие пропорции и характер ВСЕХ
+ * блоков сразу. Реализованы CSS-переменными и классами на <html>
+ * (composables/useSiteTheme.ts + assets/tokens.css), новых компонентов не
+ * требуют — именно они дают разным сайтам разный характер при совпадающем
+ * наборе блоков.
+ */
 export interface Theme {
   style: 'business' | 'warm' | 'techno' | 'custom'
   primary_color: string
@@ -230,6 +281,12 @@ export interface Theme {
   logo_url: string
   custom_css: string
   bg_color: string
+  radius: 'sharp' | 'soft' | 'round'
+  density: 'compact' | 'cozy' | 'airy'
+  container_width: 'narrow' | 'normal' | 'wide'
+  heading_style: 'plain' | 'eyebrow' | 'underline' | 'gradient'
+  button_style: 'solid' | 'outline' | 'pill' | 'ghost'
+  section_divider: 'none' | 'line' | 'tilt' | 'wave'
 }
 
 export interface Page {
@@ -243,4 +300,15 @@ export interface SiteSchema {
   type: 'landing' | 'shop' | 'multipage' | 'crm'
   theme: Theme
   pages: Page[]
+}
+
+/** Есть ли на сайте блок, кладущий товар в корзину. Зеркало site_uses_cart()
+ *  из backend/app/schemas/site.py. */
+export function siteUsesCart(site: SiteSchema): boolean {
+  return site.pages.some((page) =>
+    page.sections.some(
+      (section) =>
+        ('action' in section && section.action === 'cart') || ('show_cart' in section && section.show_cart),
+    ),
+  )
 }

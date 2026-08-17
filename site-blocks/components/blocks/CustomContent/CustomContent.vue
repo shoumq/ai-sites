@@ -17,5 +17,8 @@ function onUpdate(patch: Partial<CustomContentSection>) {
 </script>
 
 <template>
+  <!-- Все варианты (standard/callout/columns) рендерит один компонент: они
+       различаются только подложкой и раскладкой колонок, а разметка тела
+       блока общая и нетривиальная — см. комментарий в CustomContentStandard.vue. -->
   <CustomContentStandard :section="section" :editable="editable" @update:section="onUpdate" @select="emit('select')" />
 </template>
