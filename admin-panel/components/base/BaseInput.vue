@@ -52,22 +52,22 @@ const uid = useId()
 .base-field {
   display: flex;
   flex-direction: column;
-  gap: var(--a-space-2);
+  gap: 7px;
 }
 
 .base-field__label {
   font-size: var(--a-fs-xs);
   font-weight: 600;
   color: var(--a-text-muted);
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
 .base-field__control {
-  height: 42px;
+  height: 46px;
   padding: 0 var(--a-space-4);
-  background: var(--a-surface);
+  background: color-mix(in srgb, var(--a-surface) 78%, transparent);
   border: 1px solid var(--a-border);
-  border-radius: var(--a-radius-md);
+  border-radius: 13px;
   color: var(--a-text);
   font-family: inherit;
   font-size: var(--a-fs-base);
@@ -84,9 +84,9 @@ const uid = useId()
 
 .base-field__control:focus {
   outline: none;
-  border-color: var(--a-accent);
+  border-color: color-mix(in srgb, var(--a-accent) 72%, white);
   background: var(--a-surface-hover);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--a-accent) 25%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--a-accent) 18%, transparent);
 }
 
 .base-field__control:disabled {

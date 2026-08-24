@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { emptyLayoutPreferences } from '~/types/api'
-import type { BriefIn, LayoutPreferences, SiteGoal, SiteType, StylePreset } from '~/types/api'
+import type { BriefIn, LayoutPreferences, SiteColorMode, SiteGoal, SiteType, StylePreset } from '~/types/api'
 
 /**
  * Данные воронки «Новый сайт» — раньше терялись при рефреше страницы
@@ -17,6 +17,7 @@ const STORAGE_KEY = 'ai-sites:funnel-brief'
 interface PersistedFunnel {
   siteType: SiteType | null
   style: StylePreset | null
+  siteColorMode: SiteColorMode
   customHex: string
   brandName: string
   description: string
@@ -40,6 +41,7 @@ export const useFunnelStore = defineStore('funnel', () => {
 
   const siteType = ref<SiteType | null>(initial.siteType ?? null)
   const style = ref<StylePreset | null>(initial.style ?? null)
+  const siteColorMode = ref<SiteColorMode>(initial.siteColorMode ?? 'light')
   const customHex = ref(initial.customHex ?? '#2563EB')
   const brandName = ref(initial.brandName ?? '')
   const description = ref(initial.description ?? '')
@@ -55,6 +57,7 @@ export const useFunnelStore = defineStore('funnel', () => {
     const snapshot: PersistedFunnel = {
       siteType: siteType.value,
       style: style.value,
+      siteColorMode: siteColorMode.value,
       customHex: customHex.value,
       brandName: brandName.value,
       description: description.value,
@@ -65,7 +68,7 @@ export const useFunnelStore = defineStore('funnel', () => {
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot))
   }
 
-  watch([siteType, style, customHex, brandName, description, goal, extraRequirements, layout], persist, { deep: true })
+  watch([siteType, style, siteColorMode, customHex, brandName, description, goal, extraRequirements, layout], persist, { deep: true })
 
   const isBriefComplete = computed(
     () => !!siteType.value && !!style.value && brandName.value.trim().length > 0 && description.value.trim().length > 0,
@@ -76,6 +79,7 @@ export const useFunnelStore = defineStore('funnel', () => {
     return {
       site_type: siteType.value,
       style: style.value,
+      site_color_mode: siteColorMode.value,
       custom_hex_color: style.value === 'custom' ? customHex.value : null,
       brand_name: brandName.value.trim(),
       description: description.value.trim(),
@@ -88,6 +92,7 @@ export const useFunnelStore = defineStore('funnel', () => {
   function reset() {
     siteType.value = null
     style.value = null
+    siteColorMode.value = 'light'
     customHex.value = '#2563EB'
     brandName.value = ''
     description.value = ''
@@ -100,6 +105,7 @@ export const useFunnelStore = defineStore('funnel', () => {
   return {
     siteType,
     style,
+    siteColorMode,
     customHex,
     brandName,
     description,

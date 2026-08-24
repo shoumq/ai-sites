@@ -47,6 +47,7 @@ interface _GlobalComponents {
   EditorsHeroEditor: typeof import("../../components/editors/HeroEditor.vue")['default']
   EditorsLeadFormEditor: typeof import("../../components/editors/LeadFormEditor.vue")['default']
   EditorsPricingEditor: typeof import("../../components/editors/PricingEditor.vue")['default']
+  EditorsSandboxEditor: typeof import("../../components/editors/SandboxEditor.vue")['default']
   EditorsStatsEditor: typeof import("../../components/editors/StatsEditor.vue")['default']
   EditorsTestimonialsEditor: typeof import("../../components/editors/TestimonialsEditor.vue")['default']
   EditorsTextImageEditor: typeof import("../../components/editors/TextImageEditor.vue")['default']
@@ -54,10 +55,12 @@ interface _GlobalComponents {
   CartButton: typeof import("../../../site-blocks/components/CartButton.vue")['default']
   CartDrawer: typeof import("../../../site-blocks/components/CartDrawer.vue")['default']
   EditableText: typeof import("../../../site-blocks/components/EditableText.vue")['default']
+  FavoriteButton: typeof import("../../../site-blocks/components/FavoriteButton.vue")['default']
   ImagePlaceholder: typeof import("../../../site-blocks/components/ImagePlaceholder.vue")['default']
   ItemActionButton: typeof import("../../../site-blocks/components/ItemActionButton.vue")['default']
   LeadFormFields: typeof import("../../../site-blocks/components/LeadFormFields.vue")['default']
   LeadModal: typeof import("../../../site-blocks/components/LeadModal.vue")['default']
+  ProductDetailsButton: typeof import("../../../site-blocks/components/ProductDetailsButton.vue")['default']
   SectionRenderer: typeof import("../../../site-blocks/components/SectionRenderer.vue")['default']
   SiteOverlays: typeof import("../../../site-blocks/components/SiteOverlays.vue")['default']
   BlockRegistry: typeof import("../../../site-blocks/components/blockRegistry")['default']
@@ -110,6 +113,7 @@ interface _GlobalComponents {
   PricingHighlight: typeof import("../../../site-blocks/components/blocks/Pricing/variants/PricingHighlight.vue")['default']
   PricingMinimal: typeof import("../../../site-blocks/components/blocks/Pricing/variants/PricingMinimal.vue")['default']
   PricingTable: typeof import("../../../site-blocks/components/blocks/Pricing/variants/PricingTable.vue")['default']
+  Sandbox: typeof import("../../../site-blocks/components/blocks/Sandbox/Sandbox.vue")['default']
   Stats: typeof import("../../../site-blocks/components/blocks/Stats/Stats.vue")['default']
   StatsBigNumbers: typeof import("../../../site-blocks/components/blocks/Stats/variants/StatsBigNumbers.vue")['default']
   StatsCards: typeof import("../../../site-blocks/components/blocks/Stats/variants/StatsCards.vue")['default']
@@ -180,6 +184,7 @@ interface _GlobalComponents {
   LazyEditorsHeroEditor: LazyComponent<typeof import("../../components/editors/HeroEditor.vue")['default']>
   LazyEditorsLeadFormEditor: LazyComponent<typeof import("../../components/editors/LeadFormEditor.vue")['default']>
   LazyEditorsPricingEditor: LazyComponent<typeof import("../../components/editors/PricingEditor.vue")['default']>
+  LazyEditorsSandboxEditor: LazyComponent<typeof import("../../components/editors/SandboxEditor.vue")['default']>
   LazyEditorsStatsEditor: LazyComponent<typeof import("../../components/editors/StatsEditor.vue")['default']>
   LazyEditorsTestimonialsEditor: LazyComponent<typeof import("../../components/editors/TestimonialsEditor.vue")['default']>
   LazyEditorsTextImageEditor: LazyComponent<typeof import("../../components/editors/TextImageEditor.vue")['default']>
@@ -187,10 +192,12 @@ interface _GlobalComponents {
   LazyCartButton: LazyComponent<typeof import("../../../site-blocks/components/CartButton.vue")['default']>
   LazyCartDrawer: LazyComponent<typeof import("../../../site-blocks/components/CartDrawer.vue")['default']>
   LazyEditableText: LazyComponent<typeof import("../../../site-blocks/components/EditableText.vue")['default']>
+  LazyFavoriteButton: LazyComponent<typeof import("../../../site-blocks/components/FavoriteButton.vue")['default']>
   LazyImagePlaceholder: LazyComponent<typeof import("../../../site-blocks/components/ImagePlaceholder.vue")['default']>
   LazyItemActionButton: LazyComponent<typeof import("../../../site-blocks/components/ItemActionButton.vue")['default']>
   LazyLeadFormFields: LazyComponent<typeof import("../../../site-blocks/components/LeadFormFields.vue")['default']>
   LazyLeadModal: LazyComponent<typeof import("../../../site-blocks/components/LeadModal.vue")['default']>
+  LazyProductDetailsButton: LazyComponent<typeof import("../../../site-blocks/components/ProductDetailsButton.vue")['default']>
   LazySectionRenderer: LazyComponent<typeof import("../../../site-blocks/components/SectionRenderer.vue")['default']>
   LazySiteOverlays: LazyComponent<typeof import("../../../site-blocks/components/SiteOverlays.vue")['default']>
   LazyBlockRegistry: LazyComponent<typeof import("../../../site-blocks/components/blockRegistry")['default']>
@@ -243,6 +250,7 @@ interface _GlobalComponents {
   LazyPricingHighlight: LazyComponent<typeof import("../../../site-blocks/components/blocks/Pricing/variants/PricingHighlight.vue")['default']>
   LazyPricingMinimal: LazyComponent<typeof import("../../../site-blocks/components/blocks/Pricing/variants/PricingMinimal.vue")['default']>
   LazyPricingTable: LazyComponent<typeof import("../../../site-blocks/components/blocks/Pricing/variants/PricingTable.vue")['default']>
+  LazySandbox: LazyComponent<typeof import("../../../site-blocks/components/blocks/Sandbox/Sandbox.vue")['default']>
   LazyStats: LazyComponent<typeof import("../../../site-blocks/components/blocks/Stats/Stats.vue")['default']>
   LazyStatsBigNumbers: LazyComponent<typeof import("../../../site-blocks/components/blocks/Stats/variants/StatsBigNumbers.vue")['default']>
   LazyStatsCards: LazyComponent<typeof import("../../../site-blocks/components/blocks/Stats/variants/StatsCards.vue")['default']>

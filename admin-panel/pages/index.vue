@@ -109,6 +109,7 @@ function logout() {
     <div class="container dashboard">
       <header class="dashboard__header">
         <div>
+          <p class="dashboard__eyebrow"><Icon name="lucide:sparkles" /> AI Sites Workspace</p>
           <h1>Мои сайты</h1>
           <div v-if="auth.user" class="tariff-switch">
             <span class="tariff-switch__label">Тариф (бета, бесплатно):</span>
@@ -130,6 +131,7 @@ function logout() {
           </div>
         </div>
         <div class="dashboard__actions">
+          <ThemeToggle inline />
           <BaseButton variant="primary" icon="lucide:plus" to="/new">Новый сайт</BaseButton>
           <BaseButton variant="ghost" icon="lucide:log-out" @click="logout">Выйти</BaseButton>
         </div>
@@ -202,11 +204,11 @@ function logout() {
 
 <style scoped>
 .dashboard {
-  padding-top: var(--a-space-7);
+  padding-top: var(--a-space-6);
   padding-bottom: var(--a-space-8);
   display: flex;
   flex-direction: column;
-  gap: var(--a-space-5);
+  gap: var(--a-space-6);
 }
 
 .dashboard__header {
@@ -215,11 +217,19 @@ function logout() {
   justify-content: space-between;
   gap: var(--a-space-4);
   flex-wrap: wrap;
+  padding: var(--a-space-5) var(--a-space-5) var(--a-space-5) var(--a-space-6);
+  border: 1px solid var(--a-glass-border);
+  border-radius: var(--a-radius-xl);
+  background: color-mix(in srgb, var(--a-glass-bg) 72%, transparent);
+  box-shadow: var(--a-shadow-md), inset 0 1px 0 rgba(255,255,255,.1);
+  backdrop-filter: blur(var(--a-glass-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--a-glass-blur)) saturate(160%);
 }
 
 .dashboard__header h1 {
   font-size: var(--a-fs-2xl);
 }
+.dashboard__eyebrow { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; color: var(--a-accent); font-size: var(--a-fs-xs); font-weight: 700; letter-spacing: .055em; text-transform: uppercase; }
 
 .tariff-switch {
   margin-top: var(--a-space-3);
@@ -238,7 +248,7 @@ function logout() {
   display: flex;
   gap: 4px;
   padding: 4px;
-  background: var(--a-surface);
+  background: rgba(118,118,128,.12);
   border: 1px solid var(--a-border);
   border-radius: var(--a-radius-md);
 }
@@ -264,8 +274,9 @@ function logout() {
   cursor: not-allowed;
 }
 .tariff-switch__option.is-active {
-  background: var(--a-gradient-brand);
-  color: #fff;
+  background: var(--a-bg-elevated);
+  color: var(--a-text);
+  box-shadow: var(--a-shadow-sm), inset 0 1px 0 rgba(255,255,255,.12);
 }
 
 .spin {
@@ -281,25 +292,26 @@ function logout() {
 }
 
 .dashboard__search {
-  max-width: 320px;
+  max-width: 380px;
 }
 
 .project-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: var(--a-space-5);
 }
 
 .project-card {
-  padding: var(--a-space-5);
+  padding: var(--a-space-3);
   display: flex;
   flex-direction: column;
   gap: var(--a-space-3);
-  transition: transform var(--a-transition-base), box-shadow var(--a-transition-base);
+  transition: transform var(--a-transition-base), box-shadow var(--a-transition-base), border-color var(--a-transition-base);
 }
 .project-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-5px) scale(1.005);
   box-shadow: var(--a-shadow-lg);
+  border-color: color-mix(in srgb, var(--a-accent) 24%, var(--a-glass-border));
 }
 
 .project-card__link {
@@ -308,18 +320,23 @@ function logout() {
   gap: var(--a-space-3);
   text-decoration: none;
   color: inherit;
+  padding: 0 8px;
 }
 
 .project-card__thumb {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 90px;
-  border-radius: var(--a-radius-md);
+  height: 148px;
+  border-radius: var(--a-radius-lg);
   background: var(--a-gradient-brand-soft);
-  font-size: 2rem;
-  color: #fff;
+  font-size: 2.25rem;
+  color: var(--a-accent);
+  border: 1px solid color-mix(in srgb, var(--a-accent) 14%, var(--a-border));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
 }
+.project-card__thumb::before { content: '•••'; position: absolute; top: 8px; left: 12px; color: var(--a-text-faint); font-size: 13px; letter-spacing: 2px; }
 
 .project-card h3 {
   font-size: var(--a-fs-md);
@@ -328,6 +345,7 @@ function logout() {
 .project-card__actions {
   display: flex;
   gap: var(--a-space-2);
+  padding: 2px 8px 8px;
 }
 
 .empty-state {
@@ -347,9 +365,16 @@ function logout() {
   justify-content: center;
   border-radius: var(--a-radius-full);
   background: var(--a-gradient-brand-soft);
-  color: #fff;
+  color: var(--a-accent);
   font-size: 1.75rem;
   margin-bottom: var(--a-space-2);
+}
+
+@media (max-width: 640px) {
+  .dashboard__header { padding: var(--a-space-5); }
+  .dashboard__actions { width: 100%; }
+  .dashboard__actions :deep(.base-btn:first-child) { flex: 1; }
+  .project-grid { grid-template-columns: 1fr; }
 }
 
 .empty-state p {

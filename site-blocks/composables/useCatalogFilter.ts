@@ -14,15 +14,22 @@ export function useCatalogFilter(items: Ref<CatalogItem[]>, categories: Ref<stri
   const query = ref('')
 
   const availableCategories = computed(() => {
-    if (categories.value.length) return categories.value
-    return [...new Set(items.value.map((item) => item.category).filter(Boolean))]
+    const declared = categories.value.map((category) => category.trim()).filter(Boolean)
+    const fromItems = items.value.map((item) => item.category.trim()).filter(Boolean)
+    const seen = new Set<string>()
+    return [...declared, ...fromItems].filter((category) => {
+      const key = normalize(category)
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
   })
 
   const filtered = computed(() => {
     const needle = query.value.trim().toLowerCase()
     return items.value
       .map((item, index) => ({ item, index }))
-      .filter(({ item }) => activeCategory.value === 'all' || item.category === activeCategory.value)
+      .filter(({ item }) => activeCategory.value === 'all' || normalize(item.category) === normalize(activeCategory.value))
       .filter(({ item }) => {
         if (!needle) return true
         return `${item.name} ${item.description} ${item.sku ?? ''}`.toLowerCase().includes(needle)
@@ -33,5 +40,20 @@ export function useCatalogFilter(items: Ref<CatalogItem[]>, categories: Ref<stri
     activeCategory.value = category
   }
 
-  return { activeCategory, query, availableCategories, filtered, setCategory }
+  function reset() {
+    activeCategory.value = 'all'
+    query.value = ''
+  }
+
+  watch(availableCategories, (next) => {
+    if (activeCategory.value !== 'all' && !next.some((category) => normalize(category) === normalize(activeCategory.value))) {
+      activeCategory.value = 'all'
+    }
+  })
+
+  return { activeCategory, query, availableCategories, filtered, setCategory, reset }
+}
+
+function normalize(value: string) {
+  return value.trim().toLocaleLowerCase('ru-RU')
 }

@@ -30,7 +30,7 @@ from app.core.config import Settings
 from app.schemas.project import BriefIn
 from app.schemas.site import BLOCK_LIBRARY, SECTION_VARIANTS, THEME_AXES, SiteSchema, parse_site
 from app.services.ai.block_schema import describe_block_fields
-from app.services.block_keywords import match_type_in_text
+from app.services.block_keywords import match_types_in_text
 from app.services.chat_commands import apply_chat_command
 from app.services.storage import StorageClient
 
@@ -81,7 +81,10 @@ def _count_hint(section_type: str, items_count: int) -> str:
         "faq": "4-6 items",
         "gallery": "4-8 items",
         "stats": "3-4 items",
-        "catalog_filter": "6 items на 2-3 категории (поле category), заполни и categories, и items",
+        "catalog_filter": (
+            "6 items на 2-3 категории (поле category), заполни categories и items; "
+            "для каждого товара дай короткое description, подробное details и 3-5 features"
+        ),
         "lead_form": (
             "короткий заголовок и подзаголовок формы заявки + текст кнопки (submit_text) и "
             "текст благодарности (success_text). Сам состав полей формы не придумывай — "
@@ -92,6 +95,7 @@ def _count_hint(section_type: str, items_count: int) -> str:
             "библиотеки; body — 1-3 абзаца текста (можно **жирный**/*курсив*/списки через \"- \"), "
             "items опционален"
         ),
+        "sandbox": "3-5 свободных элементов kind text/button/card/image с координатами x/y, width/height и уникальными id",
     }.get(section_type, "")
 
 
@@ -120,6 +124,7 @@ _LAYOUT_TYPE_GUIDANCE = {
 _EXTRA_REQUIREMENTS_HINTS = (
     "фильтр каталога/товаров по категориям -> catalog_filter, частые вопросы -> faq, "
     "фотогалерея/портфолио работ -> gallery, цифры/показатели в динамике -> stats, "
+    "свободный холст/песочница -> sandbox, "
     "если ничего из списка не подходит под явный запрос пользователя -> custom_content"
 )
 
@@ -245,6 +250,7 @@ _LIST_FIELD: dict[str, str] = {
     "gallery": "items",
     "stats": "items",
     "custom_content": "items",
+    "sandbox": "items",
 }
 _LIST_REQUIRED_KEYS: dict[str, tuple[str, ...]] = {
     "grid_3col": ("name",),
@@ -255,6 +261,7 @@ _LIST_REQUIRED_KEYS: dict[str, tuple[str, ...]] = {
     "gallery": ("image",),
     "stats": ("value", "label"),
     "custom_content": ("label",),
+    "sandbox": ("id", "kind"),
 }
 # «Плоские» типы без списочного поля — их контент мерджится целиком через
 # _merge_dict. lead_form сюда входит намеренно: тексты формы (заголовок, кнопка,
@@ -388,6 +395,7 @@ class YandexCopywriter:
             "stats": self._mock_stats,
             "lead_form": self._mock_lead_form,
             "custom_content": self._mock_custom_content,
+            "sandbox": self._mock_sandbox,
         }.get(section_type)
         return generator(brief) if generator else {}
 
@@ -459,6 +467,8 @@ class YandexCopywriter:
             {
                 "name": f"Товар {i}",
                 "description": f"{brief.description[:40]}…",
+                "details": f"Подробное описание товара {i}. {brief.description}",
+                "features": ["Гарантия качества", "Быстрая доставка", "Поддержка после покупки"],
                 "price": f"от {1000 + i * 400} ₽",
                 "category": categories[(i - 1) % len(categories)],
             }
@@ -508,6 +518,16 @@ class YandexCopywriter:
             "title": (brief.extra_requirements or "Дополнительно")[:60],
             "body": brief.extra_requirements or brief.description,
             "items": [],
+        }
+
+    def _mock_sandbox(self, brief: BriefIn) -> dict:
+        return {
+            "title": "Соберите свой сценарий",
+            "items": [
+                {"id": "sandbox-card", "kind": "card", "x": 5, "y": 60, "width": 42, "height": 230, "content": brief.description[:90], "radius": 30},
+                {"id": "sandbox-title", "kind": "text", "x": 53, "y": 92, "width": 40, "height": 96, "content": brief.brand_name, "radius": 18},
+                {"id": "sandbox-button", "kind": "button", "x": 53, "y": 210, "width": 24, "height": 56, "content": "Узнать больше", "href": "#lead_form", "radius": 28},
+            ],
         }
 
 
@@ -596,7 +616,32 @@ class YandexLayoutEngine:
             else:
                 layout = {**preset, "style": brief.style.value, **fallback}
 
+        layout = self._ensure_requested_sections(layout, brief)
         return self._apply_preferences(layout, brief)
+
+    def _ensure_requested_sections(self, layout: dict, brief: BriefIn) -> dict:
+        """Гарантирует блоки, явно названные в свободном пожелании.
+
+        Реальная LLM могла вернуть валидный JSON, но проигнорировать фильтр или
+        статистику. Санитайзер считал такой ответ корректным, поэтому fallback
+        уже не включался. Теперь явный запрос пользователя накладывается поверх
+        любого AI-ответа; ручная структура всё ещё имеет последний приоритет.
+        """
+        if not brief.extra_requirements:
+            return layout
+        requested = match_types_in_text(brief.extra_requirements.lower())
+        if not requested:
+            requested = ["custom_content"]
+        existing = {item["type"] for item in layout["sections"]}
+        seed = f"{brief.brand_name}|{brief.description}|requested"
+        for section_type in requested:
+            if section_type not in self.ALLOWED_MIDDLE_SECTIONS or section_type in existing:
+                continue
+            options = SECTION_VARIANTS.get(section_type) or []
+            variant = _seeded_choice(f"{seed}|{section_type}", options) if options else ""
+            layout["sections"].append({"type": section_type, "variant": variant})
+            existing.add(section_type)
+        return layout
 
     def _apply_preferences(self, layout: dict, brief: BriefIn) -> dict:
         """Накладывает ручной выбор со экрана «Структура» поверх подобранного
@@ -652,11 +697,10 @@ class YandexLayoutEngine:
         middle_types = _seeded_subset(f"{seed}|blocks", optional, minimum=2, maximum=4)
 
         if brief.extra_requirements:
-            # Ключевое слово не нашлось — не отбрасываем пожелание молча,
-            # берём универсальный запасной блок (custom_content).
-            matched = match_type_in_text(brief.extra_requirements.lower()) or "custom_content"
-            if matched in self.ALLOWED_MIDDLE_SECTIONS and matched not in middle_types and matched not in required:
-                middle_types.append(matched)
+            matched_types = match_types_in_text(brief.extra_requirements.lower()) or ["custom_content"]
+            for matched in matched_types:
+                if matched in self.ALLOWED_MIDDLE_SECTIONS and matched not in middle_types and matched not in required:
+                    middle_types.append(matched)
 
         # contact_map всегда последним из «средних» — контакты внизу страницы
         # ожидаются пользователями, а не в середине между отзывами и FAQ.
@@ -849,6 +893,8 @@ def _build_chat_system_prompt() -> str:
         '(поле "site") и команду пользователя на естественном языке (поле "command"). '
         "Внеси в схему ровно те изменения, которые просит пользователь — меняй текст, "
         "переставляй/удаляй/добавляй блоки, меняй variant, sticky, цвета темы (theme.primary_color), "
+        "готовую светлую/тёмную схему (theme.color_mode = light|dark), точный радиус карточек "
+        "(theme.block_radius = 0..64 или null), "
         "фон сайта целиком (theme.bg_color) или фон конкретного блока (поле bg_color внутри секции — "
         "пустая строка означает 'без переопределения, наследует фон сайта'), "
         "шрифт (theme.font), порядок секций и т.д.\n\n"

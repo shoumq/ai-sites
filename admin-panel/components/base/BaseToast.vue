@@ -36,13 +36,13 @@ const icon = computed(() => ICONS[props.type])
   min-width: 280px;
   max-width: 380px;
   padding: var(--a-space-4);
-  border-left: 3px solid var(--a-text-muted);
+  border-color: var(--a-glass-border);
 }
 
-.base-toast.is-success { border-left-color: var(--a-success); }
-.base-toast.is-error { border-left-color: var(--a-error); }
-.base-toast.is-info { border-left-color: var(--a-info); }
-.base-toast.is-warning { border-left-color: var(--a-warning); }
+.base-toast.is-success { box-shadow: inset 3px 0 0 var(--a-success), var(--a-shadow-md); }
+.base-toast.is-error { box-shadow: inset 3px 0 0 var(--a-error), var(--a-shadow-md); }
+.base-toast.is-info { box-shadow: inset 3px 0 0 var(--a-info), var(--a-shadow-md); }
+.base-toast.is-warning { box-shadow: inset 3px 0 0 var(--a-warning), var(--a-shadow-md); }
 
 .base-toast__icon {
   flex-shrink: 0;

@@ -35,6 +35,7 @@ export const BLOCK_LIBRARY: { type: SectionType; label: string; icon: string }[]
   { type: 'stats', label: 'Статистика', icon: 'lucide:bar-chart-3' },
   { type: 'lead_form', label: 'Форма заявки', icon: 'lucide:send' },
   { type: 'custom_content', label: 'Произвольный блок', icon: 'lucide:file-text' },
+  { type: 'sandbox', label: 'Песочница', icon: 'lucide:move-3d' },
 ]
 
 export const COLOR_PRESETS: Record<Theme['style'], string> = {
@@ -65,6 +66,7 @@ export const SECTION_VARIANTS: Record<SectionType, string[]> = {
   stats: ['row', 'cards', 'big_numbers'],
   lead_form: ['split', 'card', 'inline'],
   custom_content: ['standard', 'callout', 'columns'],
+  sandbox: ['apple'],
 }
 
 /** Оси вёрстки темы — зеркало THEME_AXES из backend/app/schemas/site.py.
@@ -152,6 +154,7 @@ export const SECTION_VARIANT_LABELS: Record<string, string> = {
   inline: 'В одну строку',
   callout: 'Выделенный',
   overlap: 'С наложением',
+  apple: 'Apple Canvas',
 }
 
 export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
@@ -169,6 +172,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   stats: 'Статистика',
   lead_form: 'Форма заявки',
   custom_content: 'Произвольный блок',
+  sandbox: 'Песочница',
 }
 
 /** Значения по умолчанию для блока, вставляемого через DnD из вкладки «Блоки». */
@@ -291,5 +295,19 @@ export function createDefaultSection(type: SectionType): Section {
       }
     case 'custom_content':
       return { id, type, variant: 'standard', title: '', body: '', items: [], bg_color: '' }
+    case 'sandbox':
+      return {
+        id,
+        type,
+        variant: 'apple',
+        title: 'Свободная композиция',
+        min_height: 560,
+        show_grid: true,
+        items: [
+          { id: `${id}-card`, kind: 'card', x: 6, y: 72, width: 42, height: 220, content: 'Карточка', href: '#', image: '', background: '', color: '', radius: 28 },
+          { id: `${id}-text`, kind: 'text', x: 54, y: 126, width: 38, height: 100, content: 'Перетащите меня', href: '#', image: '', background: '', color: '', radius: 20 },
+        ],
+        bg_color: '',
+      }
   }
 }

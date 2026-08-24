@@ -52,15 +52,16 @@ function onKeydown(e: KeyboardEvent) {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  transform-origin: top right;
 }
 
 .dropdown-menu-enter-active,
 .dropdown-menu-leave-active {
-  transition: transform var(--a-transition-fast) var(--a-ease-out), opacity var(--a-transition-fast);
+  transition: transform var(--a-transition-base) var(--a-ease-spring), opacity var(--a-transition-fast), backdrop-filter var(--a-transition-base);
 }
 .dropdown-menu-enter-from,
 .dropdown-menu-leave-to {
   opacity: 0;
-  transform: translateY(-6px) scale(0.98);
+  transform: translateY(-8px) scale(0.94);
 }
 </style>

@@ -43,6 +43,8 @@ export interface Testimonial {
 export interface CatalogItem {
   name: string
   description: string
+  details: string
+  features: string[]
   price: string
   old_price: string
   category: string
@@ -70,6 +72,21 @@ export interface StatItem {
 export interface CustomContentItem {
   label: string
   value: string
+}
+
+export interface SandboxItem {
+  id: string
+  kind: 'text' | 'button' | 'card' | 'image'
+  x: number
+  y: number
+  width: number
+  height: number
+  content: string
+  href: string
+  image: string
+  background: string
+  color: string
+  radius: number
 }
 
 export interface LeadFormField {
@@ -247,6 +264,17 @@ export interface CustomContentSection {
   bg_color: string
 }
 
+export interface SandboxSection {
+  id: string
+  type: 'sandbox'
+  variant: 'apple'
+  title: string
+  min_height: number
+  show_grid: boolean
+  items: SandboxItem[]
+  bg_color: string
+}
+
 export type Section =
   | HeaderSection
   | HeroSection
@@ -262,6 +290,7 @@ export type Section =
   | StatsSection
   | LeadFormSection
   | CustomContentSection
+  | SandboxSection
 
 export type SectionType = Section['type']
 
@@ -276,6 +305,7 @@ export type SectionType = Section['type']
  */
 export interface Theme {
   style: 'business' | 'warm' | 'techno' | 'custom'
+  color_mode: 'light' | 'dark'
   primary_color: string
   font: 'Inter' | 'Roboto' | 'PT Sans' | 'Montserrat'
   logo_url: string
@@ -287,6 +317,7 @@ export interface Theme {
   heading_style: 'plain' | 'eyebrow' | 'underline' | 'gradient'
   button_style: 'solid' | 'outline' | 'pill' | 'ghost'
   section_divider: 'none' | 'line' | 'tilt' | 'wave'
+  block_radius: number | null
 }
 
 export interface Page {

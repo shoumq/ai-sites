@@ -81,7 +81,7 @@ export default defineNuxtConfig({
           // прежде чем stores/theme.ts (Pinia, монтируется вместе с app.vue)
           // успеет её переопределить. Ключ 'ai-sites:theme' — тот же, что
           // читает/пишет useThemeStore, оба должны меняться синхронно.
-          innerHTML: `(function(){try{var t=localStorage.getItem('ai-sites:theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`,
+          innerHTML: `(function(){try{var p=localStorage.getItem('ai-sites:theme');if(p!=='light'&&p!=='dark'&&p!=='system')p='system';var t=p==='system'?(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):p;document.documentElement.setAttribute('data-theme',t);document.documentElement.setAttribute('data-theme-preference',p)}catch(e){}})()`,
         },
       ],
     },

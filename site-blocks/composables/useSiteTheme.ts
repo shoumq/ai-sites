@@ -33,10 +33,31 @@ const CONTAINER_VARS: Record<Theme['container_width'], Record<string, string>> =
   wide: { '--container': '1440px' },
 }
 
+const COLOR_MODE_VARS: Record<Theme['color_mode'], Record<string, string>> = {
+  light: {
+    '--surface': '#ffffff',
+    '--surface-muted': '#f8fafc',
+    '--surface-inverse': '#0f172a',
+    '--border-color': '#e6e9f0',
+    '--text': '#0f172a',
+    '--text-muted': '#5b6472',
+    '--text-inverse': '#f8fafc',
+  },
+  dark: {
+    '--surface': '#0b0c10',
+    '--surface-muted': '#17181e',
+    '--surface-inverse': '#f5f5f7',
+    '--border-color': '#2d2f39',
+    '--text': '#f5f5f7',
+    '--text-muted': '#a3a3ad',
+    '--text-inverse': '#111217',
+  },
+}
+
 /** Оси, которые нельзя выразить переменной (нужны селекторы) — классы на <html>.
  *  Соответствующие правила живут в assets/tokens.css. */
 function axisClasses(theme: Theme): string {
-  const classes: string[] = []
+  const classes: string[] = [`site-${theme.color_mode ?? 'light'}`]
   if (theme.heading_style && theme.heading_style !== 'plain') classes.push(`heading-${theme.heading_style}`)
   if (theme.button_style && theme.button_style !== 'solid') classes.push(`buttons-${theme.button_style}`)
   if (theme.section_divider && theme.section_divider !== 'none') classes.push(`divider-${theme.section_divider}`)
@@ -75,6 +96,7 @@ export function useSiteTheme(theme: Ref<Theme> | Theme) {
   const cssVars = computed<Record<string, string>>(() => {
     const t = unref(themeRef)
     const vars: Record<string, string> = {
+      ...(COLOR_MODE_VARS[t.color_mode] ?? COLOR_MODE_VARS.light),
       '--primary': primaryColor.value,
       '--primary-dark': `color-mix(in srgb, ${primaryColor.value} 80%, black)`,
       '--primary-light': `color-mix(in srgb, ${primaryColor.value} 85%, white)`,
@@ -85,9 +107,8 @@ export function useSiteTheme(theme: Ref<Theme> | Theme) {
       ...(DENSITY_VARS[t.density] ?? DENSITY_VARS.cozy),
       ...(CONTAINER_VARS[t.container_width] ?? CONTAINER_VARS.normal),
     }
-    // Пусто — не трогаем --surface, остаётся дефолтный белый из tokens.css
-    // (и SectionRenderer.vue может по-прежнему переопределить его точечно
-    // для отдельного блока через тот же механизм наследования переменной).
+    if (typeof t.block_radius === 'number') vars['--radius-block'] = `${Math.max(0, Math.min(64, t.block_radius))}px`
+    // Ручной фон имеет приоритет над светлым/тёмным шаблоном.
     if (t.bg_color) vars['--surface'] = t.bg_color
     return vars
   })

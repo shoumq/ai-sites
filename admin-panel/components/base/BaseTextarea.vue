@@ -60,9 +60,9 @@ const count = computed(() => props.modelValue.length)
 
 .base-field__control {
   padding: var(--a-space-3) var(--a-space-4);
-  background: var(--a-surface);
+  background: color-mix(in srgb, var(--a-surface) 78%, transparent);
   border: 1px solid var(--a-border);
-  border-radius: var(--a-radius-md);
+  border-radius: 13px;
   color: var(--a-text);
   font-family: inherit;
   font-size: var(--a-fs-base);
@@ -83,7 +83,7 @@ const count = computed(() => props.modelValue.length)
   outline: none;
   border-color: var(--a-accent);
   background: var(--a-surface-hover);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--a-accent) 25%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--a-accent) 18%, transparent);
 }
 
 .base-field__footer {

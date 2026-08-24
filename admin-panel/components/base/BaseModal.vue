@@ -61,9 +61,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
   position: fixed;
   inset: 0;
   z-index: var(--a-z-modal-backdrop);
-  background: rgba(4, 4, 10, 0.6);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(4, 5, 9, 0.48);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,11 +74,11 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
   position: relative;
   z-index: var(--a-z-modal);
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   max-height: min(85vh, 720px);
   display: flex;
   flex-direction: column;
-  background: var(--a-glass-bg);
+  background: color-mix(in srgb, var(--a-glass-bg) 94%, transparent);
 }
 
 .base-modal.is-sm { max-width: 360px; }
@@ -139,14 +139,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 }
 
 .modal-panel-enter-active {
-  transition: transform var(--a-transition-slow) var(--a-ease-spring), opacity var(--a-transition-base);
+  transition: transform var(--a-transition-slow) var(--a-ease-spring), opacity var(--a-transition-base), backdrop-filter var(--a-transition-slow);
 }
 .modal-panel-leave-active {
   transition: transform var(--a-transition-fast) var(--a-ease-out), opacity var(--a-transition-fast);
 }
 .modal-panel-enter-from {
   opacity: 0;
-  transform: translateY(16px) scale(0.97);
+  transform: translateY(22px) scale(0.94);
 }
 .modal-panel-leave-to {
   opacity: 0;

@@ -116,6 +116,21 @@ async function generateImage() {
     <!-- Внешний вид темы — не привязан к выбранному блоку -->
     <div class="constructor-panel__title">Внешний вид</div>
     <div v-if="theme" class="appearance">
+      <div class="field-label">Шаблон темы сайта</div>
+      <div class="site-theme-segment" role="group" aria-label="Тема генерируемого сайта">
+        <button
+          v-for="mode in (['light', 'dark'] as const)"
+          :key="mode"
+          type="button"
+          :class="{ 'is-active': (theme.color_mode ?? 'light') === mode }"
+          @click="patchTheme({ color_mode: mode })"
+        >
+          <Icon :name="mode === 'light' ? 'lucide:sun' : 'lucide:moon'" />
+          {{ mode === 'light' ? 'Светлая' : 'Тёмная' }}
+        </button>
+      </div>
+      <p class="theme-hint">Меняет базовые поверхности и контраст. Ручные цвета ниже сохраняются.</p>
+
       <div class="field-label">Цветовой пресет</div>
       <div class="color-presets">
         <button
@@ -141,7 +156,7 @@ async function generateImage() {
         <BaseButton v-if="theme.bg_color" variant="ghost" size="sm" icon="lucide:rotate-ccw" @click="patchTheme({ bg_color: '' })">
           Сбросить
         </BaseButton>
-        <span v-else class="bg-picker__hint">По умолчанию (белый)</span>
+        <span v-else class="bg-picker__hint">По шаблону ({{ (theme.color_mode ?? 'light') === 'dark' ? 'тёмный' : 'светлый' }})</span>
       </div>
 
       <BaseSelect label="Шрифт" :model-value="theme.font" :options="FONT_OPTIONS.map((f) => ({ value: f, label: f }))" @update:model-value="patchTheme({ font: $event as Theme['font'] })" />
@@ -157,6 +172,19 @@ async function generateImage() {
         :options="values.map((v) => ({ value: v, label: THEME_AXIS_VALUE_LABELS[v] ?? v }))"
         @update:model-value="patchTheme({ [axis]: $event } as Partial<Theme>)"
       />
+
+      <label class="theme-radius">
+        <span class="field-label">Радиус карточек: {{ theme.block_radius ?? 'по шаблону' }}{{ theme.block_radius !== null && theme.block_radius !== undefined ? ' px' : '' }}</span>
+        <input
+          type="range"
+          min="0"
+          max="64"
+          step="2"
+          :value="theme.block_radius ?? 22"
+          @input="patchTheme({ block_radius: Number(($event.target as HTMLInputElement).value) })"
+        >
+        <BaseButton v-if="theme.block_radius !== null && theme.block_radius !== undefined" variant="ghost" size="sm" @click="patchTheme({ block_radius: null })">По шаблону</BaseButton>
+      </label>
 
       <BaseInput label="Логотип — URL картинки" placeholder="https://…/logo.svg" :model-value="theme.logo_url" @update:model-value="patchTheme({ logo_url: $event })" />
       <div v-if="theme.logo_url" class="logo-preview">
@@ -236,6 +264,13 @@ async function generateImage() {
   flex-direction: column;
   gap: var(--a-space-3);
 }
+.site-theme-segment { display: flex; gap: 4px; padding: 4px; border: 1px solid var(--a-border); border-radius: var(--a-radius-md); background: var(--a-surface); }
+.site-theme-segment button { flex: 1; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: var(--a-radius-sm); background: transparent; color: var(--a-text-muted); cursor: pointer; transition: background var(--a-transition-fast), color var(--a-transition-fast), transform var(--a-transition-fast); }
+.site-theme-segment button:active { transform: scale(.97); }
+.site-theme-segment button.is-active { background: var(--a-bg-elevated); color: var(--a-text); box-shadow: var(--a-shadow-sm); }
+.theme-hint { margin-top: calc(var(--a-space-2) * -1); color: var(--a-text-faint); font-size: var(--a-fs-xs); }
+.theme-radius { display: flex; flex-direction: column; gap: var(--a-space-2); padding: var(--a-space-3); border: 1px solid var(--a-border); border-radius: var(--a-radius-md); }
+.theme-radius input { width: 100%; accent-color: var(--a-accent); }
 
 .color-presets {
   display: flex;

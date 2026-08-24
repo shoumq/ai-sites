@@ -52,30 +52,30 @@ withDefaults(
 
 <style scoped>
 .base-btn {
-  --_h: 42px;
+  --_h: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--a-space-2);
   height: var(--_h);
-  padding: 0 var(--a-space-5);
-  border-radius: var(--a-radius-md);
+  padding: 0 20px;
+  border-radius: var(--a-radius-full);
   border: 1px solid transparent;
   font-family: inherit;
   font-size: var(--a-fs-sm);
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.005em;
   cursor: pointer;
   white-space: nowrap;
   text-decoration: none;
   color: var(--a-text);
-  transition: transform var(--a-transition-fast), box-shadow var(--a-transition-fast),
+  transition: transform var(--a-transition-fast), box-shadow var(--a-transition-fast), filter var(--a-transition-fast),
     background var(--a-transition-fast), border-color var(--a-transition-fast), opacity var(--a-transition-fast);
   user-select: none;
 }
 
 .base-btn:active:not(:disabled) {
-  transform: translateY(1px) scale(0.99);
+  transform: scale(0.96);
 }
 
 .base-btn.is-sm { --_h: 34px; padding: 0 var(--a-space-4); font-size: var(--a-fs-xs); }
@@ -88,13 +88,15 @@ withDefaults(
   box-shadow: var(--a-shadow-glow);
 }
 .base-btn.is-primary:hover:not(:disabled) {
-  filter: brightness(1.08);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 16px 48px -10px color-mix(in srgb, var(--a-accent) 60%, transparent);
+  filter: brightness(1.08) saturate(1.08);
+  box-shadow: 0 12px 34px -12px color-mix(in srgb, var(--a-accent) 78%, transparent), inset 0 1px 0 rgba(255,255,255,.35);
 }
 
 .base-btn.is-secondary {
-  background: var(--a-surface);
-  border-color: var(--a-border);
+  background: color-mix(in srgb, var(--a-glass-bg) 78%, transparent);
+  border-color: var(--a-glass-border);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter: blur(16px) saturate(150%);
 }
 .base-btn.is-secondary:hover:not(:disabled) {
   background: var(--a-surface-hover);

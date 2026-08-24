@@ -176,6 +176,18 @@ const actionHint = computed(() =>
           @update:model-value="patch({ [axis]: String($event) } as Partial<LayoutPreferences>)"
         />
       </div>
+      <label class="radius-control">
+        <span>Точный радиус карточек <strong>{{ modelValue.block_radius ?? 'по шаблону' }}{{ modelValue.block_radius !== null ? ' px' : '' }}</strong></span>
+        <input
+          type="range"
+          min="0"
+          max="64"
+          step="2"
+          :value="modelValue.block_radius ?? 22"
+          @input="patch({ block_radius: Number(($event.target as HTMLInputElement).value) })"
+        >
+        <button v-if="modelValue.block_radius !== null" type="button" @click="patch({ block_radius: null })">Вернуть шаблон</button>
+      </label>
     </section>
 
     <section class="structure__axes">
@@ -318,10 +330,15 @@ const actionHint = computed(() =>
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: var(--a-space-3);
 }
+.radius-control { margin-top: var(--a-space-4); padding: var(--a-space-4); display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 2fr) auto; align-items: center; gap: var(--a-space-4); border: 1px solid var(--a-border); border-radius: var(--a-radius-lg); color: var(--a-text-muted); font-size: var(--a-fs-sm); }
+.radius-control strong { color: var(--a-accent); }
+.radius-control input { width: 100%; accent-color: var(--a-accent); }
+.radius-control button { border: 0; background: transparent; color: var(--a-accent); cursor: pointer; font-size: var(--a-fs-xs); }
 
 @media (max-width: 640px) {
   .structure__modes {
     grid-template-columns: 1fr;
   }
+  .radius-control { grid-template-columns: 1fr; }
 }
 </style>

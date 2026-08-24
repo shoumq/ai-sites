@@ -334,7 +334,9 @@ function onDomainInput(value: string) {
   display: flex;
   flex-direction: column;
   gap: var(--a-space-4);
+  transition: transform var(--a-transition-base), border-color var(--a-transition-base), box-shadow var(--a-transition-base);
 }
+.settings-card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--a-accent) 18%, var(--a-glass-border)); box-shadow: var(--a-shadow-lg); }
 
 .settings-card h2 {
   display: flex;
@@ -378,8 +380,8 @@ function onDomainInput(value: string) {
 }
 
 .toggle {
-  width: 42px;
-  height: 24px;
+  width: 48px;
+  height: 28px;
   border-radius: var(--a-radius-full);
   background: var(--a-surface);
   border: 1px solid var(--a-border);
@@ -393,8 +395,8 @@ function onDomainInput(value: string) {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--a-text-muted);
   transition: transform var(--a-transition-base) var(--a-ease-spring), background var(--a-transition-base);
@@ -404,7 +406,7 @@ function onDomainInput(value: string) {
   border-color: transparent;
 }
 .toggle.is-on::after {
-  transform: translateX(18px);
+  transform: translateX(20px);
   background: #fff;
 }
 </style>

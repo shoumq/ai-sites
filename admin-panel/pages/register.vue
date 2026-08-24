@@ -71,12 +71,14 @@ async function submit() {
   padding: var(--a-space-5);
   position: relative;
   z-index: var(--a-z-base);
+  overflow: hidden;
 }
+.auth-screen::before { content: ''; position: absolute; width: 36rem; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--a-accent) 24%, transparent), transparent 68%); filter: blur(12px); transform: translate(-36%, -26%); pointer-events: none; }
 
 .auth-card {
   width: 100%;
-  max-width: 400px;
-  padding: var(--a-space-7) var(--a-space-6);
+  max-width: 440px;
+  padding: var(--a-space-7);
   display: flex;
   flex-direction: column;
   gap: var(--a-space-5);
@@ -86,15 +88,16 @@ async function submit() {
   display: flex;
   align-items: center;
   gap: var(--a-space-3);
+  justify-content: center;
 }
 
 .auth-card__logo {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--a-radius-md);
+  width: 52px;
+  height: 52px;
+  border-radius: 17px;
   background: var(--a-gradient-brand);
   color: #fff;
   font-size: 1.25rem;
@@ -109,7 +112,10 @@ async function submit() {
   font-size: var(--a-fs-sm);
   color: var(--a-text-muted);
   margin-top: calc(var(--a-space-3) * -1);
+  text-align: center;
 }
+
+@media (max-width: 480px) { .auth-card { padding: var(--a-space-6) var(--a-space-5); } }
 
 .auth-card__form {
   display: flex;

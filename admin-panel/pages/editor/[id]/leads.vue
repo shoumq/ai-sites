@@ -209,10 +209,13 @@ function formatDate(iso: string) {
   display: flex;
   flex-direction: column;
   gap: var(--a-space-3);
+  transition: transform var(--a-transition-base), border-color var(--a-transition-base), box-shadow var(--a-transition-base);
 }
+.lead-card:hover { transform: translateY(-2px); box-shadow: var(--a-shadow-lg); border-color: color-mix(in srgb, var(--a-accent) 18%, var(--a-glass-border)); }
 
 .lead-card.is-unread {
-  border-left: 3px solid var(--a-accent);
+  border-color: color-mix(in srgb, var(--a-accent) 38%, var(--a-glass-border));
+  box-shadow: inset 3px 0 0 var(--a-accent), var(--a-shadow-md);
 }
 
 .lead-card__head {

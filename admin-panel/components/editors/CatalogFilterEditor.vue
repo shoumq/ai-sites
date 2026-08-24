@@ -52,18 +52,29 @@ const ACTION_OPTIONS = Object.entries(ITEM_ACTION_LABELS).map(([value, label]) =
   <ListEditor
     :items="section.items"
     add-label="товар"
-    :new-item="() => ({ name: 'Товар', description: '', price: '', old_price: '', category: '', image: '', badge: '', sku: '', in_stock: true })"
+    :new-item="() => ({ name: 'Товар', description: '', details: '', features: [], price: '', old_price: '', category: '', image: '', badge: '', sku: '', in_stock: true })"
     @update:items="emit('patch', { items: $event })"
   >
     <template #default="{ item, update }">
       <BaseInput placeholder="Название" :model-value="item.name" @update:model-value="update({ name: $event })" />
       <BaseInput placeholder="Описание" :model-value="item.description" @update:model-value="update({ description: $event })" />
+      <BaseTextarea label="Детальное описание" placeholder="Полное описание для окна товара" :model-value="item.details" :rows="4" @update:model-value="update({ details: $event })" />
+      <BaseTextarea
+        label="Характеристики — каждая с новой строки"
+        :model-value="item.features.join('\n')"
+        :rows="4"
+        @update:model-value="update({ features: $event.split('\n').map((feature) => feature.trim()).filter(Boolean) })"
+      />
       <BaseInput placeholder="Цена" :model-value="item.price" @update:model-value="update({ price: $event })" />
       <BaseInput placeholder="Старая цена (зачёркнутая)" :model-value="item.old_price" @update:model-value="update({ old_price: $event })" />
       <BaseInput placeholder="Категория" :model-value="item.category" @update:model-value="update({ category: $event })" />
       <BaseInput placeholder="Плашка («Хит», «-20%»)" :model-value="item.badge" @update:model-value="update({ badge: $event })" />
       <BaseInput placeholder="Артикул / VIN" :model-value="item.sku" @update:model-value="update({ sku: $event })" />
       <BaseInput placeholder="Ссылка на изображение" :model-value="item.image" @update:model-value="update({ image: $event })" />
+      <label class="checkbox-row">
+        <input type="checkbox" :checked="item.in_stock" @change="update({ in_stock: ($event.target as HTMLInputElement).checked })">
+        Товар в наличии
+      </label>
     </template>
   </ListEditor>
 </template>

@@ -138,7 +138,7 @@ async function submit() {
 .chat-bubble {
   max-width: 88%;
   padding: var(--a-space-2) var(--a-space-3);
-  border-radius: var(--a-radius-md);
+  border-radius: 18px;
   font-size: var(--a-fs-sm);
   line-height: 1.5;
 }
@@ -147,14 +147,15 @@ async function submit() {
   align-self: flex-end;
   background: var(--a-gradient-brand);
   color: #fff;
-  border-bottom-right-radius: 4px;
+  border-bottom-right-radius: 7px;
+  box-shadow: 0 8px 20px -12px var(--a-accent), inset 0 1px 0 rgba(255,255,255,.22);
 }
 
 .chat-bubble.is-assistant {
   align-self: flex-start;
   background: var(--a-surface);
   border: 1px solid var(--a-border);
-  border-bottom-left-radius: 4px;
+  border-bottom-left-radius: 7px;
 }
 
 .chat-bubble.is-failed {
@@ -191,11 +192,11 @@ async function submit() {
 
 .chat-panel__input {
   flex: 1;
-  height: 42px;
+  height: 46px;
   padding: 0 var(--a-space-4);
   background: var(--a-surface);
   border: 1px solid var(--a-border);
-  border-radius: var(--a-radius-md);
+  border-radius: var(--a-radius-full);
   color: var(--a-text);
   font-family: inherit;
   font-size: var(--a-fs-base);
@@ -203,23 +204,24 @@ async function submit() {
 .chat-panel__input:focus {
   outline: none;
   border-color: var(--a-accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--a-accent) 25%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--a-accent) 18%, transparent);
 }
 
 .chat-panel__send {
-  width: 42px;
-  height: 42px;
+  width: 46px;
+  height: 46px;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: var(--a-radius-md);
+  border-radius: var(--a-radius-full);
   background: var(--a-gradient-brand);
   color: #fff;
   cursor: pointer;
-  transition: filter var(--a-transition-fast), opacity var(--a-transition-fast);
+  transition: filter var(--a-transition-fast), opacity var(--a-transition-fast), transform var(--a-transition-fast);
 }
+.chat-panel__send:active:not(:disabled) { transform: scale(.92); }
 .chat-panel__send:hover:not(:disabled) {
   filter: brightness(1.1);
 }

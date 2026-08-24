@@ -15,6 +15,7 @@ import Gallery from './blocks/Gallery/Gallery.vue'
 import Stats from './blocks/Stats/Stats.vue'
 import LeadForm from './blocks/LeadForm/LeadForm.vue'
 import CustomContent from './blocks/CustomContent/CustomContent.vue'
+import Sandbox from './blocks/Sandbox/Sandbox.vue'
 
 /**
  * type -> компонент-диспетчер блока. Явная статическая карта вместо строкового
@@ -39,4 +40,5 @@ export const SECTION_COMPONENT_MAP: Record<SectionType, Component> = {
   stats: Stats,
   lead_form: LeadForm,
   custom_content: CustomContent,
+  sandbox: Sandbox,
 }

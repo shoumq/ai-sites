@@ -74,6 +74,17 @@
   --btn-radius: var(--radius-control);
 }
 
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--surface);
+  color: var(--text);
+}
+
+html.site-dark { color-scheme: dark; }
+html.site-light { color-scheme: light; }
+
 /* ---- ось theme.section_divider: как соседние секции отделяются друг от друга.
    Реализовано на обёртке .site-section, поэтому работает для любого блока и
    не требует правок в самих вариантах вёрстки. header/footer исключены —

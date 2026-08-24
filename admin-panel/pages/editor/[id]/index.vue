@@ -36,11 +36,19 @@ onMounted(load)
 // требует условного вызова composable.
 const DEFAULT_THEME: Theme = {
   style: 'business',
+  color_mode: 'light',
   primary_color: '#2563EB',
   font: 'Inter',
   logo_url: '',
   custom_css: '',
   bg_color: '',
+  radius: 'soft',
+  density: 'cozy',
+  container_width: 'normal',
+  heading_style: 'plain',
+  button_style: 'solid',
+  section_divider: 'none',
+  block_radius: null,
 }
 const themeForPreview = computed(() => store.site?.theme ?? DEFAULT_THEME)
 useSiteTheme(themeForPreview)
@@ -288,6 +296,7 @@ const publishedHref = computed(() => {
   flex-direction: column;
   position: relative;
   z-index: var(--a-z-base);
+  padding-top: var(--a-space-3);
 }
 
 .editor-loading {
@@ -304,11 +313,18 @@ const publishedHref = computed(() => {
   align-items: center;
   justify-content: space-between;
   gap: var(--a-space-4);
-  padding: var(--a-space-3) var(--a-space-5);
-  border-bottom: 1px solid var(--a-border);
+  margin: 0 var(--a-space-4);
+  padding: 10px var(--a-space-3);
+  border: 1px solid var(--a-glass-border);
+  border-radius: var(--a-radius-lg);
   background: var(--a-glass-bg);
-  backdrop-filter: blur(var(--a-glass-blur));
+  backdrop-filter: blur(var(--a-glass-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--a-glass-blur)) saturate(160%);
+  box-shadow: var(--a-shadow-md), inset 0 1px 0 rgba(255,255,255,.1);
   flex-wrap: wrap;
+  position: sticky;
+  top: var(--a-space-3);
+  z-index: var(--a-z-sticky);
 }
 
 .editor-topbar__left,
@@ -325,7 +341,7 @@ const publishedHref = computed(() => {
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: var(--a-radius-md);
+  border-radius: var(--a-radius-full);
   background: transparent;
   border: 1px solid transparent;
   color: var(--a-text-muted);
@@ -337,6 +353,7 @@ const publishedHref = computed(() => {
   background: var(--a-surface);
   color: var(--a-text);
 }
+.icon-btn:active { transform: scale(.92); }
 .icon-btn.is-active {
   background: var(--a-gradient-brand);
   color: #fff;
@@ -409,9 +426,9 @@ const publishedHref = computed(() => {
 .page-tabs {
   display: flex;
   gap: var(--a-space-1);
-  padding: var(--a-space-2) var(--a-space-5);
+  padding: var(--a-space-3) var(--a-space-5) 0;
   overflow-x: auto;
-  border-bottom: 1px solid var(--a-border);
+  border-bottom: none;
 }
 
 .page-tabs__item {
@@ -430,9 +447,9 @@ const publishedHref = computed(() => {
   background: var(--a-surface);
 }
 .page-tabs__item.is-active {
-  background: var(--a-surface);
+  background: var(--a-bg-elevated);
   color: var(--a-text);
-  box-shadow: inset 0 -2px 0 var(--a-accent);
+  box-shadow: var(--a-shadow-sm);
 }
 
 .editor-body {
@@ -440,25 +457,27 @@ const publishedHref = computed(() => {
   display: grid;
   grid-template-columns: 1fr 360px;
   gap: var(--a-space-4);
-  padding: var(--a-space-4) var(--a-space-5) var(--a-space-6);
+  padding: var(--a-space-4);
   min-height: 0;
 }
 
 .editor-canvas-wrap {
   overflow: auto;
   border-radius: var(--a-radius-lg);
-  background: var(--a-bg-elevated);
+  background: color-mix(in srgb, var(--a-glass-bg) 54%, transparent);
   border: 1px solid var(--a-border);
-  padding: var(--a-space-5);
+  padding: var(--a-space-6);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(20px);
 }
 
 .editor-canvas-frame {
   background: var(--surface, #fff);
-  border-radius: var(--a-radius-md);
+  border-radius: var(--a-radius-lg);
   overflow: hidden;
   margin: 0 auto;
   transition: max-width var(--a-transition-slow) var(--a-ease-out);
-  box-shadow: var(--a-shadow-lg);
+  box-shadow: 0 28px 80px rgba(0,0,0,.3), 0 0 0 1px rgba(255,255,255,.08);
   /* Блоки сайта переключают мобильную вёрстку через @container, а не
      @media — иначе переключатель "Мобильный" здесь в редакторе сужает
      только эту рамку, а не реальный viewport браузера, и адаптивные
@@ -480,8 +499,16 @@ const publishedHref = computed(() => {
   height: fit-content;
   max-height: calc(100vh - 140px);
   position: sticky;
-  top: var(--a-space-4);
+  top: 84px;
   overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .editor-shell { padding-top: var(--a-space-2); }
+  .editor-topbar { margin: 0 var(--a-space-2); position: relative; top: 0; }
+  .editor-topbar__right { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; }
+  .editor-body { padding: var(--a-space-2); }
+  .editor-canvas-wrap { padding: var(--a-space-3); }
 }
 
 .editor-panel__content {

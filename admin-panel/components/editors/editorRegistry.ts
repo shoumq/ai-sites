@@ -15,6 +15,7 @@ import GalleryEditor from './GalleryEditor.vue'
 import StatsEditor from './StatsEditor.vue'
 import LeadFormEditor from './LeadFormEditor.vue'
 import CustomContentEditor from './CustomContentEditor.vue'
+import SandboxEditor from './SandboxEditor.vue'
 
 /** type -> компонент формы полей в ConstructorPanel.vue. Явная статическая
  * карта — тот же принцип, что и site-blocks/components/blockRegistry.ts. */
@@ -33,4 +34,5 @@ export const EDITOR_COMPONENT_MAP: Record<SectionType, Component> = {
   stats: StatsEditor,
   lead_form: LeadFormEditor,
   custom_content: CustomContentEditor,
+  sandbox: SandboxEditor,
 }

@@ -99,6 +99,26 @@ function generate() {
             <label class="field-label">HEX-цвет бренда</label>
             <input v-model="funnel.customHex" type="color" class="color-input">
           </div>
+          <div class="site-mode-picker">
+            <div>
+              <h3>Тема сайта</h3>
+              <p>Шаблон задаёт фон и контраст текста. После генерации любой цвет можно изменить вручную.</p>
+            </div>
+            <div class="site-mode-picker__options">
+              <button
+                v-for="mode in (['light', 'dark'] as const)"
+                :key="mode"
+                type="button"
+                class="site-mode-card"
+                :class="[`is-${mode}`, { 'is-selected': funnel.siteColorMode === mode }]"
+                @click="funnel.siteColorMode = mode"
+              >
+                <span class="site-mode-card__preview"><i /><i /><i /></span>
+                <span>{{ mode === 'light' ? 'Светлая' : 'Тёмная' }}</span>
+                <Icon v-if="funnel.siteColorMode === mode" name="lucide:check-circle-2" />
+              </button>
+            </div>
+          </div>
         </div>
 
         <div v-else-if="step === 2" key="2" class="funnel__step">
@@ -179,11 +199,18 @@ function generate() {
 <style scoped>
 .funnel {
   max-width: 880px;
-  padding-top: var(--a-space-7);
-  padding-bottom: var(--a-space-8);
+  margin-top: var(--a-space-6);
+  margin-bottom: var(--a-space-7);
+  padding: var(--a-space-6);
   display: flex;
   flex-direction: column;
   gap: var(--a-space-6);
+  border: 1px solid var(--a-glass-border);
+  border-radius: calc(var(--a-radius-xl) + 4px);
+  background: color-mix(in srgb, var(--a-glass-bg) 70%, transparent);
+  box-shadow: var(--a-shadow-lg), inset 0 1px 0 rgba(255,255,255,.1);
+  backdrop-filter: blur(var(--a-glass-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--a-glass-blur)) saturate(160%);
 }
 
 .funnel__dots {
@@ -194,13 +221,14 @@ function generate() {
 
 .funnel__dot {
   width: 32px;
-  height: 5px;
+  height: 6px;
   border-radius: var(--a-radius-full);
-  background: var(--a-surface);
+  background: rgba(118,118,128,.15);
   transition: background var(--a-transition-base);
 }
 .funnel__dot.is-active {
   background: var(--a-gradient-brand);
+  box-shadow: 0 4px 14px -4px var(--a-accent);
 }
 
 .funnel__step h2 {
@@ -228,15 +256,16 @@ function generate() {
   align-items: flex-start;
   gap: var(--a-space-2);
   padding: var(--a-space-5);
-  background: var(--a-surface);
+  background: color-mix(in srgb, var(--a-surface) 78%, transparent);
   border: 1px solid var(--a-border);
-  border-radius: var(--a-radius-lg);
+  border-radius: var(--a-radius-xl);
   cursor: pointer;
   text-align: left;
-  transition: border-color var(--a-transition-fast), transform var(--a-transition-fast), background var(--a-transition-fast);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  transition: border-color var(--a-transition-fast), transform var(--a-transition-fast), background var(--a-transition-fast), box-shadow var(--a-transition-fast);
 }
 .choice-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   border-color: var(--a-border-strong);
   background: var(--a-surface-hover);
 }
@@ -244,6 +273,7 @@ function generate() {
   border-color: var(--a-accent);
   background: color-mix(in srgb, var(--a-accent) 10%, var(--a-surface));
   box-shadow: 0 0 0 1px var(--a-accent);
+  transform: scale(1.01);
 }
 
 .choice-card__icon {
@@ -305,9 +335,34 @@ function generate() {
   padding: 4px var(--a-space-3);
   border-radius: var(--a-radius-full);
   background: var(--a-gradient-brand-soft);
-  color: #fff;
+  color: var(--a-accent);
   font-size: var(--a-fs-xs);
   font-weight: 600;
+}
+
+.site-mode-picker { margin-top: var(--a-space-5); padding: var(--a-space-4); display: grid; grid-template-columns: 1fr auto; gap: var(--a-space-4); align-items: center; border: 1px solid var(--a-border); border-radius: var(--a-radius-xl); background: var(--a-surface); }
+.site-mode-picker h3 { font-size: var(--a-fs-md); }
+.site-mode-picker p { margin-top: 5px; max-width: 430px; color: var(--a-text-faint); font-size: var(--a-fs-xs); }
+.site-mode-picker__options { display: flex; gap: var(--a-space-2); }
+.site-mode-card { min-width: 116px; padding: 8px; display: grid; grid-template-columns: 42px 1fr 16px; align-items: center; gap: 8px; border: 1px solid var(--a-border); border-radius: var(--a-radius-lg); background: transparent; color: var(--a-text); cursor: pointer; text-align: left; transition: transform var(--a-transition-fast), border-color var(--a-transition-fast), background var(--a-transition-fast); }
+.site-mode-card:hover { transform: translateY(-2px); border-color: var(--a-border-strong); }
+.site-mode-card.is-selected { border-color: var(--a-accent); background: color-mix(in srgb, var(--a-accent) 9%, transparent); }
+.site-mode-card > svg { color: var(--a-accent); }
+.site-mode-card__preview { width: 42px; height: 32px; padding: 6px; display: flex; flex-direction: column; gap: 3px; border-radius: 8px; border: 1px solid rgba(128,128,128,.25); background: #fff; }
+.site-mode-card.is-dark .site-mode-card__preview { background: #111217; }
+.site-mode-card__preview i { display: block; height: 3px; width: 100%; border-radius: 3px; background: #c7c7cc; }
+.site-mode-card__preview i:nth-child(2) { width: 70%; background: #0a84ff; }
+.site-mode-card.is-dark .site-mode-card__preview i { background: #555762; }
+.site-mode-card.is-dark .site-mode-card__preview i:nth-child(2) { background: #0a84ff; }
+
+@media (max-width: 640px) {
+  .funnel { margin-top: var(--a-space-3); padding: var(--a-space-5) var(--a-space-4); }
+  .choice-grid { grid-template-columns: 1fr; }
+  .funnel__nav { align-items: flex-end; }
+  .funnel__nav-right { flex-wrap: wrap; justify-content: flex-end; }
+  .site-mode-picker { grid-template-columns: 1fr; }
+  .site-mode-picker__options { width: 100%; }
+  .site-mode-card { flex: 1; min-width: 0; }
 }
 
 .funnel__nav {

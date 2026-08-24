@@ -132,8 +132,8 @@ function moveSection(index: number, dir: -1 | 1) {
   align-items: center;
   gap: 6px;
   padding: 3px 8px 3px 4px;
-  background: var(--a-bg-elevated);
-  border: 1px solid var(--a-border-strong);
+  background: var(--a-glass-bg);
+  border: 1px solid var(--a-glass-border);
   border-radius: var(--a-radius-full);
   font-size: 0.6875rem;
   font-weight: 600;
@@ -142,6 +142,8 @@ function moveSection(index: number, dir: -1 | 1) {
   transform: translateY(-4px);
   transition: opacity var(--a-transition-fast), transform var(--a-transition-fast);
   pointer-events: none;
+  box-shadow: var(--a-shadow-md);
+  backdrop-filter: blur(18px) saturate(160%);
 }
 
 .canvas-block:hover .canvas-block__toolbar,
@@ -183,6 +185,7 @@ function moveSection(index: number, dir: -1 | 1) {
   cursor: pointer;
   transition: background var(--a-transition-fast), color var(--a-transition-fast);
 }
+.canvas-block__move button:active:not(:disabled) { transform: scale(.88); }
 
 .canvas-block__move button:hover:not(:disabled) {
   background: var(--a-surface);

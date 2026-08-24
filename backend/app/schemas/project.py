@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -42,6 +43,7 @@ class LayoutPreferences(BaseModel):
     heading_style: str = ""
     button_style: str = ""
     section_divider: str = ""
+    block_radius: int | None = Field(default=None, ge=0, le=64)
 
     # Коммерческое поведение карточек каталога/услуг: none | lead | cart.
     # Пусто = вывести из типа сайта (магазин -> корзина, остальное -> заявка).
@@ -54,6 +56,7 @@ class BriefIn(BaseModel):
 
     site_type: SiteType
     style: StylePreset
+    site_color_mode: Literal["light", "dark"] = "light"
     custom_hex_color: str | None = Field(default=None, description="Только для style=custom")
     brand_name: str = Field(min_length=1, max_length=120)
     description: str = Field(min_length=1, max_length=500)

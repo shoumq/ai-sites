@@ -55,6 +55,10 @@ class Testimonial(BaseModel):
 class CatalogItem(BaseModel):
     name: str
     description: str = ""
+    # Полное описание открывается в карточке товара; короткое description
+    # остаётся для сетки каталога.
+    details: str = ""
+    features: list[str] = Field(default_factory=list, max_length=30)
     price: str = ""
     # Зачёркнутая «старая» цена — рисуется только если непустая.
     old_price: str = ""
@@ -86,6 +90,27 @@ class StatItem(BaseModel):
 class CustomContentItem(BaseModel):
     label: str
     value: str = ""
+
+
+class SandboxItem(BaseModel):
+    """Свободно позиционируемый элемент внутри Apple-style песочницы.
+
+    x/width хранятся в процентах для адаптивности, y/height — в пикселях,
+    чтобы перемещение и изменение размера ощущались 1:1 в редакторе.
+    """
+
+    id: str
+    kind: Literal["text", "button", "card", "image"] = "text"
+    x: float = Field(default=5, ge=0, le=100)
+    y: int = Field(default=40, ge=0, le=1800)
+    width: float = Field(default=40, ge=8, le=100)
+    height: int = Field(default=120, ge=40, le=1200)
+    content: str = ""
+    href: str = "#"
+    image: str = ""
+    background: str = ""
+    color: str = ""
+    radius: int = Field(default=24, ge=0, le=64)
 
 
 class LeadFormField(BaseModel):
@@ -313,6 +338,15 @@ class CustomContentSection(SectionBase):
     items: list[CustomContentItem] = Field(default_factory=list)
 
 
+class SandboxSection(SectionBase):
+    type: Literal["sandbox"] = "sandbox"
+    variant: Literal["apple"] = "apple"
+    title: str = "Свободная композиция"
+    min_height: int = Field(default=560, ge=240, le=2000)
+    show_grid: bool = True
+    items: list[SandboxItem] = Field(default_factory=list, max_length=30)
+
+
 BLOCK_LIBRARY: dict[str, type[BaseModel]] = {
     "header": HeaderSection,
     "hero": HeroSection,
@@ -328,6 +362,7 @@ BLOCK_LIBRARY: dict[str, type[BaseModel]] = {
     "stats": StatsSection,
     "lead_form": LeadFormSection,
     "custom_content": CustomContentSection,
+    "sandbox": SandboxSection,
 }
 
 Section = Annotated[
@@ -365,6 +400,7 @@ class Theme(BaseModel):
     """
 
     style: Literal["business", "warm", "techno", "custom"] = "business"
+    color_mode: Literal["light", "dark"] = "light"
     primary_color: str = "#2563EB"
     font: Literal["Inter", "Roboto", "PT Sans", "Montserrat"] = "Inter"
     logo_url: str = ""
@@ -388,6 +424,7 @@ class Theme(BaseModel):
     button_style: Literal["solid", "outline", "pill", "ghost"] = "solid"
     # Как визуально разделяются соседние секции
     section_divider: Literal["none", "line", "tilt", "wave"] = "none"
+    block_radius: int | None = Field(default=None, ge=0, le=64)
 
 
 # Оси темы, которые подбираются под бриф (не цвет/шрифт/логотип) — единый

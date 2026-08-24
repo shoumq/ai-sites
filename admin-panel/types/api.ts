@@ -21,6 +21,7 @@ export interface Token {
 export type SiteType = 'landing' | 'shop' | 'multipage' | 'crm'
 export type StylePreset = Theme['style']
 export type SiteGoal = 'sales' | 'booking' | 'portfolio' | 'info'
+export type SiteColorMode = 'light' | 'dark'
 
 export interface BlockPreference {
   type: string
@@ -41,12 +42,14 @@ export interface LayoutPreferences {
   heading_style: string
   button_style: string
   section_divider: string
+  block_radius: number | null
   item_action: string
 }
 
 export interface BriefIn {
   site_type: SiteType
   style: StylePreset
+  site_color_mode: SiteColorMode
   custom_hex_color?: string | null
   brand_name: string
   description: string
@@ -68,6 +71,7 @@ export function emptyLayoutPreferences(): LayoutPreferences {
     heading_style: '',
     button_style: '',
     section_divider: '',
+    block_radius: null,
     item_action: '',
   }
 }

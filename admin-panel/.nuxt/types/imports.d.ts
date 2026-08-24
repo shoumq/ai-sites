@@ -40,6 +40,7 @@ declare global {
   const h: typeof import('vue').h
   const hasInjectionContext: typeof import('vue').hasInjectionContext
   const initCart: typeof import('../../../site-blocks/composables/useCart').initCart
+  const initFavorites: typeof import('../../../site-blocks/composables/useFavorites').initFavorites
   const inject: typeof import('vue').inject
   const injectHead: typeof import('../../node_modules/nuxt/dist/app/composables/head').injectHead
   const isNuxtError: typeof import('../../node_modules/nuxt/dist/app/composables/error').isNuxtError
@@ -125,6 +126,7 @@ declare global {
   const useElementStyle: typeof import('../../node_modules/@vueuse/motion/dist/nuxt/runtime/composables/index').useElementStyle
   const useElementTransform: typeof import('../../node_modules/@vueuse/motion/dist/nuxt/runtime/composables/index').useElementTransform
   const useError: typeof import('../../node_modules/nuxt/dist/app/composables/error').useError
+  const useFavorites: typeof import('../../../site-blocks/composables/useFavorites').useFavorites
   const useFetch: typeof import('../../node_modules/nuxt/dist/app/composables/fetch').useFetch
   const useFunnelStore: typeof import('../../stores/funnel').useFunnelStore
   const useHead: typeof import('../../node_modules/nuxt/dist/app/composables/head').useHead
@@ -150,6 +152,7 @@ declare global {
   const useNuxtDevTools: typeof import('../../node_modules/@nuxt/devtools/dist/runtime/use-nuxt-devtools').useNuxtDevTools
   const usePinia: typeof import('../../node_modules/@pinia/nuxt/dist/runtime/composables').usePinia
   const usePreviewMode: typeof import('../../node_modules/nuxt/dist/app/composables/preview').usePreviewMode
+  const useProductDetails: typeof import('../../../site-blocks/composables/useProductDetails').useProductDetails
   const useReducedMotion: typeof import('../../node_modules/@vueuse/motion/dist/nuxt/runtime/composables/index').useReducedMotion
   const useRequestEvent: typeof import('../../node_modules/nuxt/dist/app/composables/ssr').useRequestEvent
   const useRequestFetch: typeof import('../../node_modules/nuxt/dist/app/composables/ssr').useRequestFetch
@@ -254,6 +257,9 @@ declare global {
   export type { CartItem } from '../../../site-blocks/composables/useCart'
   import('../../../site-blocks/composables/useCart')
   // @ts-ignore
+  export type { FavoriteItem } from '../../../site-blocks/composables/useFavorites'
+  import('../../../site-blocks/composables/useFavorites')
+  // @ts-ignore
   export type { LiteMdSpan, LiteMdParagraph, LiteMdList, LiteMdBlock } from '../../../site-blocks/composables/useLiteMarkdown'
   import('../../../site-blocks/composables/useLiteMarkdown')
   // @ts-ignore
@@ -269,7 +275,7 @@ declare global {
   export type { SaveStatus } from '../../stores/editor'
   import('../../stores/editor')
   // @ts-ignore
-  export type { ThemeMode } from '../../stores/theme'
+  export type { ThemeMode, ThemePreference } from '../../stores/theme'
   import('../../stores/theme')
 }
 // for vue template auto import
@@ -315,6 +321,7 @@ declare module 'vue' {
     readonly h: UnwrapRef<typeof import('vue')['h']>
     readonly hasInjectionContext: UnwrapRef<typeof import('vue')['hasInjectionContext']>
     readonly initCart: UnwrapRef<typeof import('../../../site-blocks/composables/useCart')['initCart']>
+    readonly initFavorites: UnwrapRef<typeof import('../../../site-blocks/composables/useFavorites')['initFavorites']>
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly injectHead: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/head')['injectHead']>
     readonly isNuxtError: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/error')['isNuxtError']>
@@ -400,6 +407,7 @@ declare module 'vue' {
     readonly useElementStyle: UnwrapRef<typeof import('../../node_modules/@vueuse/motion/dist/nuxt/runtime/composables/index')['useElementStyle']>
     readonly useElementTransform: UnwrapRef<typeof import('../../node_modules/@vueuse/motion/dist/nuxt/runtime/composables/index')['useElementTransform']>
     readonly useError: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/error')['useError']>
+    readonly useFavorites: UnwrapRef<typeof import('../../../site-blocks/composables/useFavorites')['useFavorites']>
     readonly useFetch: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/fetch')['useFetch']>
     readonly useFunnelStore: UnwrapRef<typeof import('../../stores/funnel')['useFunnelStore']>
     readonly useHead: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/head')['useHead']>
@@ -425,6 +433,7 @@ declare module 'vue' {
     readonly useNuxtDevTools: UnwrapRef<typeof import('../../node_modules/@nuxt/devtools/dist/runtime/use-nuxt-devtools')['useNuxtDevTools']>
     readonly usePinia: UnwrapRef<typeof import('../../node_modules/@pinia/nuxt/dist/runtime/composables')['usePinia']>
     readonly usePreviewMode: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/preview')['usePreviewMode']>
+    readonly useProductDetails: UnwrapRef<typeof import('../../../site-blocks/composables/useProductDetails')['useProductDetails']>
     readonly useReducedMotion: UnwrapRef<typeof import('../../node_modules/@vueuse/motion/dist/nuxt/runtime/composables/index')['useReducedMotion']>
     readonly useRequestEvent: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/ssr')['useRequestEvent']>
     readonly useRequestFetch: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/ssr')['useRequestFetch']>

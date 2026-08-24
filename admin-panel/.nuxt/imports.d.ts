@@ -39,8 +39,10 @@ export { useToast, ToastType, ToastItem } from '../composables/useToast';
 export { useVariantOptions } from '../composables/useVariantOptions';
 export { parsePrice, formatMoney, initCart, useCart, CartItem } from '../../site-blocks/composables/useCart';
 export { useCatalogFilter } from '../../site-blocks/composables/useCatalogFilter';
+export { initFavorites, useFavorites, FavoriteItem } from '../../site-blocks/composables/useFavorites';
 export { parseLiteMarkdown, LiteMdSpan, LiteMdParagraph, LiteMdList, LiteMdBlock } from '../../site-blocks/composables/useLiteMarkdown';
 export { useMobileNav } from '../../site-blocks/composables/useMobileNav';
+export { useProductDetails } from '../../site-blocks/composables/useProductDetails';
 export { useSiteAnalytics, AnalyticsConfig, SeoConfig } from '../../site-blocks/composables/useSiteAnalytics';
 export { useLeadModal, useSiteForms, LeadPayload, LeadModalState } from '../../site-blocks/composables/useSiteForms';
 export { DEFAULT_SITE_RUNTIME, useSiteRuntime, setSiteRuntime, SiteRuntime } from '../../site-blocks/composables/useSiteRuntime';
@@ -49,6 +51,6 @@ export { reactiveStyle, reactiveTransform, useElementStyle, useElementTransform,
 export { useAuthStore } from '../stores/auth';
 export { useEditorStore, SaveStatus } from '../stores/editor';
 export { useFunnelStore } from '../stores/funnel';
-export { useThemeStore, ThemeMode } from '../stores/theme';
+export { useThemeStore, ThemeMode, ThemePreference } from '../stores/theme';
 export { defineStore, acceptHMRUpdate, usePinia, storeToRefs } from '../node_modules/@pinia/nuxt/dist/runtime/composables';
 export { useNuxtDevTools } from '../node_modules/@nuxt/devtools/dist/runtime/use-nuxt-devtools';

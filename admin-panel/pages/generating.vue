@@ -149,6 +149,14 @@ const progressPct = computed(() => {
   text-align: center;
   gap: var(--a-space-4);
   max-width: 560px;
+  margin-block: var(--a-space-6);
+  min-height: calc(100vh - var(--a-space-8));
+  padding: var(--a-space-7);
+  border: 1px solid var(--a-glass-border);
+  border-radius: calc(var(--a-radius-xl) + 6px);
+  background: color-mix(in srgb, var(--a-glass-bg) 68%, transparent);
+  box-shadow: var(--a-shadow-lg), inset 0 1px 0 rgba(255,255,255,.1);
+  backdrop-filter: blur(var(--a-glass-blur)) saturate(160%);
 }
 
 .ai-badge {
@@ -158,7 +166,7 @@ const progressPct = computed(() => {
   padding: 4px var(--a-space-3);
   border-radius: var(--a-radius-full);
   background: var(--a-gradient-brand-soft);
-  color: #fff;
+  color: var(--a-accent);
   font-size: var(--a-fs-xs);
   font-weight: 600;
 }
@@ -234,6 +242,7 @@ const progressPct = computed(() => {
   height: 8px;
   border-radius: var(--a-radius-full);
   background: var(--a-surface);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.18);
   overflow: hidden;
   margin-top: var(--a-space-2);
 }
@@ -243,6 +252,7 @@ const progressPct = computed(() => {
   background: var(--a-gradient-brand);
   border-radius: var(--a-radius-full);
   transition: width 0.6s var(--a-ease-out);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--a-accent) 58%, transparent);
 }
 
 .generating__message {

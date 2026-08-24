@@ -37,6 +37,7 @@ const currentPage = computed(() => {
 
 const DEFAULT_THEME: Theme = {
   style: 'business',
+  color_mode: 'light',
   primary_color: '#2563EB',
   font: 'Inter',
   logo_url: '',
@@ -48,6 +49,7 @@ const DEFAULT_THEME: Theme = {
   heading_style: 'plain',
   button_style: 'solid',
   section_divider: 'none',
+  block_radius: null,
 }
 useSiteTheme(computed(() => project.value?.site_data.theme ?? DEFAULT_THEME))
 

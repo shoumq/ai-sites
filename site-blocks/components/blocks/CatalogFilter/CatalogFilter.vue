@@ -26,7 +26,7 @@ const emit = defineEmits<{
 
 const items = toRef(props.section, 'items')
 const categoriesProp = toRef(props.section, 'categories')
-const { activeCategory, query, availableCategories, filtered, setCategory } = useCatalogFilter(items, categoriesProp)
+const { activeCategory, query, availableCategories, filtered, setCategory, reset } = useCatalogFilter(items, categoriesProp)
 
 function updateItem(index: number, patch: Partial<CatalogItem>) {
   const updated = props.section.items.map((item, i) => (i === index ? { ...item, ...patch } : item))
@@ -72,6 +72,11 @@ function updateItem(index: number, patch: Partial<CatalogItem>) {
         >
           {{ category }}
         </button>
+      </div>
+
+      <div class="catalog__status" aria-live="polite">
+        <span>Найдено: <strong>{{ filtered.length }}</strong></span>
+        <button v-if="activeCategory !== 'all' || query" type="button" @click="reset">Сбросить фильтры</button>
       </div>
 
       <CatalogFilterList
@@ -144,6 +149,30 @@ function updateItem(index: number, patch: Partial<CatalogItem>) {
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--space-2);
+}
+
+.catalog__status {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.catalog__status strong {
+  color: var(--text);
+}
+
+.catalog__status button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
 }
 
 .catalog__chip {

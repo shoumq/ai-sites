@@ -81,21 +81,24 @@ function addBlock(entry: (typeof BLOCK_LIBRARY)[number]) {
   gap: var(--a-space-2);
   aspect-ratio: 1.1;
   padding: var(--a-space-3);
-  background: var(--a-surface);
+  background: color-mix(in srgb, var(--a-surface) 78%, transparent);
   border: 1px solid var(--a-border);
-  border-radius: var(--a-radius-lg);
+  border-radius: var(--a-radius-xl);
   cursor: grab;
   text-align: center;
   font-family: inherit;
-  transition: border-color var(--a-transition-fast), transform var(--a-transition-fast), background var(--a-transition-fast);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  transition: border-color var(--a-transition-fast), transform var(--a-transition-fast), background var(--a-transition-fast), box-shadow var(--a-transition-fast);
 }
 .block-chip:hover {
   border-color: var(--a-border-strong);
   background: var(--a-surface-hover);
-  transform: translateY(-2px);
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: var(--a-shadow-md);
 }
 .block-chip:active {
   cursor: grabbing;
+  transform: scale(.96);
 }
 
 .block-chip__add {
@@ -127,9 +130,9 @@ function addBlock(entry: (typeof BLOCK_LIBRARY)[number]) {
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: var(--a-radius-md);
+  border-radius: 13px;
   background: var(--a-gradient-brand-soft);
-  color: #fff;
+  color: var(--a-accent);
   font-size: 1.15rem;
 }
 

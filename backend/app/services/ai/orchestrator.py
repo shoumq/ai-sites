@@ -118,6 +118,8 @@ class GenerationOrchestrator:
             "primary_color": layout["primary_color"],
             "font": layout["font"],
             "style": layout["style"],
+            "color_mode": brief.site_color_mode,
+            "block_radius": brief.layout.block_radius,
             **layout["axes"],
         }
         section_specs = [
@@ -190,6 +192,10 @@ class GenerationOrchestrator:
         if section["type"] in _ACTIONABLE_TYPES:
             section["action"] = item_action
             section["action_text"] = _ACTION_TEXT[item_action]
+        if section["type"] == "catalog_filter":
+            # Сгенерированный фильтр должен сразу ощущаться рабочим: категории
+            # плюс клиентский поиск, а не только статичная сетка карточек.
+            section["show_search"] = True
         return section
 
     @staticmethod
