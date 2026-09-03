@@ -2149,7 +2149,7 @@ const serverDiagnostics = /* #__PURE__ */ defineDiagnostics({
 	}
 });
 
-const appHead = {"meta":[{"charset":"utf-8"},{"name":"viewport","content":"width=device-width, initial-scale=1"}],"link":[],"style":[],"script":[{"innerHTML":"(function(){try{var t=localStorage.getItem('ai-sites:theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t)}catch(e){}})()"}],"noscript":[],"htmlAttrs":{"lang":"ru"},"title":"AI Sites — админка"};
+const appHead = {"meta":[{"charset":"utf-8"},{"name":"viewport","content":"width=device-width, initial-scale=1"}],"link":[],"style":[],"script":[{"innerHTML":"(function(){try{var p=localStorage.getItem('ai-sites:theme');if(p!=='light'&&p!=='dark'&&p!=='system')p='system';var t=p==='system'?(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):p;document.documentElement.setAttribute('data-theme',t);document.documentElement.setAttribute('data-theme-preference',p)}catch(e){}})()"}],"noscript":[],"htmlAttrs":{"lang":"ru"},"title":"AI Sites — админка"};
 
 const appRootTag = "div";
 
