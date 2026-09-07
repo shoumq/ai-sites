@@ -57,6 +57,7 @@ function moveBlock(type: string, delta: number) {
   if (index === -1 || target < 0 || target >= props.modelValue.blocks.length) return
   const blocks = [...props.modelValue.blocks]
   const [moved] = blocks.splice(index, 1)
+  if (!moved) return
   blocks.splice(target, 0, moved)
   patch({ blocks })
 }
@@ -66,7 +67,7 @@ function variantSelectOptions(type: SectionType) {
 }
 
 function axisOptions(axis: string) {
-  return [AUTO_OPTION, ...THEME_AXES[axis].map((v) => ({ value: v, label: THEME_AXIS_VALUE_LABELS[v] ?? v }))]
+  return [AUTO_OPTION, ...(THEME_AXES[axis] ?? []).map((v) => ({ value: v, label: THEME_AXIS_VALUE_LABELS[v] ?? v }))]
 }
 
 const ACTION_OPTIONS = [
@@ -122,7 +123,7 @@ const actionHint = computed(() =>
 
           <template v-if="selectedIndex(block.type) !== -1">
             <BaseSelect
-              :model-value="modelValue.blocks[selectedIndex(block.type)].variant"
+              :model-value="modelValue.blocks[selectedIndex(block.type)]?.variant ?? ''"
               :options="variantSelectOptions(block.type)"
               @update:model-value="setBlockVariant(block.type, String($event))"
             />
@@ -135,7 +136,7 @@ const actionHint = computed(() =>
         </div>
       </div>
       <p v-if="!modelValue.blocks.length" class="structure__hint">
-        Ничего не выбрано — сайт соберётся так же, как в режиме «Пусть соберёт ИИ».
+        Дополнительных блоков не будет. Для сайта компании сохраняются его базовые страницы.
       </p>
     </section>
 

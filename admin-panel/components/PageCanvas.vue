@@ -32,8 +32,11 @@ function onUpdateSection(id: string, patch: Record<string, unknown>) {
 function moveSection(index: number, dir: -1 | 1) {
   const list = sections.value.slice()
   const target = index + dir
-  if (target < 0 || target >= list.length) return
-  ;[list[index], list[target]] = [list[target], list[index]]
+  const current = list[index]
+  const neighbor = list[target]
+  if (!current || !neighbor) return
+  list[index] = neighbor
+  list[target] = current
   store.setPageSections(list)
 }
 </script>

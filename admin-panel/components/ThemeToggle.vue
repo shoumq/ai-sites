@@ -4,7 +4,7 @@ import type { ThemePreference } from '~/stores/theme'
 const props = withDefaults(defineProps<{ inline?: boolean }>(), { inline: false })
 const theme = useThemeStore()
 const route = useRoute()
-const visible = computed(() => props.inline || route.path !== '/')
+const visible = computed(() => props.inline || !['/', '/new'].includes(route.path))
 
 const options: { value: ThemePreference; label: string; icon: string }[] = [
   { value: 'system', label: 'Как в системе', icon: 'lucide:monitor' },

@@ -52,7 +52,7 @@ async def ws_generate(websocket: WebSocket, token: str = Query(...)) -> None:
                 style=brief.style,
                 status=ProjectStatus.generating,
                 site_data={},
-                settings={},
+                settings={"_generation_brief": brief.model_dump(mode="json")},
             )
             db.add(project)
             await db.flush()

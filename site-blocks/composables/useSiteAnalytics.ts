@@ -92,10 +92,10 @@ function rawHtmlInjector(html: string, target: 'head' | 'body'): string {
 }
 
 export function useSiteAnalytics(analytics: AnalyticsConfig, seo: SeoConfig = {}) {
-  const script: Record<string, unknown>[] = []
-  const noscript: Record<string, unknown>[] = []
-  const meta: Record<string, string>[] = []
-  const link: Record<string, string>[] = []
+  const script: import('@unhead/vue').Script[] = []
+  const noscript: import('@unhead/vue').Noscript[] = []
+  const meta: import('@unhead/vue').Meta[] = []
+  const link: import('@unhead/vue').Link[] = []
 
   // dataLayer объявляем до счётчиков: и GTM, и ecommerce Метрики пишут в него,
   // и если он появится позже первого события — событие потеряется.

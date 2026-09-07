@@ -33,7 +33,10 @@ async def update_settings(
             detail="Свой домен доступен на тарифах «Базовый» и «Бизнес».",
         )
 
+    saved_brief = (project.settings or {}).get("_generation_brief")
     project.settings = payload.model_dump()
+    if saved_brief is not None:
+        project.settings = {**project.settings, "_generation_brief": saved_brief}
     await db.commit()
     return payload
 

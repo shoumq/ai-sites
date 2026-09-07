@@ -1,7 +1,7 @@
 /** Apple-inspired design tokens for the admin chrome. */
 :root {
   color-scheme: dark;
-  --a-bg: #090a0f;
+  --a-bg: #151517;
   --a-bg-elevated: rgba(23, 24, 31, 0.92);
   --a-surface: rgba(255, 255, 255, 0.065);
   --a-surface-hover: rgba(255, 255, 255, 0.105);
@@ -10,7 +10,7 @@
   --a-border-strong: rgba(255, 255, 255, 0.18);
   --a-text: #f5f5f7;
   --a-text-muted: #b2b2bb;
-  --a-text-faint: #777780;
+  --a-text-faint: #a0a0a8;
 
   /* Legacy names remain because the intro artwork consumes them. */
   --a-sunset-orange: #64d2ff;
@@ -83,7 +83,7 @@
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --a-bg: #f2f2f7;
+  --a-bg: #f6f6f8;
   --a-bg-elevated: rgba(255,255,255,.88);
   --a-surface: rgba(118,118,128,.09);
   --a-surface-hover: rgba(118,118,128,.15);
@@ -92,17 +92,17 @@
   --a-border-strong: rgba(60,60,67,.20);
   --a-text: #1d1d1f;
   --a-text-muted: #646469;
-  --a-text-faint: #8e8e93;
+  --a-text-faint: #707077;
   --a-accent: #007aff;
-  --a-gradient-brand: linear-gradient(180deg, #2792ff 0%, #007aff 55%, #0068d7 100%);
+  --a-gradient-brand: linear-gradient(#0071e3, #0071e3);
   --a-gradient-text: linear-gradient(100deg, #1d1d1f 0%, #0f5799 52%, #007aff 100%);
   --a-gradient-brand-soft: linear-gradient(145deg, rgba(0,122,255,.13), rgba(90,200,250,.09), rgba(88,86,214,.08));
   --a-glass-bg: rgba(255,255,255,.68);
   --a-glass-border: rgba(255,255,255,.76);
   --a-shadow-sm: 0 1px 2px rgba(15,23,42,.06), 0 2px 9px rgba(15,23,42,.04);
-  --a-shadow-md: 0 14px 40px rgba(34,48,78,.10), 0 2px 8px rgba(34,48,78,.05);
-  --a-shadow-lg: 0 32px 90px rgba(34,48,78,.17), 0 8px 24px rgba(34,48,78,.08);
-  --a-shadow-glow: 0 10px 28px -9px rgba(0,122,255,.48), inset 0 1px 0 rgba(255,255,255,.65);
+  --a-shadow-md: 0 4px 20px rgba(34,48,78,.05), 0 1px 3px rgba(34,48,78,.03);
+  --a-shadow-lg: 0 16px 50px rgba(34,48,78,.09), 0 4px 16px rgba(34,48,78,.04);
+  --a-shadow-glow: 0 2px 4px rgba(0,80,160,.08);
 }
 
 @media (prefers-reduced-transparency: reduce) {

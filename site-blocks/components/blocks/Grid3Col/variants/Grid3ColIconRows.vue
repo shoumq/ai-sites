@@ -76,7 +76,6 @@ function updateItem(index: number, patch: Partial<ServiceItem>) {
             :name="item.name"
             :price="item.price"
             :image="item.image"
-            :sku="item.sku"
             :editable="editable"
           />
         </article>

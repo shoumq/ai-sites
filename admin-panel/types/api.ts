@@ -46,6 +46,19 @@ export interface LayoutPreferences {
   item_action: string
 }
 
+export interface GenerationPreferences {
+  industry: string
+  audience: string
+  tone: 'neutral' | 'friendly' | 'expert' | 'bold'
+  design_direction: 'auto' | 'minimal' | 'editorial' | 'bold' | 'warm'
+  features: ('catalog' | 'leads' | 'gallery' | 'faq' | 'pricing')[]
+  avoid: string
+}
+
+export function emptyGenerationPreferences(): GenerationPreferences {
+  return { industry: '', audience: '', tone: 'neutral', design_direction: 'auto', features: [], avoid: '' }
+}
+
 export interface BriefIn {
   site_type: SiteType
   style: StylePreset
@@ -56,6 +69,7 @@ export interface BriefIn {
   goal: SiteGoal
   extra_requirements?: string | null
   layout: LayoutPreferences
+  preferences: GenerationPreferences
 }
 
 export function emptyLayoutPreferences(): LayoutPreferences {

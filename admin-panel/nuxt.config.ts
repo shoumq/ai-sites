@@ -1,12 +1,25 @@
 // admin-panel — Nuxt 4 SPA, внутренняя админка AI-конструктора сайтов.
 // extends site-blocks ради <SectionRenderer>/<EditableText>/блоков превью —
 // тот же движок рендера, что видит конечный пользователь на публикации.
+import { fileURLToPath } from 'node:url'
+
 export default defineNuxtConfig({
   extends: ['../site-blocks'],
 
   // Авторизованный внутренний инструмент: SPA-режим проще для guard'ов на
   // токен и не требует SSR-хостинга рядом с FastAPI-бэкендом.
   ssr: false,
+
+  // The shared layer lives outside this app's node_modules ancestry.
+  typescript: {
+    tsConfig: {
+      compilerOptions: {
+        types: ['node'],
+        paths: { vue: [fileURLToPath(new URL('./node_modules/vue', import.meta.url))] },
+        typeRoots: [fileURLToPath(new URL('./node_modules/@types', import.meta.url))],
+      },
+    },
+  },
 
   compatibilityDate: '2025-01-01',
 
@@ -20,6 +33,7 @@ export default defineNuxtConfig({
   ],
 
   icon: {
+    clientBundle: { scan: true },
     // Единый набор иконок по ТЗ — держим бандл маленьким, без подключения
     // остальных коллекций Iconify.
     serverBundle: {

@@ -50,6 +50,17 @@ class LayoutPreferences(BaseModel):
     item_action: str = ""
 
 
+class GenerationPreferences(BaseModel):
+    """Business context and creative direction; independent of the site JSON."""
+
+    industry: str = Field(default="", max_length=120)
+    audience: str = Field(default="", max_length=300)
+    tone: Literal["neutral", "friendly", "expert", "bold"] = "neutral"
+    design_direction: Literal["auto", "minimal", "editorial", "bold", "warm"] = "auto"
+    features: list[Literal["catalog", "leads", "gallery", "faq", "pricing"]] = Field(default_factory=list, max_length=5)
+    avoid: str = Field(default="", max_length=400)
+
+
 class BriefIn(BaseModel):
     """Воронка: Экран 1 (тип сайта) + Экран 2 (настроение) + Экран 3 (опросник)
     + Экран 4 (структура сайта, необязательный)."""
@@ -66,6 +77,7 @@ class BriefIn(BaseModel):
     # блоков (YandexLayoutEngine) и их наполнении контентом (YandexCopywriter).
     extra_requirements: str | None = Field(default=None, max_length=800)
     layout: LayoutPreferences = Field(default_factory=LayoutPreferences)
+    preferences: GenerationPreferences = Field(default_factory=GenerationPreferences)
 
     @field_validator("layout", mode="before")
     @classmethod

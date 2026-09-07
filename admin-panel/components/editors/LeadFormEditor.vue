@@ -49,13 +49,13 @@ const FIELD_TYPES = [
   <ListEditor
     :items="section.fields"
     add-label="поле"
-    :new-item="() => ({ name: 'field', label: 'Новое поле', type: 'text', required: false, placeholder: '', options: [] })"
+    :new-item="() => ({ name: 'field', label: 'Новое поле', type: 'text' as const, required: false, placeholder: '', options: [] })"
     @update:items="emit('patch', { fields: $event })"
   >
     <template #default="{ item, update }">
       <BaseInput placeholder="Имя поля (латиницей)" :model-value="item.name" @update:model-value="update({ name: $event })" />
       <BaseInput placeholder="Подпись" :model-value="item.label" @update:model-value="update({ label: $event })" />
-      <BaseSelect :model-value="item.type" :options="FIELD_TYPES" @update:model-value="update({ type: $event })" />
+      <BaseSelect :model-value="item.type" :options="FIELD_TYPES" @update:model-value="update({ type: $event as LeadFormSection['fields'][number]['type'] })" />
       <BaseInput placeholder="Подсказка внутри поля" :model-value="item.placeholder" @update:model-value="update({ placeholder: $event })" />
       <BaseInput
         v-if="item.type === 'select'"

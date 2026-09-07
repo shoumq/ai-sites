@@ -15,3 +15,5 @@ site-builder/builds/
 # Misc
 .DS_Store
 *.log
+.test-deps/
+.test-artifacts/

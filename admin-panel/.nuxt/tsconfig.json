@@ -52,6 +52,9 @@
       "crossws": [
         "../node_modules/crossws"
       ],
+      "vue": [
+        "../node_modules/vue"
+      ],
       "~": [
         ".."
       ],
@@ -144,11 +147,16 @@
     "libReplacement": false,
     "jsx": "preserve",
     "jsxImportSource": "vue",
-    "types": [],
+    "types": [
+      "node"
+    ],
     "moduleResolution": "Bundler",
     "useDefineForClassFields": true,
     "noImplicitThis": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "typeRoots": [
+      "/app/node_modules/@types"
+    ]
   },
   "include": [
     "./nuxt.d.ts",

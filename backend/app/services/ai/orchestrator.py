@@ -14,6 +14,7 @@ from app.core.config import Settings
 from app.schemas.project import BriefIn, GenerationProgress
 from app.schemas.site import Page, SiteSchema, Theme, parse_site
 from app.services.ai.providers import YandexArtImageGenerator, YandexCopywriter, YandexLayoutEngine
+from app.services.ai.preferences import preference_context
 from app.services.storage import StorageClient
 
 logger = logging.getLogger(__name__)
@@ -145,12 +146,12 @@ class GenerationOrchestrator:
 
         await emit(2)
         hero_bg = await self.image_generator.generate_image(
-            f"{brief.description}, {brief.style.value} style, website hero background"
+            f"{brief.description}, {brief.style.value} style, website hero background{preference_context(brief)}"
         )
         about_image = None
         if is_multipage or any(spec["type"] == "text_image" for spec in section_specs):
             about_image = await self.image_generator.generate_image(
-                f"{brief.brand_name}, {brief.description}, photo"
+                f"{brief.brand_name}, {brief.description}, photo{preference_context(brief)}"
             )
         await asyncio.sleep(0.3)
 

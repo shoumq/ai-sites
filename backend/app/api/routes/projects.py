@@ -62,7 +62,7 @@ async def generate_project(
         style=brief.style,
         status=ProjectStatus.generating,
         site_data={},
-        settings={},
+        settings={"_generation_brief": brief.model_dump(mode="json")},
     )
     db.add(project)
     await db.flush()  # получить project.id до генерации

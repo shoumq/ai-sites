@@ -44,7 +44,7 @@ function newItem(): SandboxItem {
   <div class="field-label">Элементы песочницы</div>
   <ListEditor :items="section.items" add-label="элемент" :new-item="newItem" @update:items="emit('patch', { items: $event })">
     <template #default="{ item, update }">
-      <BaseSelect :model-value="item.kind" :options="KIND_OPTIONS" @update:model-value="update({ kind: $event })" />
+      <BaseSelect :model-value="item.kind" :options="KIND_OPTIONS" @update:model-value="update({ kind: $event as SandboxItem['kind'] })" />
       <BaseTextarea v-if="item.kind !== 'image'" label="Содержимое" :model-value="item.content" :rows="2" @update:model-value="update({ content: $event })" />
       <BaseInput v-if="item.kind === 'button'" label="Ссылка" :model-value="item.href" placeholder="#contact или https://…" @update:model-value="update({ href: $event })" />
       <BaseInput v-if="item.kind === 'image'" label="URL изображения" :model-value="item.image" placeholder="https://…" @update:model-value="update({ image: $event })" />

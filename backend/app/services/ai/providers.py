@@ -28,6 +28,7 @@ import httpx
 
 from app.core.config import Settings
 from app.schemas.project import BriefIn
+from app.services.ai.preferences import apply_creative_preferences, preference_context, suggested_blocks
 from app.schemas.site import BLOCK_LIBRARY, SECTION_VARIANTS, THEME_AXES, SiteSchema, parse_site
 from app.services.ai.block_schema import describe_block_fields
 from app.services.block_keywords import match_types_in_text
@@ -308,6 +309,7 @@ class YandexCopywriter:
         )
         if brief.extra_requirements:
             user_prompt += f"\nДополнительные пожелания пользователя: {brief.extra_requirements}"
+        user_prompt += preference_context(brief)
         text = await _call_yandex_completion(self.settings, system_prompt, user_prompt, self.settings.yandex_gpt_model, 0.6)
         return _extract_json(text) if text else None
 
@@ -617,6 +619,7 @@ class YandexLayoutEngine:
                 layout = {**preset, "style": brief.style.value, **fallback}
 
         layout = self._ensure_requested_sections(layout, brief)
+        layout = apply_creative_preferences(layout, brief)
         return self._apply_preferences(layout, brief)
 
     def _ensure_requested_sections(self, layout: dict, brief: BriefIn) -> dict:
@@ -657,7 +660,7 @@ class YandexLayoutEngine:
             if chosen in allowed:
                 layout["axes"][axis] = chosen
 
-        if prefs.mode == "manual" and prefs.blocks:
+        if prefs.mode == "manual":
             seed = f"{brief.brand_name}|{brief.description}"
             manual: list[dict] = []
             seen: set[str] = set()
@@ -673,7 +676,7 @@ class YandexLayoutEngine:
                 else:
                     # Пользователь выбрал блок, но не вариант — подбираем сами.
                     manual.append({"type": block.type, "variant": _seeded_choice(f"{seed}|{block.type}", options)})
-            if manual:
+            if manual or not prefs.blocks:
                 layout["sections"] = manual
         return layout
 
@@ -689,6 +692,7 @@ class YandexLayoutEngine:
         site_type = brief.site_type.value
 
         required = list(self.REQUIRED_MIDDLE_SECTIONS.get(site_type, self.REQUIRED_MIDDLE_SECTIONS["multipage"]))
+        required = list(dict.fromkeys(required + suggested_blocks(brief)))
         optional = [
             t
             for t in self.OPTIONAL_MIDDLE_SECTIONS.get(site_type, self.OPTIONAL_MIDDLE_SECTIONS["multipage"])
@@ -804,6 +808,7 @@ class YandexLayoutEngine:
         )
         if brief.extra_requirements:
             user_prompt += f"\nДополнительные пожелания пользователя: {brief.extra_requirements}"
+        user_prompt += preference_context(brief)
         text = await _call_yandex_completion(self.settings, system_prompt, user_prompt, self.settings.yandex_gpt_model, 0.6)
         return _extract_json(text) if text else None
 

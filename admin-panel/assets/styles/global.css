@@ -1,21 +1,14 @@
 *, *::before, *::after { box-sizing: border-box; }
 html {
   -webkit-text-size-adjust: 100%;
-  background:
-    radial-gradient(circle at 14% -8%, color-mix(in srgb, var(--a-accent) 19%, transparent), transparent 34rem),
-    radial-gradient(circle at 94% 10%, rgba(94,92,230,.14), transparent 30rem),
-    var(--a-bg);
+  background: var(--a-bg);
   overscroll-behavior-y: none;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 14% -8%, rgba(10,132,255,.19), transparent 34rem),
-    radial-gradient(circle at 94% 10%, rgba(94,92,230,.14), transparent 30rem),
-    radial-gradient(circle at 50% 116%, rgba(100,210,255,.08), transparent 34rem),
-    var(--a-bg);
+  background: var(--a-bg);
   background-attachment: fixed;
   color: var(--a-text);
   font-family: var(--a-font-family);
@@ -26,7 +19,7 @@ body {
 }
 
 body::before {
-  content: '';
+  content: none;
   position: fixed;
   inset: 0;
   z-index: var(--a-z-bg);

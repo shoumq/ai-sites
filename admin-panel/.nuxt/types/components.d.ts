@@ -19,12 +19,14 @@ interface _GlobalComponents {
   ConfirmHost: typeof import("../../components/ConfirmHost.vue")['default']
   ConstructorPanel: typeof import("../../components/ConstructorPanel.vue")['default']
   DeployModal: typeof import("../../components/DeployModal.vue")['default']
+  DesignPreview: typeof import("../../components/DesignPreview.vue")['default']
   IntroSplash: typeof import("../../components/IntroSplash.vue")['default']
   ListEditor: typeof import("../../components/ListEditor.vue")['default']
   PageCanvas: typeof import("../../components/PageCanvas.vue")['default']
   StructurePicker: typeof import("../../components/StructurePicker.vue")['default']
   ThemeToggle: typeof import("../../components/ThemeToggle.vue")['default']
   ToastHost: typeof import("../../components/ToastHost.vue")['default']
+  WorkspaceShell: typeof import("../../components/WorkspaceShell.vue")['default']
   BaseBadge: typeof import("../../components/base/BaseBadge.vue")['default']
   BaseButton: typeof import("../../components/base/BaseButton.vue")['default']
   BaseConfirmDialog: typeof import("../../components/base/BaseConfirmDialog.vue")['default']
@@ -156,12 +158,14 @@ interface _GlobalComponents {
   LazyConfirmHost: LazyComponent<typeof import("../../components/ConfirmHost.vue")['default']>
   LazyConstructorPanel: LazyComponent<typeof import("../../components/ConstructorPanel.vue")['default']>
   LazyDeployModal: LazyComponent<typeof import("../../components/DeployModal.vue")['default']>
+  LazyDesignPreview: LazyComponent<typeof import("../../components/DesignPreview.vue")['default']>
   LazyIntroSplash: LazyComponent<typeof import("../../components/IntroSplash.vue")['default']>
   LazyListEditor: LazyComponent<typeof import("../../components/ListEditor.vue")['default']>
   LazyPageCanvas: LazyComponent<typeof import("../../components/PageCanvas.vue")['default']>
   LazyStructurePicker: LazyComponent<typeof import("../../components/StructurePicker.vue")['default']>
   LazyThemeToggle: LazyComponent<typeof import("../../components/ThemeToggle.vue")['default']>
   LazyToastHost: LazyComponent<typeof import("../../components/ToastHost.vue")['default']>
+  LazyWorkspaceShell: LazyComponent<typeof import("../../components/WorkspaceShell.vue")['default']>
   LazyBaseBadge: LazyComponent<typeof import("../../components/base/BaseBadge.vue")['default']>
   LazyBaseButton: LazyComponent<typeof import("../../components/base/BaseButton.vue")['default']>
   LazyBaseConfirmDialog: LazyComponent<typeof import("../../components/base/BaseConfirmDialog.vue")['default']>

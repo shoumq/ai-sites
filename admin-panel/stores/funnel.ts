@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { emptyLayoutPreferences } from '~/types/api'
-import type { BriefIn, LayoutPreferences, SiteColorMode, SiteGoal, SiteType, StylePreset } from '~/types/api'
+import { emptyLayoutPreferences, emptyGenerationPreferences } from '~/types/api'
+import type { BriefIn, GenerationPreferences, LayoutPreferences, SiteColorMode, SiteGoal, SiteType, StylePreset } from '~/types/api'
 
 /**
  * Данные воронки «Новый сайт» — раньше терялись при рефреше страницы
@@ -24,6 +24,7 @@ interface PersistedFunnel {
   goal: SiteGoal
   extraRequirements: string
   layout: LayoutPreferences
+  preferences: GenerationPreferences
 }
 
 function readPersisted(): Partial<PersistedFunnel> {
@@ -51,6 +52,7 @@ export const useFunnelStore = defineStore('funnel', () => {
   // версии брифа может не быть части осей, и они должны стать пустыми
   // («на усмотрение ИИ»), а не undefined в теле запроса.
   const layout = ref<LayoutPreferences>({ ...emptyLayoutPreferences(), ...(initial.layout ?? {}) })
+  const preferences = ref<GenerationPreferences>({ ...emptyGenerationPreferences(), ...(initial.preferences ?? {}) })
 
   function persist() {
     if (typeof window === 'undefined') return
@@ -64,11 +66,12 @@ export const useFunnelStore = defineStore('funnel', () => {
       goal: goal.value,
       extraRequirements: extraRequirements.value,
       layout: layout.value,
+      preferences: preferences.value,
     }
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot))
+    try { window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot)) } catch { /* Storage may be unavailable. */ }
   }
 
-  watch([siteType, style, siteColorMode, customHex, brandName, description, goal, extraRequirements, layout], persist, { deep: true })
+  watch([siteType, style, siteColorMode, customHex, brandName, description, goal, extraRequirements, layout, preferences], persist, { deep: true })
 
   const isBriefComplete = computed(
     () => !!siteType.value && !!style.value && brandName.value.trim().length > 0 && description.value.trim().length > 0,
@@ -86,6 +89,7 @@ export const useFunnelStore = defineStore('funnel', () => {
       goal: goal.value,
       extra_requirements: extraRequirements.value.trim() || null,
       layout: layout.value,
+      preferences: preferences.value,
     }
   }
 
@@ -99,6 +103,7 @@ export const useFunnelStore = defineStore('funnel', () => {
     goal.value = 'sales'
     extraRequirements.value = ''
     layout.value = emptyLayoutPreferences()
+    preferences.value = emptyGenerationPreferences()
     if (typeof window !== 'undefined') window.sessionStorage.removeItem(STORAGE_KEY)
   }
 
@@ -112,6 +117,7 @@ export const useFunnelStore = defineStore('funnel', () => {
     goal,
     extraRequirements,
     layout,
+    preferences,
     isBriefComplete,
     toBrief,
     reset,
