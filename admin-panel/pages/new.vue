@@ -54,7 +54,7 @@ function generate() { if (funnel.isBriefComplete) navigateTo('/generating') }
   <WorkspaceShell>
     <div class="studio">
       <header class="studio__top"><NuxtLink to="/">Мои сайты</NuxtLink><Icon name="lucide:chevron-right" /><span>Новый сайт</span><span class="studio__draft"><span /> Бриф сохраняется в этой вкладке</span></header>
-      <div class="studio__intro"><span class="studio__eyebrow">ОТ ИДЕИ К САЙТУ</span><h1>Начнём с вашего видения.</h1><p>Бизнес, характер, детали. Всё остальное соберём вместе.</p></div>
+      <div class="studio__intro"><span class="studio__eyebrow">ДИЗАЙН-СТУДИЯ / НОВЫЙ ПРОЕКТ</span><h1>Хороший сайт начинается с идеи.</h1><p>Задайте характер, расскажите о бизнесе — соберём первую версию сайта.</p></div>
       <nav class="studio__steps" aria-label="Этапы создания сайта"><button v-for="(label, i) in steps" :key="label" type="button" :class="{ current: step === i, done: step > i }" :aria-current="step === i ? 'step' : undefined" :disabled="i > step" @click="goTo(i)"><span><Icon v-if="step > i" name="lucide:check" /><template v-else>{{ String(i + 1).padStart(2, '0') }}</template></span>{{ label }}</button></nav>
       <div class="studio__grid">
         <section class="studio__form" aria-label="Настройки генерации">
@@ -80,7 +80,7 @@ function generate() { if (funnel.isBriefComplete) navigateTo('/generating') }
             <details class="studio__details"><summary>Дополнительные пожелания</summary><BaseTextarea v-model="funnel.extraRequirements" label="Что ещё учесть" placeholder="Например: каталог с фильтром, акцент на индивидуальном подходе" :rows="3" :maxlength="800" /><BaseTextarea v-model="funnel.preferences.avoid" label="Чего избегать в дизайне и текстах" placeholder="Например: неоновых цветов, канцелярита, неподтверждённых обещаний" :rows="2" :maxlength="400" /></details>
           </div>
           <div v-else class="studio__step"><h2 ref="heading" tabindex="-1">Последние штрихи.</h2><p class="studio__hint">Доверьте структуру ИИ или расставьте блоки сами. Ручной выбор важнее автоматического.</p><StructurePicker v-model="funnel.layout" :site-type="funnel.siteType ?? ''" /><p v-if="funnel.siteType === 'multipage'" class="studio__hint">Сейчас сайт компании включает главную, услуги, информацию о компании и контакты. Ручная структура применяется в пределах этих страниц.</p></div>
-          <footer class="studio__actions"><BaseButton v-if="step > 0" variant="ghost" icon="lucide:arrow-left" @click="goTo(step - 1)">Назад</BaseButton><span v-else class="studio__step-count">Шаг 1 из 4</span><div><BaseButton v-if="step === 2" variant="ghost" :disabled="!funnel.isBriefComplete" @click="generate">Создать сразу</BaseButton><BaseButton v-if="step < 3" variant="primary" :disabled="!canContinue" @click="goTo(step + 1)">Продолжить <span aria-hidden="true">→</span></BaseButton><BaseButton v-else variant="primary" icon="lucide:sparkles" :disabled="!funnel.isBriefComplete" @click="generate">Создать сайт</BaseButton></div></footer>
+          <footer class="studio__actions"><BaseButton v-if="step > 0" variant="ghost" icon="lucide:arrow-left" @click="goTo(step - 1)">Назад</BaseButton><span v-else class="studio__step-count">{{ String(step + 1).padStart(2, '0') }} / 04</span><div><BaseButton v-if="step === 2" variant="ghost" :disabled="!funnel.isBriefComplete" @click="generate">Создать сразу</BaseButton><BaseButton v-if="step < 3" variant="primary" :disabled="!canContinue" @click="goTo(step + 1)">Продолжить <span aria-hidden="true">→</span></BaseButton><BaseButton v-else variant="primary" icon="lucide:sparkles" :disabled="!funnel.isBriefComplete" @click="generate">Создать сайт</BaseButton></div></footer>
         </section>
         <aside class="studio__preview"><div class="studio__preview-label"><span>ВАШЕ НАПРАВЛЕНИЕ</span><Icon name="lucide:sliders-horizontal" /></div><DesignPreview :direction="funnel.preferences.design_direction" :brand="funnel.brandName" :dark="funnel.siteColorMode === 'dark'" :accent="accent" /><div class="studio__preview-caption"><span>{{ currentDirection?.label || 'Свобода для вашей идеи' }}</span><span>Эскиз оформления</span></div><p class="studio__preview-note">Пример визуального настроения. Настоящие тексты, изображения и блоки появятся после генерации.</p><div class="studio__brief"><span class="studio__eyebrow">В ОСНОВЕ ВАШЕГО САЙТА</span><dl><div><dt>Формат</dt><dd>{{ types.find(t => t.value === funnel.siteType)?.label || 'Выберите формат' }}</dd></div><div><dt>Цель</dt><dd>{{ goals.find(g => g.value === funnel.goal)?.label }}</dd></div><div v-if="funnel.preferences.industry"><dt>Бизнес</dt><dd>{{ funnel.preferences.industry }}</dd></div><div><dt>Структура</dt><dd>{{ funnel.layout.mode === 'manual' ? 'Ваш выбор блоков' : 'Подберёт ИИ' }}</dd></div></dl><div class="studio__editable"><Icon name="lucide:circle-check" /><span>Каждый блок можно будет отредактировать.</span></div></div></aside>
       </div>
@@ -90,17 +90,17 @@ function generate() { if (funnel.isBriefComplete) navigateTo('/generating') }
 
 <style scoped>
 .studio { max-width: 1400px; margin: auto; padding: 0 48px 50px; }
-.studio__top { height: 76px; display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--a-text-muted); border-bottom: 1px solid var(--a-border); }
+.studio__top { height: 76px; display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--a-text-muted); border-bottom: 1px solid var(--a-border); }
 .studio__top a { text-decoration: none; }
-.studio__draft { margin-left: auto; display: flex; align-items: center; gap: 7px; font-size: 10px; }
+.studio__draft { margin-left: auto; display: flex; align-items: center; gap: 7px; font-size: 12px; }
 .studio__draft > span { width: 5px; height: 5px; border-radius: 50%; background: #729777; }
 .studio__intro { padding: 44px 0 34px; }
-.studio__eyebrow { font-size: 9px; letter-spacing: .16em; font-weight: 600; color: var(--a-text-muted); }
+.studio__eyebrow { font-size: 13px; letter-spacing: .16em; font-weight: 600; color: var(--a-text-muted); }
 .studio__intro h1 { font-size: clamp(28px, 3.2vw, 44px); font-weight: 600; letter-spacing: -.05em; margin: 13px 0; }
 .studio__intro p { font-size: 13px; color: var(--a-text-muted); }
 .studio__steps { display: flex; gap: 32px; margin-bottom: 32px; border-bottom: 1px solid var(--a-border); }
 .studio__steps button { position: relative; display: flex; align-items: center; gap: 9px; padding: 0 0 17px; border: 0; background: none; color: var(--a-text-muted); font-size: 12px; cursor: pointer; }
-.studio__steps button > span { display: grid; place-items: center; width: 23px; height: 23px; border-radius: 50%; background: var(--a-surface); font-size: 9px; }
+.studio__steps button > span { display: grid; place-items: center; width: 23px; height: 23px; border-radius: 50%; background: var(--a-surface); font-size: 13px; }
 .studio__steps button.current { color: var(--a-text); font-weight: 600; }
 .studio__steps button.current::after { content: ''; position: absolute; bottom: -1px; height: 2px; background: var(--a-text); width: 100%; }
 .studio__steps button.current > span { background: var(--a-text); color: var(--a-bg); }
@@ -118,52 +118,81 @@ function generate() { if (funnel.isBriefComplete) navigateTo('/generating') }
 .format-card.selected, .direction-card.selected { border-color: var(--a-accent); box-shadow: 0 0 0 1px var(--a-accent); background: color-mix(in srgb, var(--a-accent) 4%, transparent); }
 .format-card > .iconify { font-size: 23px; margin-bottom: 24px; }
 .format-card strong, .direction-card strong { display: block; font-size: 12px; font-weight: 600; }
-.format-card small, .direction-card small { display: block; font-size: 10px; color: var(--a-text-muted); line-height: 1.6; margin-top: 6px; }
-.selection-dot { position: absolute; right: 13px; top: 14px; border: 1px solid var(--a-border-strong); border-radius: 50%; width: 15px; height: 15px; display: grid; place-items: center; font-size: 10px; }
+.format-card small, .direction-card small { display: block; font-size: 12px; color: var(--a-text-muted); line-height: 1.6; margin-top: 6px; }
+.selection-dot { position: absolute; right: 13px; top: 14px; border: 1px solid var(--a-border-strong); border-radius: 50%; width: 15px; height: 15px; display: grid; place-items: center; font-size: 12px; }
 .selected .selection-dot { background: var(--a-accent); color: white; border-color: transparent; }
 .direction-card { padding: 8px 8px 14px; }
 .direction-card strong, .direction-card small { padding-inline: 5px; }
-.direction-art { display: flex; flex-direction: column; background: #f1f2ed; color: var(--direction-color); height: 83px; border-radius: 7px; margin-bottom: 12px; padding: 11px 15px; gap: 4px; }
-.direction-art i { font-size: 27px; font-weight: 500; font-style: normal; line-height: 1.1; letter-spacing: -.06em; }
+.direction-art { display: flex; flex-direction: column; background: #f1f2ed; color: var(--direction-color); height: 110px; border-radius: 7px; margin-bottom: 12px; padding: 11px 15px; gap: 4px; }
+.direction-art i { font-size: 40px; font-weight: 500; font-style: normal; line-height: 1.1; letter-spacing: -.06em; }
 .direction-art > span { width: 70%; height: 3px; background: currentColor; opacity: .25; }
 .direction-art > span:last-child { width: 45%; }
 .art-editorial { background: #ebe8e1; border-radius: 0; font-family: Georgia, serif; }
 .art-bold { background: #e8e1fb; }
 .art-bold i { font-weight: 850; }
 .art-warm { background: #f3e7db; border-radius: 20px 20px 7px 7px; }
-.studio__auto { display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: none; color: var(--a-text-muted); font-size: 11px; cursor: pointer; padding: 4px; }
+.studio__auto { display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: none; color: var(--a-text-muted); font-size: 13px; cursor: pointer; padding: 4px; }
 .studio__auto[aria-pressed='true'] { color: var(--a-accent); }
 .studio__appearance { display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; border-top: 1px solid var(--a-border); padding-top: 20px; }
 .palette, .mode-switch { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
-.palette button { display: grid; place-items: center; height: 26px; width: 26px; color: white; border: 3px solid var(--a-surface-solid); outline: 1px solid transparent; border-radius: 50%; cursor: pointer; font-size: 11px; }
+.palette button { display: grid; place-items: center; height: 26px; width: 26px; color: white; border: 3px solid var(--a-surface-solid); outline: 1px solid transparent; border-radius: 50%; cursor: pointer; font-size: 13px; }
 .palette button.selected { outline-color: var(--a-text-muted); }
 .palette input { width: 28px; height: 28px; padding: 0; border: 0; background: transparent; }
 .mode-switch { padding: 3px; background: var(--a-surface); border-radius: 8px; gap: 3px; }
-.mode-switch button { display: flex; align-items: center; gap: 5px; border: 0; border-radius: 6px; background: transparent; color: var(--a-text-muted); font-size: 10px; padding: 6px 8px; cursor: pointer; }
+.mode-switch button { display: flex; align-items: center; gap: 5px; border: 0; border-radius: 6px; background: transparent; color: var(--a-text-muted); font-size: 12px; padding: 6px 8px; cursor: pointer; }
 .mode-switch button.selected { background: var(--a-surface-solid); color: var(--a-text); box-shadow: var(--a-shadow-sm); }
 .feature-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.feature-chips button { display: flex; gap: 6px; align-items: center; background: transparent; color: var(--a-text-muted); padding: 9px 12px; border: 1px solid var(--a-border); border-radius: 20px; font-size: 11px; cursor: pointer; }
+.feature-chips button { display: flex; gap: 6px; align-items: center; background: transparent; color: var(--a-text-muted); padding: 9px 12px; border: 1px solid var(--a-border); border-radius: 20px; font-size: 13px; cursor: pointer; }
 .feature-chips button.selected { border-color: var(--a-accent); color: var(--a-accent); background: color-mix(in srgb, var(--a-accent) 5%, transparent); }
 .studio__details { font-size: 12px; color: var(--a-text-muted); }
 .studio__details summary { cursor: pointer; padding-block: 8px; }
 .studio__details > :not(summary) { margin-top: 16px; }
 .studio__actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--a-border); }
 .studio__actions > div { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
-.studio__actions :deep(.base-btn) { font-size: 11px; padding-inline: 16px; height: 38px; }
-.studio__step-count { font-size: 10px; color: var(--a-text-muted); }
+.studio__actions :deep(.base-btn) { font-size: 13px; padding-inline: 16px; min-height: 44px; }
+.studio__step-count { font-size: 12px; color: var(--a-text-muted); }
 .studio__preview { position: sticky; top: 30px; padding-top: 4px; }
-.studio__preview-label { display: flex; justify-content: space-between; align-items: center; color: var(--a-text-muted); font-size: 9px; letter-spacing: .14em; margin-bottom: 18px; }
-.studio__preview-caption { display: flex; justify-content: space-between; margin-top: 20px; gap: 12px; font-size: 11px; }
-.studio__preview-caption > span:last-child { color: var(--a-text-muted); font-size: 10px; }
-.studio__preview-note { font-size: 10px; line-height: 1.7; color: var(--a-text-muted); margin-top: 12px; max-width: 320px; }
+.studio__preview-label { display: flex; justify-content: space-between; align-items: center; color: var(--a-text-muted); font-size: 13px; letter-spacing: .14em; margin-bottom: 18px; }
+.studio__preview-caption { display: flex; justify-content: space-between; margin-top: 20px; gap: 12px; font-size: 13px; }
+.studio__preview-caption > span:last-child { color: var(--a-text-muted); font-size: 12px; }
+.studio__preview-note { font-size: 12px; line-height: 1.7; color: var(--a-text-muted); margin-top: 12px; max-width: 320px; }
 .studio__brief { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--a-border); }
-.studio__brief dl { margin: 18px 0; font-size: 11px; }
+.studio__brief dl { margin: 18px 0; font-size: 13px; }
 .studio__brief dl > div { display: flex; justify-content: space-between; gap: 20px; margin-block: 12px; }
 .studio__brief dt { color: var(--a-text-muted); }
 .studio__brief dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
-.studio__editable { display: flex; align-items: center; gap: 7px; font-size: 10px; color: var(--a-text-muted); }
+.studio__editable { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--a-text-muted); }
 .studio__editable .iconify { color: #65866a; }
 @media (max-width: 1200px) { .studio { padding-inline: 28px; } .studio__grid { gap: 24px; } .studio__form { padding: 22px; } }
 @media (max-width: 1050px) { .studio__grid { grid-template-columns: 1fr; } .studio__preview { position: static; max-width: 580px; width: 100%; } .studio__draft { display: none; } }
-@media (max-width: 600px) { .studio { padding-inline: 20px; } .studio__intro { padding-top: 30px; } .studio__steps { gap: 0; justify-content: space-between; } .studio__steps button { font-size: 10px; gap: 5px; } .studio__steps button > span { width: 20px; height: 20px; } .studio__form { padding: 18px; } .format-card { padding: 16px 12px; } .studio__actions { align-items: flex-start; } }
+@media (max-width: 600px) { .studio { padding-inline: 20px; } .studio__intro { padding-top: 30px; } .studio__steps { gap: 0; justify-content: space-between; } .studio__steps button { font-size: 12px; gap: 5px; } .studio__steps button > span { width: 20px; height: 20px; } .studio__form { padding: 18px; } .format-card { padding: 16px 12px; } .studio__actions { align-items: flex-start; } }
+
+.studio__intro { max-width: 780px; padding-block: 48px 36px; }
+.studio__intro h1 { font-size: clamp(32px, 3.8vw, 54px); line-height: 1.06; letter-spacing: -.055em; }
+.studio__intro p { font-size: 15px; line-height: 1.7; max-width: 540px; }
+.studio__form { border-radius: 12px; box-shadow: none; padding: 32px; }
+.studio__step h2 { font-size: 25px; }
+.studio__hint { font-size: 14px; }
+.format-card { min-height: 170px; border-radius: 8px; }
+.format-card strong, .direction-card strong { font-size: 15px; }
+.format-card small, .direction-card small { font-size: 12px; }
+.studio__preview { padding: 22px; background: var(--a-surface); border: 1px solid var(--a-border); border-radius: 12px; }
+.studio__preview-note { max-width: none; font-size: 12px; }
+.studio__brief { margin-top: 24px; }
+.studio__steps button { min-height: 44px; }
+.studio__auto { min-height: 44px; }
+.palette button { width: 36px; height: 36px; }
+.mode-switch button { min-height: 38px; }
+@media (max-width: 600px) {
+  .studio { padding: 0 16px 32px; }
+  .studio__intro { padding-block: 28px; }
+  .studio__form { padding: 20px 16px; }
+  .studio__preview { padding: 16px; }
+  .studio__steps button { font-size: 11px; }
+  .studio__steps { margin-bottom: 24px; }
+  .studio__actions { flex-wrap: wrap; }
+  .studio__actions > div { margin-left: auto; }
+  .studio__actions :deep(.base-btn) { padding-inline: 12px; font-size: 12px; }
+  .format-card { min-height: 166px; }
+}
 </style>

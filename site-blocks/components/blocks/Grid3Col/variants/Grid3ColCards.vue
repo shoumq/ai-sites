@@ -36,10 +36,11 @@ function updateItem(index: number, patch: Partial<ServiceItem>) {
           :key="i"
           class="service-card"
           v-motion
-          :initial="{ opacity: 0, y: 24 }"
+        data-reveal
+          :initial="{ opacity: editable ? 1 : 0, y: editable ? 0 : 24 }"
           :visibleOnce="{ opacity: 1, y: 0, transition: { duration: 420, delay: i * 90, ease: 'easeOut' } }"
         >
-          <span v-if="item.icon" class="service-card__icon" aria-hidden="true">{{ item.icon }}</span>
+          <span class="service-card__index" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}<span>↗</span></span>
           <EditableText
             tag="h3"
             class="service-card__name"
@@ -102,7 +103,7 @@ function updateItem(index: number, patch: Partial<ServiceItem>) {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: var(--space-6);
 }
 
@@ -110,14 +111,14 @@ function updateItem(index: number, patch: Partial<ServiceItem>) {
   font-size: var(--fs-3xl);
   font-weight: 700;
   letter-spacing: -0.02em;
-  text-align: center;
+  text-align: left;
   color: var(--text);
 }
 
 .grid3col__grid {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-5);
 }
 
@@ -163,6 +164,7 @@ function updateItem(index: number, patch: Partial<ServiceItem>) {
 }
 
 .grid3col__cta {
+  align-self: flex-start;
   padding: var(--space-3) var(--space-6);
   border-radius: var(--radius-md);
   background: var(--primary);
@@ -188,4 +190,13 @@ function updateItem(index: number, patch: Partial<ServiceItem>) {
     grid-template-columns: 1fr;
   }
 }
+
+.grid3col__title { max-width: 22ch; font-weight: 600; letter-spacing: -.045em; }
+.service-card { min-width: 0; min-height: 280px; background: var(--surface-muted); border-color: transparent; box-shadow: none; }
+.service-card__index { display: flex; justify-content: space-between; margin-bottom: 32px; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.service-card__index > span { font-size: 20px; }
+.service-card__name { font-size: var(--fs-xl); letter-spacing: -.03em; overflow-wrap: anywhere; }
+.service-card__desc { line-height: 1.8; }
+@media (hover: hover) { .service-card:hover { transform: translateY(-2px); box-shadow: none; border-color: var(--border-color); } }
+@media (prefers-reduced-motion: reduce) { [data-reveal] { opacity: 1 !important; transform: none !important; } }
 </style>

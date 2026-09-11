@@ -292,6 +292,7 @@ const publishedHref = computed(() => {
 <style scoped>
 .editor-shell {
   min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -455,7 +456,7 @@ const publishedHref = computed(() => {
 .editor-body {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: var(--a-space-4);
   padding: var(--a-space-4);
   min-height: 0;
@@ -498,6 +499,7 @@ const publishedHref = computed(() => {
   gap: var(--a-space-4);
   height: fit-content;
   max-height: calc(100vh - 140px);
+  max-height: calc(100dvh - 140px);
   position: sticky;
   top: 84px;
   overflow: hidden;
@@ -525,4 +527,10 @@ const publishedHref = computed(() => {
     max-height: none;
   }
 }
+
+.editor-topbar__name-btn { min-width: 0; overflow-wrap: anywhere; text-align: left; }
+.editor-topbar__right > * { flex-shrink: 0; }
+.editor-panel__content { min-height: 0; }
+@media (max-width: 960px) { .editor-panel { max-height: none; } }
+@media (max-width: 640px) { .editor-shell { padding-bottom: env(safe-area-inset-bottom); } }
 </style>

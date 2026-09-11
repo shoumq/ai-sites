@@ -54,6 +54,30 @@ class PreferencesTests(unittest.IsolatedAsyncioTestCase):
         plan = await YandexLayoutEngine(settings()).plan_layout(brief(layout={"mode": "manual", "blocks": []}))
         self.assertEqual(plan["sections"], [])
 
+    async def test_direction_coordinates_sections_and_keeps_conversion_last(self):
+        engine = YandexLayoutEngine(settings())
+        engine.mock = False
+        engine._call_real_api = AsyncMock(return_value={"sections": [
+            {"type": "lead_form", "variant": "card"},
+            {"type": "gallery", "variant": "grid"},
+            {"type": "faq", "variant": "plain"},
+            {"type": "grid_3col", "variant": "cards"},
+        ]})
+        plan = await engine.plan_layout(brief(preferences={"design_direction": "editorial"}))
+        self.assertEqual(plan["sections"], [
+            {"type": "gallery", "variant": "masonry"},
+            {"type": "grid_3col", "variant": "icon_rows"},
+            {"type": "faq", "variant": "two_columns"},
+            {"type": "lead_form", "variant": "split"},
+        ])
+
+    async def test_manual_section_order_survives_conversion_ordering(self):
+        sections = [{"type": "lead_form", "variant": "card"}, {"type": "gallery", "variant": "slider"}]
+        plan = await YandexLayoutEngine(settings()).plan_layout(brief(
+            preferences={"design_direction": "editorial"}, layout={"mode": "manual", "blocks": sections},
+        ))
+        self.assertEqual(plan["sections"], sections)
+
     async def test_explicit_choices_override_valid_model_output(self):
         engine = YandexLayoutEngine(settings())
         engine.mock = False

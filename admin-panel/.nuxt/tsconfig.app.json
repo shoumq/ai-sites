@@ -110,7 +110,7 @@
         "./imports"
       ],
       "#app-manifest": [
-        "./manifest/meta/dev.json"
+        "./manifest/meta/8d6e2cef-8d04-4071-8a77-e42c0086fd08.json"
       ],
       "#components": [
         "./components"
@@ -155,7 +155,7 @@
     "noImplicitThis": true,
     "allowSyntheticDefaultImports": true,
     "typeRoots": [
-      "/app/node_modules/@types"
+      "C:\\Users\\fredd\\ai-sites2\\admin-panel\\node_modules\\@types"
     ]
   },
   "include": [
@@ -184,6 +184,7 @@
     "../../site-blocks/layers/*/*.d.ts"
   ],
   "exclude": [
+    "../../node_modules",
     "../dist",
     "../.data",
     "../modules/*/runtime/server/**/*",
@@ -210,7 +211,7 @@
     "../node_modules/dist/runtime/server",
     "../node_modules/*.*",
     "../node_modules/dist/*.*",
-    "dev",
+    "../.output",
     "../server"
   ],
   "vueCompilerOptions": {

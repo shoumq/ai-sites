@@ -53,4 +53,3 @@ export { useEditorStore, SaveStatus } from '../stores/editor';
 export { useFunnelStore } from '../stores/funnel';
 export { useThemeStore, ThemeMode, ThemePreference } from '../stores/theme';
 export { defineStore, acceptHMRUpdate, usePinia, storeToRefs } from '../node_modules/@pinia/nuxt/dist/runtime/composables';
-export { useNuxtDevTools } from '../node_modules/@nuxt/devtools/dist/runtime/use-nuxt-devtools';

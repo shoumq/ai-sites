@@ -18,7 +18,8 @@ const emit = defineEmits<{
       <div
         class="hero__content"
         v-motion
-        :initial="{ opacity: 0, x: -24 }"
+        data-reveal
+        :initial="{ opacity: editable ? 1 : 0, x: editable ? 0 : -24 }"
         :visibleOnce="{ opacity: 1, x: 0, transition: { duration: 500, ease: 'easeOut' } }"
       >
         <EditableText
@@ -52,7 +53,8 @@ const emit = defineEmits<{
       <div
         class="hero__media"
         v-motion
-        :initial="{ opacity: 0, x: 24 }"
+        data-reveal
+        :initial="{ opacity: editable ? 1 : 0, x: editable ? 0 : 24 }"
         :visibleOnce="{ opacity: 1, x: 0, transition: { duration: 500, delay: 120, ease: 'easeOut' } }"
       >
         <img v-if="section.bg_image" :src="section.bg_image" alt="" class="hero__image" />
@@ -72,7 +74,7 @@ const emit = defineEmits<{
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   gap: var(--space-7);
   align-items: center;
 }
@@ -84,10 +86,10 @@ const emit = defineEmits<{
 }
 
 .hero__title {
-  font-size: var(--fs-4xl);
+  font-size: clamp(2.5rem, 5.8cqi, 5.5rem);
   font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  line-height: 1.02;
+  letter-spacing: -0.055em;
   color: var(--text);
 }
 
@@ -108,7 +110,7 @@ const emit = defineEmits<{
   font-weight: 600;
   font-size: var(--fs-base);
   text-decoration: none;
-  box-shadow: var(--shadow-md);
+  box-shadow: none;
   transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
@@ -120,8 +122,8 @@ const emit = defineEmits<{
 .hero__media {
   border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: var(--shadow-lg);
-  aspect-ratio: 4 / 3;
+  box-shadow: none;
+  aspect-ratio: 4 / 5;
 }
 
 .hero__image {
@@ -140,4 +142,13 @@ const emit = defineEmits<{
     text-align: center;
   }
 }
+
+.hero__content { min-width: 0; padding-block: 24px; }
+.hero__title { overflow-wrap: anywhere; max-width: 13ch; }
+.hero__subtitle { line-height: 1.75; margin-top: 12px; }
+.hero__cta { display: inline-flex; align-items: center; gap: 32px; min-height: 48px; margin-top: 20px; }
+.hero__cta::after { content: '↗'; font-size: 1.2em; }
+.hero__media { min-width: 0; }
+@container (max-width: 860px) { .hero__media { aspect-ratio: 4 / 3; } .hero__title { max-width: 18ch; } .hero__grid { gap: 28px; } }
+@media (prefers-reduced-motion: reduce) { [data-reveal] { opacity: 1 !important; transform: none !important; } }
 </style>

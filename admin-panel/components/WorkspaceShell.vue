@@ -20,8 +20,8 @@ const route = useRoute()
 </template>
 
 <style scoped>
-.workspace { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
-.workspace__rail { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; padding: 36px 18px 18px; background: var(--a-glass-bg); border-right: 1px solid var(--a-border); backdrop-filter: blur(28px); }
+.workspace { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; min-height: 100svh; }
+.workspace__rail { position: sticky; top: 0; height: 100vh; height: 100dvh; display: flex; flex-direction: column; padding: 36px 18px 18px; background: var(--a-glass-bg); border-right: 1px solid var(--a-border); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px); }
 .workspace__brand { display: flex; align-items: center; gap: 9px; padding: 0 14px; margin-bottom: 64px; font-size: 26px; font-weight: 650; letter-spacing: -.06em; text-decoration: none; }
 .workspace__mark { display: grid; place-items: center; width: 33px; height: 33px; border-radius: 10px; background: var(--a-text); color: var(--a-bg); font-size: 20px; }
 .workspace__edition { font-size: 12px; letter-spacing: 0; color: var(--a-text-muted); font-weight: 450; margin-top: 8px; }
@@ -44,4 +44,12 @@ const route = useRoute()
 .workspace__body { min-width: 0; }
 @media (max-width: 1000px) { .workspace { grid-template-columns: 200px minmax(0, 1fr); } .workspace__rail { padding-inline: 12px; } }
 @media (max-width: 760px) { .workspace { display: block; } .workspace__rail { position: relative; height: auto; padding: 16px 20px; flex-direction: row; align-items: center; gap: 20px; border-right: 0; border-bottom: 1px solid var(--a-border); } .workspace__brand { margin: 0; padding: 0; } .workspace__group-label, .workspace__note, .workspace__account, .workspace__edition { display: none; } .workspace__nav { display: flex; margin-left: auto; } .workspace__nav a { padding: 9px; font-size: 11px; } .workspace__nav a > span:last-child:not(:first-child) { display: none; } }
+
+@media (max-width: 760px) {
+  .workspace__rail { height: auto; min-height: 72px; padding-top: max(16px, env(safe-area-inset-top)); gap: 12px; }
+  .workspace__brand { font-size: 23px; flex-shrink: 0; }
+  .workspace__nav { min-width: 0; gap: 2px; }
+  .workspace__nav a { min-height: 44px; font-size: 12px; gap: 6px; }
+}
+@media (max-width: 380px) { .workspace__rail { padding-inline: 12px; } .workspace__mark { display: none; } }
 </style>

@@ -17,3 +17,5 @@ site-builder/builds/
 *.log
 .test-deps/
 .test-artifacts/
+
+.test-browsers/
