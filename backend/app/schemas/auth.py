@@ -9,7 +9,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
-# TODO add more fields
+# TODO add more fields1
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
